@@ -82,7 +82,7 @@ When you have the device cert and key (possibly created using the [create_test_c
 
 1. You can use the [create_individual_enrollment][service-sample-create-individual-enrollment] sample in the [provisioning service SDK samples][service-samples] to enroll with the service. To use your x509 certificate, you need to update the enrollment object to contain your cert. If your cert comes from a CER file, it needs to be base64 encoded.
 
-```
+    ```
     var enrollment = {
       registrationId: registrationId,
       deviceId: deviceId,
@@ -97,23 +97,23 @@ When you have the device cert and key (possibly created using the [create_test_c
         }
       }
     };
-```
+    ```
 
 2. Alternatively, You can use the Azure portal. Instructions to accomplish this are [here][c-sdk-create-individual-enrollment], starting with the step labeled 'Add enrollment list entry'.
 
-  After enrolling the device with the provisioning service, you can use [register_x509.js][register-x509] to register the device. When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values. More information on Device Provisioning Concepts can be found [here][lnk-dps-concepts]
+    After enrolling the device with the provisioning service, you can use [register_x509.js][register-x509] to register the device. When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values. More information on Device Provisioning Concepts can be found [here][lnk-dps-concepts]
 
-  If the registration succeeds, you should see the device Id and the assigned hub in the console output. You should be able to connect to this hub with this device ID using the device cert and private key you created above.
+    If the registration succeeds, you should see the device Id and the assigned hub in the console output. You should be able to connect to this hub with this device ID using the device cert and private key you created above.
 
 3. Finally, set the following environment variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
-| Env variable                 | Description                                                            |
-| :--------------------------- | :--------------------------------------------------------------------- |
-| PROVISIONING_HOST            | Default is `global.azure-devices-provisioning.net`                     |
-| PROVISIONING_IDSCOPE         | `ID Scope` from the Device Provision Service                           |
-| PROVISIONING_REGISTRATION_ID | This is the id for the device. By default it uses `my-first-device-id` |
-| CERTIFICATE_FILE             | File location of certificate file                                      |
-| KEY_FILE                     | File location of key file                                              |
+    | Env variable                 | Description                                                            |
+    | :--------------------------- | :--------------------------------------------------------------------- |
+    | PROVISIONING_HOST            | Default is `global.azure-devices-provisioning.net`                     |
+    | PROVISIONING_IDSCOPE         | `ID Scope` from the Device Provision Service                           |
+    | PROVISIONING_REGISTRATION_ID | This is the id for the device. By default it uses `my-first-device-id` |
+    | CERTIFICATE_FILE             | File location of certificate file                                      |
+    | KEY_FILE                     | File location of key file                                              |
 
 #### Running the sample
 
@@ -135,21 +135,21 @@ When you have a certificate change containing a root certificate and several opt
 
 2. You can upload your group certificate to the Certificates tab in your Device Provisioning Service blade in the Azure portal and verify it. You can find instructions [here][lnk-x509-verification-instructions].
 
-  At the very least, your root certificate needs to be uploaded to your Device Provisioning Service blade in the Azure portal, and it needs to be verified.
+    At the very least, your root certificate needs to be uploaded to your Device Provisioning Service blade in the Azure portal, and it needs to be verified.
 
-  Once the group is created and the certificates have been uploaded and verified, you can use [register_x509.js][register-x509] to register the device. When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values. Guidance on populating these values can be found [here][simulate-x509-device]
+    Once the group is created and the certificates have been uploaded and verified, you can use [register_x509.js][register-x509] to register the device. When running this sample, you'll need to replace the '[provisioning host]' '[id scope]', '[registration id'], '[cert filename]', and '[key filename]' values in the code with your specific values. Guidance on populating these values can be found [here][simulate-x509-device]
 
-  When registering a device via group enrollment, the cert may need to include the certificate chain that links it back to a verified certificate.
+    When registering a device via group enrollment, the cert may need to include the certificate chain that links it back to a verified certificate.
 
 3. Finally, set the following environment variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
-| Env variable                 | Description                                                            |
-| :--------------------------- | :--------------------------------------------------------------------- |
-| PROVISIONING_HOST            | Default is `global.azure-devices-provisioning.net`                     |
-| PROVISIONING_IDSCOPE         | `ID Scope` from the Device Provision Service                           |
-| PROVISIONING_REGISTRATION_ID | This is the id for the device. By default it uses `my-first-device-id` |
-| CERTIFICATE_FILE             | File location of certificate file                                      |
-| KEY_FILE                     | File location of key file                                              |
+    | Env variable                 | Description                                                            |
+    | :--------------------------- | :--------------------------------------------------------------------- |
+    | PROVISIONING_HOST            | Default is `global.azure-devices-provisioning.net`                     |
+    | PROVISIONING_IDSCOPE         | `ID Scope` from the Device Provision Service                           |
+    | PROVISIONING_REGISTRATION_ID | This is the id for the device. By default it uses `my-first-device-id` |
+    | CERTIFICATE_FILE             | File location of certificate file                                      |
+    | KEY_FILE                     | File location of key file                                              |
 
 #### Running the sample
 
