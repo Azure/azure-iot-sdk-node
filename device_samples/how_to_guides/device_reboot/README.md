@@ -56,7 +56,8 @@ Device reboot twin state reported.
 
 # 👉 Next Steps
 
-- [More samples](../../)
+- [More how-to-guide samples](../../)
+- [All samples](../../../device_samples)
 
 # 💬 Feedback
 

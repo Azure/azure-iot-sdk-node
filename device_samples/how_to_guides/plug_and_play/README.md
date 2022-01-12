@@ -76,7 +76,8 @@ From the `how_to_guides/plug_and_play` directory, run `node temperature_controll
 
 # 👉 Next Steps
 
-- [More how-to-guides samples](../../)
+- [Use Device Twins to reboot a device](../device_reboot)
+- [More how-to-guide samples](../../)
 
 # 💬 Feedback
 

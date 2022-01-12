@@ -144,12 +144,12 @@ When you have a certificate change containing a root certificate and several opt
 3. Finally, set the following environment variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
    | Env variable                | Description                                                            |
-   | :-------------------------- | :--------------------------------------------------------------------- | --- |
+   | :-------------------------- | :--------------------------------------------------------------------- |
    | IOTHUB_DEVICE_DPS_ENDPOINT  | Default is `global.azure-devices-provisioning.net`                     |
    | IOTHUB_DEVICE_DPS_IDSCOPE   | `ID Scope` from the Device Provision Service                           |
    | IOTHUB_DEVICE_DPS_DEVICE_ID | This is the id for the device. By default it uses `my-first-device-id` |
    | CERTIFICATE_FILE            | File location of certificate file                                      |
-   | KEY_FILE                    | File location of key file                                              |     |
+   | KEY_FILE                    | File location of key file                                              |
 
 #### Running the sample
 
@@ -176,8 +176,8 @@ Send status: MessageEnqueued
 
 # 👉 Next Steps
 
-- [Send messages to IoT Hub](../send_messages)
-- [More getting started samples](../../)
+- [Enabling and using devices with Plug and Play](../plug_and_play)
+- [More how-to-guide samples](../../)
 
 # 💬 Feedback
 
