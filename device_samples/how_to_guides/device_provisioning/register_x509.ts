@@ -9,24 +9,25 @@ import fs from 'fs';
 
 // change the following using statement if you would like to try another protocol.
 import { Mqtt as ProvProtocol } from 'azure-iot-provisioning-device-mqtt';
+import { RegistrationClient } from 'azure-iot-provisioning-device/dist/interfaces';
 // import { Amqp as ProvProtocol } from 'azure-iot-provisioning-device-amqp';
 // import { Http as ProvProtocol } from 'azure-iot-provisioning-device-http';
 // import { MqttWs as ProvProtocol } from 'azure-iot-provisioning-device-mqtt';
 // import { AmqpWs as ProvProtocol } from 'azure-iot-provisioning-device-amqp';
 
-const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
-const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
-const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? '';
-const certFile = process.env.CERTIFICATE_FILE ?? '';
-const keyFile = process.env.KEY_FILE ?? '';
-const logRed = '\x1b[31m%s\x1b[0m';
+const provisioningHost: string = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope: string = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
+const deviceId: string = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID ?? 'my-first-device-id';
+const certFile: string = process.env.CERTIFICATE_FILE ?? '';
+const keyFile: string = process.env.KEY_FILE ?? '';
+const logRed: string = '\x1b[31m%s\x1b[0m';
 
 const deviceCert: { cert: string; key: string; } = { cert: fs.readFileSync(certFile).toString(), key: fs.readFileSync(keyFile).toString() };
-const securityClient = new X509Security(registrationId, deviceCert);
-const deviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), securityClient);
+const securityClient: X509Security = new X509Security(deviceId, deviceCert);
+const registrationClient: RegistrationClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), securityClient);
 
 // Register the device. Do not force a re-registration.
-deviceClient.register(function(err: Error | undefined, result: RegistrationResult | any) {
+registrationClient.register(function(err: Error | undefined, result: RegistrationResult | any) {
   if (err) {
     console.log(logRed, "Error registering device: " + err);
   } else {

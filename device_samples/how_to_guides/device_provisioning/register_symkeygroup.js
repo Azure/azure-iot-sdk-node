@@ -17,25 +17,24 @@ const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').Mqtt
 // const ProvisioningTransport = require('azure-iot-provisioning-device-amqp').AmqpWs;
 // const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
-const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
-const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
-const symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY ?? '';
-const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? 'my-first-device-id';
-
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
+const deviceId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID ?? 'my-first-device-id';
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_SYMMETRIC_KEY ?? '';
 const logRed = '\x1b[31m%s\x1b[0m';
 
-function computeDerivedSymmetricKey(masterKey, regId) {
-  return crypto.createHmac('SHA256', Buffer.from(masterKey, 'base64'))
-    .update(regId, 'utf8')
+function computeDerivedSymmetricKey(key, id) {
+  return crypto.createHmac('SHA256', Buffer.from(key, 'base64'))
+    .update(id, 'utf8')
     .digest('base64');
 }
 
-const derivedSymmetricKey = computeDerivedSymmetricKey(symmetricKey, registrationId);
-const provisioningSecurityClient = new SymmetricKeySecurityClient(registrationId, derivedSymmetricKey);
-const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), provisioningSecurityClient);
+const derivedSymmetricKey = computeDerivedSymmetricKey(symmetricKey, deviceId);
+const securityClient = new SymmetricKeySecurityClient(deviceId, derivedSymmetricKey);
+const registrationClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), securityClient);
 
 // Register the device.
-provisioningClient.register(function(err, result) {
+registrationClient.register(function(err, result) {
   if (err) {
     console.log(logred, "Error registering device: " + err.message);
   } else {

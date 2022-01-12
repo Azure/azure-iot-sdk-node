@@ -16,15 +16,14 @@ const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').Mqtt
 // const ProvisioningTransport = require('azure-iot-provisioning-device-amqp').AmqpWs;
 // const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
-const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
-const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
-const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? '';
-const symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY ?? '';
-
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
+const registrationId = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_ID ?? '';
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_SYMMETRIC_KEY ?? '';
 const logRed = '\x1b[31m%s\x1b[0m';
 
-const provisioningSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
-const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), provisioningSecurityClient);
+const securityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), securityClient);
 
 // Register the device.
 provisioningClient.setProvisioningPayload({a: 'b'});

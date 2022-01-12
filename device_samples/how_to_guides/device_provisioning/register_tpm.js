@@ -15,8 +15,8 @@ const ProvisioningTransport = require('azure-iot-provisioning-device-amqp').Amqp
 // const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').Mqtt;
 // const ProvisioningTransport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
-const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
-const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
 
 const securityClient = new tpmSecurity.TpmSecurityClient();
 const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), securityClient);

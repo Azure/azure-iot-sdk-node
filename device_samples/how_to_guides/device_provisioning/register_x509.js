@@ -17,20 +17,20 @@ const Transport = require('azure-iot-provisioning-device-mqtt').Mqtt;
 // const Transport = require('azure-iot-provisioning-device-http').Http;
 // const Transport = require('azure-iot-provisioning-device-mqtt').MqttWs;
 
-const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
-const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
-const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? '';
+const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
+const deviceId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID ?? 'my-first-device-id';
 const certFile = process.env.CERTIFICATE_FILE ?? '';
 const keyFile = process.env.KEY_FILE ?? '';
 const logRed = '\x1b[31m%s\x1b[0m';
 
 const deviceCert = { cert: fs.readFileSync(certFile).toString(), key: fs.readFileSync(keyFile).toString() };
 const transport = new Transport();
-const securityClient = new X509Security(registrationId, deviceCert);
-const deviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+const securityClient = new X509Security(deviceId, deviceCert);
+const registrationClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
 
 // Register the device. Do not force a re-registration.
-deviceClient.register(function(err, result) {
+registrationClient.register(function(err, result) {
   if (err) {
     console.log(logRed, "Error registering device: " + err);
   } else {

@@ -10,19 +10,20 @@ import { ProvisioningDeviceClient, RegistrationResult } from 'azure-iot-provisio
 
 // change the following using statement if you would like to try another protocol.
 import { Mqtt as ProvProtocol } from 'azure-iot-provisioning-device-mqtt';
+import { RegistrationClient } from 'azure-iot-provisioning-device/dist/interfaces';
 // import { Amqp as ProvProtocol } from 'azure-iot-provisioning-device-amqp';
 // import { Http as ProvProtocol } from 'azure-iot-provisioning-device-http';
 // import { MqttWs as ProvProtocol } from 'azure-iot-provisioning-device-mqtt';
 // import { AmqpWs as ProvProtocol } from 'azure-iot-provisioning-device-amqp';
 
-const provisioningHost = process.env.PROVISIONING_HOST ?? 'global.azure-devices-provisioning.net';
-const idScope = process.env.PROVISIONING_IDSCOPE ?? '';
-const registrationId = process.env.PROVISIONING_REGISTRATION_ID ?? '';
-const symmetricKey = process.env.PROVISIONING_SYMMETRIC_KEY ?? '';
-const logRed = '\x1b[31m%s\x1b[0m';
+const provisioningHost: string = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ?? 'global.azure-devices-provisioning.net';
+const idScope: string = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE ?? '';
+const registrationId: string = process.env.IOTHUB_DEVICE_DPS_REGISTRATION_ID ?? '';
+const symmetricKey: string = process.env.IOTHUB_DEVICE_DPS_SYMMETRIC_KEY ?? '';
+const logRed: string = '\x1b[31m%s\x1b[0m';
 
-const provisioningSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
-const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provisioningSecurityClient);
+const securityClient: SymmetricKeySecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+const provisioningClient: RegistrationClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), securityClient);
 
 // Register the device.
 provisioningClient.setProvisioningPayload({a: 'b'});
