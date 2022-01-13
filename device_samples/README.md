@@ -32,4 +32,4 @@ Once you have become familair with the [getting started](getting_started) sample
 
 ## [Edge modules (level 100-200)](./edge_modules)
 
-Nulla id tempus tortor, ut viverra odio. Aliquam accumsan magna vel efficitur eleifend. Curabitur consectetur fringilla eros ut pellentesque. Morbi id posuere quam. Nam aliquet nisi mauris, sit amet pharetra tortor euismod ac. Cras ullamcorper non purus et aliquet. Fusce dui mi, pellentesque at sagittis a, fringilla ac velit. Nullam nec enim iaculis, dictum turpis ac, tempus turpis. Pellentesque in dolor suscipit, faucibus risus a, pretium metus.
+Comming Soon!
