@@ -27,7 +27,8 @@ Once you have become familair with the [getting started](getting_started) sample
 
 - [Register and connect a device using the Device Provisioning service](./how_to_guides/device_provisioning)
 - [Enabling and using devices with Plug and Play](./how_to_guides/plug_and_play)
-- [Use Device Twins to reboot a device](./how_to_guides/device_reboot)
+- [Reboot a device](./how_to_guides/device_reboot)
+- [Update firmware on a device](./how_to_guides/device_update)
 
 ## [Edge modules (level 100-200)](./edge_modules)
 

@@ -14,9 +14,13 @@ The IoT Hub Device Provisioning Service (DPS) is a helper service for IoT Hub th
 
 IoT Plug and Play enables solution builders to integrate IoT devices with their solutions without any manual configuration. At the core of IoT Plug and Play, is a device model that a device uses to advertise its capabilities to an IoT Plug and Play-enabled application.
 
-## [Use Device Twins to reboot a device](device_reboot)
+## [Reboot a device](device_reboot)
 
 Use device twins and cloud-to-device method invocations to simulate rebooting a physical device.
+
+## [Update device firmware](device_update)
+
+Use device twins and cloud-to-device method invocations to simulate updating the firmware on a device.
 
 # Next Steps
 
