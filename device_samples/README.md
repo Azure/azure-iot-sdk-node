@@ -3,8 +3,8 @@
 Welcome to our new samples page for the Node.js Azure IoT Device SDK. We have organized the samples into three different buckets to provide you a better developer experience.
 
 - **[Getting started](./getting_started)**: For those folks just getting started and looking to learn the basics. 
-- **Edge modules**: Using the SDK in Azure IoT Edge modules.
-- **How to guides**: Scenario based examples for Azure IoT device builders.
+- **[Edge modules](./edge_modules)**: Using the SDK in Azure IoT Edge modules (Coming soon!).
+- **[How to guides](./how_to_guides)**: Scenario based examples for Azure IoT device builders.
 
 > An important note. These samples are for education purposes only. They are not designed to cut and pasted into product code.
 

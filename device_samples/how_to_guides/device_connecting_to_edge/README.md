@@ -38,7 +38,7 @@ From the `how_to_guides/device_connecting_to_edge` directory, run `node edge_dow
 
 # 👉 Next Steps
 
-- [More getting started samples](../../)
+- [More how-to-guide samples](../../)
 
 # 💬 Feedback
 

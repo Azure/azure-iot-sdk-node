@@ -89,6 +89,7 @@ Completed firmwareUpdate flow
 
 # 👉 Next Steps
 
+- [Connect a downstream device to IoT Edge and send and receive messages](../device_connecting_to_edge)
 - [More how-to-guide samples](../../)
 - [All samples](../../../device_samples)
 
