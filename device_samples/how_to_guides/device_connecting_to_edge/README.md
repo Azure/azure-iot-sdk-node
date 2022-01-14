@@ -17,7 +17,7 @@ Before you can run any of the samples, you will need to setup and configure a fe
 
 ### Connect a downstream device
 
-Connect to a device to IoT Edge and send and recieve telemetry.
+Connect a device to IoT Edge and send and recieve telemetry.
 
 Before you get started, make sure you set the following environmental variables. [Click here](../../../doc/devicesamples/setting-env-variables.md) if you need help setting environment variables.
 
@@ -34,11 +34,7 @@ HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;Ga
 
 #### Running the sample
 
-From the `getting_started/edge` directory, run `node edge_downstream_device.js`
-
-# 📖 Further reading
-
-- [Understand and invoke direct methods from IoT Hub](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-direct-methods?WT.mc_id=Portal-Microsoft_Azure_IotHub)
+From the `how_to_guides/device_connecting_to_edge` directory, run `node edge_downstream_device.js`
 
 # 👉 Next Steps
 

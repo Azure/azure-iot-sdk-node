@@ -30,10 +30,6 @@ Device twins are JSON documents that store device state information, including m
 
 In some scenarios you can't easily map the data your devices send into the relatively small device-to-cloud messages that IoT Hub accepts. For example: Large files that contain images or videos. This sample will show you how to upload file to a linked Azure storage account.
 
-## [Edge sample](edge)
-
-Connect a downstream device to IoT Edge and send and receive messages.
-
 # Next Steps
 
 - [Send messages to IoT Hub](./send_messages)

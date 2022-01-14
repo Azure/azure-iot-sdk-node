@@ -29,6 +29,7 @@ Once you have become familair with the [getting started](getting_started) sample
 - [Enabling and using devices with Plug and Play](./how_to_guides/plug_and_play)
 - [Reboot a device](./how_to_guides/device_reboot)
 - [Update firmware on a device](./how_to_guides/device_update)
+- [Connect a device to IoT Edge and send and recieve telemetry](./how_to_guides/device_connecting_to_edge)
 
 ## [Edge modules (level 100-200)](./edge_modules)
 

@@ -22,6 +22,10 @@ Use device twins and cloud-to-device method invocations to simulate rebooting a 
 
 Use device twins and cloud-to-device method invocations to simulate updating the firmware on a device.
 
+## [Edge sample](device_connecting_to_edge)
+
+Connect a downstream device to IoT Edge and send and receive messages.
+
 # Next Steps
 
 - [Register and connect a device using the Device Provisioning service](./device_provisioning)
