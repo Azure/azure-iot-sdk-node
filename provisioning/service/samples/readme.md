@@ -107,3 +107,4 @@ For more information on how to use this library refer to the documents below:
 [run-bulk-operation]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/query.js
 [package-json]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/package.json
 [create-certificate-for-individual-enrollment]: https://github.com/Azure/azure-iot-sdk-node/tree/main/provisioning/device/samples#creating-x509-device-certificates-for-individual-enrollment
+[rbac-overview]: https://docs.microsoft.com/en-us/azure/role-based-access-control/overview

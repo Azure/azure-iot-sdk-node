@@ -5,7 +5,7 @@
 
 const { ClientSecretCredential } = require("@azure/identity");
 var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
-var uuid = require('uuid')
+var uuid = require('uuid');
 
 var argv = require('yargs')
   .usage('Usage: $0 --hostname <DPS HOST NAME> --endorsementKey <ENDORSMENT KEY> --tenantid <AAD TENANT ID> --clientid <AAD CLIENT ID> --clientsecret <AAD_CLIENT_SECRET>')
