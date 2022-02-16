@@ -51,7 +51,7 @@ $ node create_individual_enrollment.js "<the connection string for the Device Pr
 
 * For the TokenCredential sample:
 
-For a quick explanation of Role Based Access Control, you can check [this overview][rbac-overview]. For this test you will need to set the environment variables AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET.
+For a quick explanation of Role Based Access Control, you can check [this overview][rbac-overview].
 
 Get the following files from the current folder:
 * [package.json][package-json]
@@ -63,7 +63,7 @@ Place the files in the folder of your choice on the target machine/device then g
 
 ```
 $ npm install
-$ node create_tpm_enrollment_with_token_credential.js -h <The host name of the DPS instance> -e <an enrollment key>
+$ node create_tpm_enrollment_with_token_credential.js -h <The host name of the DPS instance> -t <The AAD tenant ID> -c <The AAD client ID> -s <The AAD client secret>
 ```
 
 * For creating an EnrollmentGroup:
