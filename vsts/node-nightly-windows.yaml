@@ -1,0 +1,96 @@
+name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+resources:
+  - repo: self
+    clean: true
+
+jobs:
+- job: Phase_1
+  displayName: 'Windows Node 12.x'
+  condition: succeededOrFailed()
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: NodeTool@0
+    displayName: 'Use Node 12.x'
+    inputs:
+      versionSpec: '12.x'
+
+  - powershell: |
+       runas.exe /savecred /user:administrator
+       npm install --global node-gyp
+       npm install --global lerna
+       npm install
+    displayName: 'Install Dependencies'
+
+  - script: |
+       call lerna bootstrap --hoist
+       call lerna run build
+    displayName: 'Bootstrap & Build'
+
+  - script: 'call lerna run ci'
+    displayName: 'Unit & Integration Tests'
+    env:
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+
+  - script: 'lerna run e2e'
+    displayName: 'E2E Tests'
+    env:
+      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
+      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
+      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+      STORAGE_CONNECTION_STRING: $(STORAGE-CONNECTION-STRING)
+      IOT_PROVISIONING_DEVICE_IDSCOPE: $(IOT-PROVISIONING-DEVICE-IDSCOPE)
+      IOT_PROVISIONING_ROOT_CERT: $(IOT-PROVISIONING-ROOT-CERT)
+      IOT_PROVISIONING_ROOT_CERT_KEY: $(IOT-PROVISIONING-ROOT-CERT-KEY)
+      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
+      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
+      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
+      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results | Mocha'
+    inputs:
+      testResultsFiles: 'e2etests/test-results.*.xml'
+      mergeTestResults: true
+      testRunTitle: 'E2E Tests - Windows'
+    condition: succeededOrFailed()
+
+  - task: DownloadBuildArtifacts@0
+    condition: coalesce(variables.release, False)
+    inputs:
+      buildType: 'specific'
+      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+      pipeline: '296' # iot-sdks-internals-scripts pipeline
+      buildVersionToDownload: 'latest'
+      downloadType: 'single'
+      downloadPath: '$(System.ArtifactsDirectory)/scripts'
+      artifactName: 'node'
+
+  - powershell: |
+      . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
+      $outputFolder = $env:output
+      Build-Artifacts -Sources $env:sources -Output $outputFolder
+    displayName: 'npm pack'
+    condition: coalesce(variables.release, False)
+    env:
+      sources: $(Build.SourcesDirectory)
+      output: $(Build.ArtifactStagingDirectory)\_out
+
+  - task: PublishBuildArtifacts@1
+    condition: coalesce(variables.release, False)
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
+      ArtifactName: drop
+      publishLocation: 'Container'
+
+  - task: AzureFileCopy@2
+    displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+    condition: coalesce(variables.release, False)
+    inputs:
+      SourcePath: $(Build.ArtifactStagingDirectory)\_out
+      azureSubscription: azuresdkpartnerdrops
+      Destination: AzureBlob
+      storage: azuresdkpartnerdrops
+      ContainerName: 'drops/azure-iot-sdk/node/'

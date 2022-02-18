@@ -12,7 +12,6 @@
     "device/transport/*",
     "service",
     "service/samples/javascript",
-    "service/samples/typescript",
     "provisioning/*",
     "provisioning/transport/*",
     "provisioning/device/samples",
