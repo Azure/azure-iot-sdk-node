@@ -10,6 +10,9 @@
   "author": "danhellem",
   "license": "ISC",
   "dependencies": {
-    "azure-iothub": "^1.14.6" 
+    "azure-iothub": "^1.14.6"
+  },
+  "devDependencies": {
+    "encoding": "^0.1.13"
   }
 }
