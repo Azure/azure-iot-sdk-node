@@ -17,11 +17,11 @@
     "ws": "^6.0.0"
   },
   "devDependencies": {
-    "@types/async": "^2.4.2",
-    "@types/node": "^16.6.1",
+    "@types/async": "^3.2.8",
+    "@types/node": "^16.10.2",
     "@types/sinon-test": "^2.4.3",
     "chai": "^4.3.3",
-    "mocha": "^9.1.2",
+    "mocha": "^9.2.1",
     "nyc": "^15.0.0",
     "sinon": "^11.1.2",
     "sinon-test": "^3.1.1",

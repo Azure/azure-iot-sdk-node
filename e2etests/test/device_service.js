@@ -23,7 +23,7 @@ var deviceHttp = require('azure-iot-device-http');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var maximumMessageSize = ((256*1024)-512);
+var maximumMessageSize = ((64*1024)-512);
 
 [
   DeviceIdentityHelper.createDeviceWithSas,
