@@ -11,9 +11,9 @@ jobs:
     vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 14.x'
     inputs:
-      versionSpec: '12.x'
+      versionSpec: '14.x'
 
   - powershell: |
        runas.exe /savecred /user:administrator
