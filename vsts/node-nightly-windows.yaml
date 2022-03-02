@@ -17,6 +17,7 @@ jobs:
 
   - powershell: |
        runas.exe /savecred /user:administrator
+       npm install --global --production windows-build-tools
        npm install --global node-gyp@6.1.0
        npm install --global lerna
        npm install
