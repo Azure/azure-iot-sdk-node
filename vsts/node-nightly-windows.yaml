@@ -5,7 +5,7 @@ resources:
 
 jobs:
 - job: Phase_1
-  displayName: 'Windows Node 12.x'
+  displayName: 'Windows Node 14.x'
   condition: succeededOrFailed()
   pool:
     vmImage: 'windows-latest'
@@ -17,7 +17,7 @@ jobs:
 
   - powershell: |
        runas.exe /savecred /user:administrator
-       npm install --global node-gyp
+       npm install --global node-gyp@6.1.0
        npm install --global lerna
        npm install
     displayName: 'Install Dependencies'
