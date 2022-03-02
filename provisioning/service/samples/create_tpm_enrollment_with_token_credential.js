@@ -52,17 +52,10 @@ const enrollment = {
   }
 };
 
-serviceClient.createOrUpdateIndividualEnrollment(enrollment, function (err, enrollmentResponse) {
-  if (err) {
-    console.log('error creating the individual enrollment: ' + err);
-  } else {
-    console.log("enrollment record returned: " + JSON.stringify(enrollmentResponse, null, 2));
-    serviceClient.deleteIndividualEnrollment(enrollmentResponse.registrationId, function (err) {
-      if (err) {
-        console.log('error deleting the first enrollment: ' + err);
-      } else {
-        console.log("enrollment successfully deleted");
-      }
-    });
-  }
-});
+serviceClient.createOrUpdateIndividualEnrollment(enrollment).then((enrollmentResponse) => {
+    console.log("Enrollment record returned: " + JSON.stringify(enrollmentResponse.responseBody, null, 2)),
+    serviceClient.deleteIndividualEnrollment(enrollmentResponse.responseBody.registrationId).then(
+      (res) => console.log("Enrollment deleted successfully"),
+      (err) => console.log("Error deleting enrollment: " + err)
+    )}
+  ).catch((err) => console.log("Error creating the individual enrollment: " + err));
