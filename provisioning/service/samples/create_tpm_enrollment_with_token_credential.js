@@ -4,10 +4,10 @@
 'use strict';
 
 const { ClientSecretCredential } = require("@azure/identity");
-var provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
-var uuid = require('uuid');
+const provisioningServiceClient = require('azure-iot-provisioning-service').ProvisioningServiceClient;
+const uuid = require('uuid');
 
-var argv = require('yargs')
+const argv = require('yargs')
   .usage('Usage: $0 --hostname <DPS HOST NAME> --endorsementKey <ENDORSMENT KEY> --tenantid <AAD TENANT ID> --clientid <AAD CLIENT ID> --clientsecret <AAD_CLIENT_SECRET>')
   .option('hostname', {
     alias: 'h',
@@ -35,10 +35,10 @@ var argv = require('yargs')
   })
   .argv;
 
-var credential = new ClientSecretCredential(argv.tenantid, argv.clientid, argv.clientsecret);
-var serviceClient = provisioningServiceClient.fromTokenCredential(argv.hostname, credential);
+const credential = new ClientSecretCredential(argv.tenantid, argv.clientid, argv.clientsecret);
+const serviceClient = provisioningServiceClient.fromTokenCredential(argv.hostname, credential);
 
-var enrollment = {
+const enrollment = {
   registrationId: 'sample_enrollment-' + uuid.v1(),
   attestation: {
     type: 'symmetricKey',
