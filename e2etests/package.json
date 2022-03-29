@@ -61,7 +61,7 @@
     "phase0_modules": "npm-run-all -p -l module_crud module_messaging module_twin module_methods configurations",
     "phase1_fast": "npm-run-all -p -l service registry device_acknowledge_tests upload_disconnect authentication d2c_disconnect",
     "phase2_slow": "npm-run-all -p -l file_upload device_method twin_e2e_tests sas_token_tests device_service empty_messages c2d_disconnect method_disconnect twin_disconnect",
-    "alltest": "npm run  phase0_modules && npm run phase1_fast && npm run phase2_slow",
+    "alltest": "npm run phase1_fast && npm run phase2_slow",
     "e2e": "npm -s run lint && npm -s run alltest",
     "test": "npm -s run lint && npm -s run alltest"
   },
