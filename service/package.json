@@ -10,7 +10,7 @@
     "@azure/core-http": "1.2.3",
     "@azure/identity": "1.2.5",
     "@azure/ms-rest-js": "^2.0.5",
-    "async": "^2.6.3",
+    "async": "^3.2.3",
     "azure-iot-amqp-base": "2.4.13",
     "azure-iot-common": "1.12.13",
     "azure-iot-http-base": "1.11.13",
