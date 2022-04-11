@@ -5,7 +5,7 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "async": "^2.6.3",
+    "async": "^3.2.3",
     "azure-iot-common": "1.12.13",
     "azure-iot-provisioning-device": "1.8.12",
     "azure-iot-provisioning-device-amqp": "1.8.12",
