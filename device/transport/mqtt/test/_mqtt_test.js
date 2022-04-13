@@ -3,7 +3,6 @@
 
 'use strict';
 
-require('es5-shim');
 const assert = require('chai').assert;
 const sinon = require('sinon');
 const Mqtt = require('../dist/mqtt.js').Mqtt;
