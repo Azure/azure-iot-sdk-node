@@ -22,6 +22,7 @@
     "mocha": "^9.2.1"
   },
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "test": "mocha"
   },
   "engines": {

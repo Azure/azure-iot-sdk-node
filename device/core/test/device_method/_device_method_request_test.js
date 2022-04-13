@@ -3,7 +3,6 @@
 
 'use strict';
 
-require('es5-shim');
 var assert = require('chai').assert;
 var DeviceMethodRequest = require('../../dist/device_method').DeviceMethodRequest;
 

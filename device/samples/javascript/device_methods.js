@@ -10,7 +10,6 @@ var Protocol = require('azure-iot-device-mqtt').Mqtt;
 // var Protocol = require('azure-iot-device-mqtt').MqttWs;
 // var Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-require('es5-shim');
 var Client = require('azure-iot-device').Client;
 var client = null;
 

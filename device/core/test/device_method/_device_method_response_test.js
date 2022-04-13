@@ -3,7 +3,6 @@
 
 'use strict';
 
-require('es5-shim');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var sinon = require('sinon');

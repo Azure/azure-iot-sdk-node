@@ -4,6 +4,7 @@
   "description": "metric analysis of mean time to recovery for device code",
   "main": "ochestrator.js",
   "scripts": {
+    "npmlockrefresh": "npm i --package-lock-only",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint \"*.js\" --ignore-pattern node_modules/"
   },
