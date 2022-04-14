@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "dependencies": {
-    "azure-iothub": "1.14.7",
+    "azure-iothub": "1.14.8",
     "chalk": "^1.1.3",
     "pem": "^1.14.2",
     "yargs": "^15.3.1"

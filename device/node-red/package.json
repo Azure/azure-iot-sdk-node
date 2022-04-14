@@ -5,10 +5,10 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "dependencies": {
-    "azure-iot-device": "1.17.9",
-    "azure-iot-device-amqp": "1.13.9",
-    "azure-iot-device-http": "1.13.9",
-    "azure-iot-device-mqtt": "1.15.9"
+    "azure-iot-device": "1.17.10",
+    "azure-iot-device-amqp": "1.13.10",
+    "azure-iot-device-http": "1.13.10",
+    "azure-iot-device-mqtt": "1.15.10"
   },
   "node-red": {
     "nodes": {
