@@ -5,16 +5,16 @@ resources:
 
 jobs:
 - job: Phase_2
-  displayName: Ubuntu 20.04 - Node 12.x
+  displayName: Ubuntu 20.04 - Node 14.x
   condition: succeededOrFailed()
   pool:
     vmImage: 'Ubuntu 20.04'
 
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 14.x'
     inputs:
-      versionSpec: '12.x'
+      versionSpec: '14.x'
 
   - script: |
        npm install --global node-gyp
