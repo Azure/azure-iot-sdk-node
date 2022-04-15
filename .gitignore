@@ -194,7 +194,7 @@ $RECYCLE.BIN/
 **/.idea/
 **/coverage/
 **/.nyc_output/
-
+**/package-lock.json
 
 # VS Code stuff
 **/typings/**
