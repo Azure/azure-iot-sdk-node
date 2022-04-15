@@ -195,6 +195,7 @@ $RECYCLE.BIN/
 **/coverage/
 **/.nyc_output/
 
+
 # VS Code stuff
 **/typings/**
 **/.vscode/**
