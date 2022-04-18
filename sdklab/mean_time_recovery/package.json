@@ -12,9 +12,9 @@
   "license": "MIT",
   "dependencies": {
     "aedes": "^0.46.3",
-    "azure-iot-common": "1.12.15",
-    "azure-iot-device": "1.17.10",
-    "azure-iot-device-mqtt": "1.15.10",
+    "azure-iot-common": "1.13.0-alpha-220418.0",
+    "azure-iot-device": "1.18.0-alpha-220418.0",
+    "azure-iot-device-mqtt": "1.16.0-alpha-220418.0",
     "colors": "^1.4.0",
     "eslint": "^7.10.0",
     "tslint": "^6.1.3"
