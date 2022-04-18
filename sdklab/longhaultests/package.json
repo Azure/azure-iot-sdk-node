@@ -29,7 +29,8 @@
     "typescript": "4.4.4"
   },
   "dependencies": {
-    "async": "^3.2.3",
+		"async": "^3.2.3",
+		"es5-ext": "0.10.53",
     "azure-iot-common": "1.13.0-alpha-220418.0",
     "azure-iot-device": "1.18.0-alpha-220418.0",
     "azure-iot-device-amqp": "1.14.0-alpha-220418.0",

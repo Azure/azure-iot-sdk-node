@@ -7,7 +7,8 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "async": "^3.2.3",
+		"async": "^3.2.3",
+		"es5-ext": "0.10.53",
     "azure-iot-common": "1.13.0-alpha-220418.0",
     "debug": "^4.3.1",
     "lodash.merge": "^4.6.1",
