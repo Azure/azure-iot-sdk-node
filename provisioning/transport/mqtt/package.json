@@ -1,15 +1,15 @@
 {
   "name": "azure-iot-provisioning-device-mqtt",
-  "version": "1.7.14",
+  "version": "1.8.0-alpha-220418.0",
   "description": "MQTT transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
-    "azure-iot-common": "1.12.15",
-    "azure-iot-mqtt-base": "1.12.15",
-    "azure-iot-provisioning-device": "1.8.14",
+    "azure-iot-common": "1.13.0-alpha-220418.0",
+    "azure-iot-mqtt-base": "1.13.0-alpha-220418.0",
+    "azure-iot-provisioning-device": "1.9.0-alpha-220418.0",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
     "uuid": "^8.3.2"
