@@ -11,6 +11,8 @@
     "ci": "npm run lint"
   },
   "dependencies": {
+		"async": "^3.2.3",
+		"es5-ext": "0.10.53",
     "azure-iothub": "1.15.0-alpha-220418.0",
     "azure-storage": "^2.10.4"
   },

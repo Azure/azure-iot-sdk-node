@@ -7,6 +7,8 @@
   "main": "index.js",
   "typings": "index.d.ts",
   "dependencies": {
+		"async": "^3.2.3",
+		"es5-ext": "0.10.53",
     "azure-iot-common": "1.13.0-alpha-220418.0",
     "azure-iot-device": "1.18.0-alpha-220418.0",
     "azure-iot-http-base": "1.12.0-alpha-220418.0",

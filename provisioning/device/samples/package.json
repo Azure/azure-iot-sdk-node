@@ -5,6 +5,8 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
+		"async": "^3.2.3",
+		"es5-ext": "0.10.53",
     "azure-iot-device": "1.18.0-alpha-220418.0",
     "azure-iot-device-amqp": "1.14.0-alpha-220418.0",
     "azure-iot-device-http": "1.14.0-alpha-220418.0",
