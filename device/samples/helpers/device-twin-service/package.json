@@ -10,8 +10,8 @@
   "author": "danhellem",
   "license": "ISC",
   "dependencies": {
-		"async": "^3.2.3",
-		"es5-ext": "0.10.53",
+    "async": "^3.2.3",
+    "es5-ext": "0.10.53",
     "azure-iothub": "^1.14.6"
   },
   "devDependencies": {

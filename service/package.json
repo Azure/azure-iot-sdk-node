@@ -7,8 +7,8 @@
   "main": "iothub.js",
   "typings": "iothub.d.ts",
   "dependencies": {
-		"async": "^3.2.3",
-		"es5-ext": "0.10.53",
+    "async": "^3.2.3",
+    "es5-ext": "0.10.53",
     "@azure/core-http": "1.2.3",
     "@azure/identity": "1.2.5",
     "@azure/ms-rest-js": "^2.0.5",
