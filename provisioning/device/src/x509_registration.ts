@@ -22,6 +22,7 @@ export class X509Registration implements RegistrationClient {
   private _idScope: string;
   private _pollingStateMachine: PollingStateMachine;
   private _provisioningPayload: ProvisioningPayload;
+  private _clientCsr: string;
 
   constructor(provisioningHost: string, idScope: string, transport: X509ProvisioningTransport, securityClient: X509SecurityClient) {
     this._provisioningHost = provisioningHost;
@@ -40,6 +41,14 @@ export class X509Registration implements RegistrationClient {
     this._provisioningPayload = payload;
   }
 
+  /**
+   * Sets the certificate signing request to be sent to the Provisioning Service to request for a device client certificate.
+   *
+   * @param payload The certificate signing request.
+   */
+  setClientCertificateSigningRequest(csr: string) {
+    this._clientCsr = csr;
+  }
   /**
    * Register the device with the provisioning service.
    *
@@ -69,6 +78,9 @@ export class X509Registration implements RegistrationClient {
           /* Codes_SRS_NODE_DPS_X509_REGISTRATION_06_001: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
           if (this._provisioningPayload) {
             request.payload = this._provisioningPayload;
+          }
+          if (this._clientCsr) {
+            request.clientCertificateSigningRequest = this._clientCsr;
           }
           /* Codes_SRS_NODE_DPS_X509_REGISTRATION_18_004: [ `register` shall pass the certificate into the `setAuthentication` method on the transport ] */
           this._transport.setAuthentication(cert);

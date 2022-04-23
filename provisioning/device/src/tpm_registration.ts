@@ -20,6 +20,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
   private _idScope: string;
   private _pollingStateMachine: PollingStateMachine;
   private _provisioningPayload: ProvisioningPayload;
+  private _clientCsr: string;
 
   constructor(provisioningHost: string, idScope: string, transport: TpmProvisioningTransport, securityClient: TpmSecurityClient) {
     super();
@@ -236,6 +237,15 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
     this._provisioningPayload = payload;
   }
 
+  /**
+   * Sets the certificate signing request to be sent to the Provisioning Service to request for a device client certificate.
+   *
+   * @param payload The certificate signing request.
+   */
+   setClientCertificateSigningRequest(csr: string) {
+    this._clientCsr = csr;
+  }
+
   register(callback: Callback<RegistrationResult>): void;
   register(): Promise<RegistrationResult>;
   register(callback?: Callback<RegistrationResult>): Promise<RegistrationResult> | void {
@@ -252,6 +262,9 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
       /* Codes_SRS_NODE_DPS_TPM_REGISTRATION_06_001: [ If `setProvisioningPayload` is invoked prior to invoking `register` than the `payload` property of the `RegistrationRequest` shall be set to the argument provided to the `setProvisioningPayload`.] */
       if (this._provisioningPayload) {
         registrationInfo.request.payload = this._provisioningPayload;
+      }
+      if (this._clientCsr) {
+        registrationInfo.request.clientCertificateSigningRequest = this._clientCsr;
       }
       this._fsm.handle('register', registrationInfo, _callback);
     }, callback);

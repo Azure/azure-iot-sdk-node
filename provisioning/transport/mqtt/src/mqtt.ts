@@ -371,6 +371,9 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
     if (request.payload) {
       requestBody.payload = request.payload;
     }
+    if (request.clientCertificateSigningRequest) {
+      requestBody.clientCertificateCsr = request.clientCertificateSigningRequest
+    }
     debug('registration publish: ' + '$dps/registrations/PUT/iotdps-register/?$rid=' + rid + ' body: ' + JSON.stringify(requestBody));
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
     this._mqttBase.publish('$dps/registrations/PUT/iotdps-register/?$rid=' + rid, JSON.stringify(requestBody), { qos: 1 } , (err) => {

@@ -55,6 +55,11 @@ export interface RegistrationRequest {
    * Custom payload passed to the provisioning service.
    */
   payload?: ProvisioningPayload;
+
+  /**
+   * The certificate signing request sent by the user to the provisioning service.
+   */
+  clientCertificateSigningRequest?: string;
 }
 
 /**
@@ -90,6 +95,11 @@ export interface DeviceRegistrationState {
    * other values returned by the provisioning service
    */
   [key: string]: any;
+
+  /**
+   * Client certificate issued to the device in PEM format.
+   */
+  issuedClientCertificate?: string;
 }
 
 /**
@@ -118,11 +128,13 @@ export interface TpmAttestation {
 
 /**
  * structure used to during device registration.
+ * NOTE : This should follow the schema defined by Provisioning Swagger.
  */
 export interface DeviceRegistration {
   registrationId: string;
   tpm?: TpmAttestation;
   payload?: ProvisioningPayload;
+  clientCertificateCsr?: string;
 }
 
 /**
@@ -205,6 +217,8 @@ export interface RegistrationClient {
    * Sets the custom payload for registration that will be sent to the custom allocation policy implemented in an Azure Function.
    */
   setProvisioningPayload(payload: ProvisioningPayload): void;
+
+  setClientCertificateSigningRequest(csr: string): void;
 }
 
 /**
