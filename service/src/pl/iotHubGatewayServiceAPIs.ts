@@ -9,9 +9,9 @@
  */
 
 import * as msRest from "@azure/ms-rest-js";
-import * as Models from "./models";
+import * as Models from "./models/index";
 import * as Mappers from "./models/mappers";
-import * as operations from "./operations";
+import * as operations from "./operations/index";
 import { IotHubGatewayServiceAPIsContext } from "./iotHubGatewayServiceAPIsContext";
 
 class IotHubGatewayServiceAPIs extends IotHubGatewayServiceAPIsContext {

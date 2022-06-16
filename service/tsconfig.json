@@ -1,8 +1,10 @@
 {
     "compilerOptions": {
-        "outDir": "./dist",
-        "target":"es2018",
-        "module": "commonjs",
+        "rootDir": "./",
+        "outDir": "./dist-esm",
+        "target":"es6",
+        "module": "esnext",
+        "moduleResolution": "node",
         "sourceMap": true,
         "declaration": true,
         "noUnusedLocals": true,
@@ -13,8 +15,10 @@
         "./src/**/*.ts"
     ],
     "exclude": [
-        "./dist",
+        "dist_esm",
+        "build",
+        "dist",
         "node_modules",
-        "./samples"
+        "samples"
     ]
 }

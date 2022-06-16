@@ -3,6 +3,18 @@
 
 'use strict';
 
+import {Client} from './dist-esm/src/client.js';
+import { ConnectionString } from './dist-esm/src/connection_string.js';
+import { Registry } from './dist-esm/src/registry.js';
+import { SharedAccessSignature } from './dist-esm/src/shared_access_signature.js';
+import { Amqp } from './dist-esm/src/amqp.js';
+import { AmqpWs } from './dist-esm/src/amqp_ws.js';
+import { JobClient } from './dist-esm/src/job_client.js';
+import { Device } from './dist-esm/src/device.js';
+import { Twin } from './dist-esm/src/twin.js';
+import { IoTHubTokenCredentials } from './dist-esm/src/auth/iothub_token_credentials.js';
+import { DigitalTwinClient } from './dist-esm/src/cl/digital_twin_client.js';
+
 /**
  * The Azure IoT Service SDK for Node.js allows applications to interact with an Azure IoT hub with:
  * A messaging {@link azure-iothub.Client} using either AMQP or AMQP over Websockets that enables:
@@ -21,16 +33,17 @@
  *
  * @module azure-iothub
  */
-module.exports = {
-  Client: require('./dist/client.js').Client,
-  ConnectionString: require('./dist/connection_string.js'),
-  Registry: require('./dist/registry.js').Registry,
-  SharedAccessSignature: require('./dist/shared_access_signature.js'),
-  Amqp: require('./dist/amqp.js').Amqp,
-  AmqpWs: require('./dist/amqp_ws.js').AmqpWs,
-  JobClient: require('./dist/job_client.js').JobClient,
-  Device: require('./dist/device.js').Device,
-  Twin: require('./dist/twin.js').Twin,
-  IoTHubTokenCredentials: require('./dist/auth/iothub_token_credentials').IoTHubTokenCredentials,
-  DigitalTwinClient: require('./dist/cl/digital_twin_client').DigitalTwinClient
+
+export default IoTHubServiceClientLibrary = {
+  Client: Client,
+  ConnectionString: ConnectionString,
+  Registry: Registry,
+  SharedAccessSignature: SharedAccessSignature,
+  Amqp: Amqp,
+  AmqpWs: AmqpWs,
+  JobClient: JobClient,
+  Device: Device,
+  Twin: Twin,
+  IoTHubTokenCredentials: IoTHubTokenCredentials,
+  DigitalTwinClient: DigitalTwinClient
 };
