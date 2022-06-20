@@ -13,40 +13,30 @@ console.log(`${ devMode ? 'development' : 'production' } mode bundle`);
 export default [
   {
     input: 'iothub.js',
+    watch: {
+      include: './dist/**',
+      clearScreen: false
+    },
     plugins: [
+      nodeResolve(),
+      nodePolyfills(),
+      // commonjs(),
+      // json(),
+      sourcemaps(),
+      // // visualizer should be last plugin in the list
+      // visualizer()
     ],
+
     output: {
-      file: 'service_client.js'
+      sourcemap: true,
+      dir: 'build/browser/src',
+      name: 'iothub.js',
     }
   }
   // {
-  //   input: 'service_client.js',
-  //   watch: {
-  //     include: './dist/**',
-  //     clearScreen: false
-  //   },
-  //   plugins: [
-  //     commonjs(),
-  //     json(),
-  //     nodeResolve({browser: true}),
-  //     nodePolyfills(),
-  //     sourcemaps(),
-  //     // visualizer should be last plugin in the list
-  //     visualizer()
-  //   ],
-
-  //   output: {
-  //     sourcemap: true,
-  //     dir: 'build/browser/src',
-  //     name: 'iothub.js',
-  //     format: 'cjs'
-  //   }
-
-  // },
-  // {
   //   input: "test/**/*.js",
   //   output: {
-  //     file: 'build/test/test.js',
+  //     file: 'build/browser/test/test.js',
   //     format: 'iife'
   //   },
   //   plugins: [

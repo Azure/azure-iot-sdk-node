@@ -9,7 +9,8 @@
         "declaration": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "removeComments": false
+        "removeComments": false,
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "./src/**/*.ts"

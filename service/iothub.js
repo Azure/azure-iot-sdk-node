@@ -4,9 +4,9 @@
 'use strict';
 
 import {Client} from './dist-esm/src/client.js';
-import { ConnectionString } from './dist-esm/src/connection_string.js';
+import * as ConnectionString from './dist-esm/src/connection_string.js';
 import { Registry } from './dist-esm/src/registry.js';
-import { SharedAccessSignature } from './dist-esm/src/shared_access_signature.js';
+import * as SharedAccessSignature from './dist-esm/src/shared_access_signature.js';
 import { Amqp } from './dist-esm/src/amqp.js';
 import { AmqpWs } from './dist-esm/src/amqp_ws.js';
 import { JobClient } from './dist-esm/src/job_client.js';

@@ -53,4 +53,4 @@ export {
   Models as IotHubGatewayServiceAPIsModels,
   Mappers as IotHubGatewayServiceAPIsMappers
 };
-export * from "./operations";
+export * from "./operations/index";
