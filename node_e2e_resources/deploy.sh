@@ -12,10 +12,10 @@ set -e
 function usage {
     printf "usage: $0 [flags]\n\n"
     printf "flags:\n"
-    printf "--help, -h        Show this help message\n"
-    printf "--rg-name, -n     Name of the resource group to use. Will be created if needed. (required)\n"
-    printf "                  Note: A resource group can only hold a single set of E2E resources.\n"
-    printf "--location, -l    Deploy to specific Azure region (optional, default is westus2)\n"
+    printf "    --help, -h        Show this help message\n"
+    printf "    --rg-name, -n     Name of the resource group to use. Will be created if needed. (required)\n"
+    printf "                      Note: A resource group can only hold a single set of E2E resources.\n"
+    printf "    --location, -l    Deploy to specific Azure region (optional, default is westus2)\n"
 }
 
 
@@ -101,6 +101,7 @@ key_vault_name=$(printf "$deployment_out" | jq -r .properties.outputs.keyVaultNa
 iot_provisioning_device_idscope=$(printf "$deployment_out" | jq -r .properties.outputs.iotProvisioningDeviceIdScope.value)
 iot_provisioning_service_connection_string=$(printf "$deployment_out" | jq -r .properties.outputs.iotProvisioningServiceConnectionString.value)
 iothub_connection_string=$(printf "$deployment_out" | jq -r .properties.outputs.iotHubConnectionString.value)
+eventhub_connection_string=$(printf "$deployment_out" | jq -r .properties.outputs.eventHubConnectionString.value)
 storage_connection_string=$(printf "$deployment_out" | jq -r .properties.outputs.storageConnectionString.value)
 
 
@@ -142,6 +143,7 @@ printf "Set-Item -Path Env:IOT_PROVISIONING_ROOT_CERT -Value '$root_cert'\r\n" >
 printf "Set-Item -Path Env:IOT_PROVISIONING_ROOT_CERT_KEY -Value '$private_key'\r\n" >> activate.ps1
 printf "Set-Item -Path Env:IOT_PROVISIONING_SERVICE_CONNECTION_STRING -Value '$iot_provisioning_service_connection_string'\r\n" >> activate.ps1
 printf "Set-Item -Path Env:IOTHUB_CONNECTION_STRING -Value '$iothub_connection_string'\r\n" >> activate.ps1
+printf "Set-Item -Path Env:EVENTHUB_CONNECTION_STRING -Value '$eventhub_connection_string'\r\n" >> activate.ps1
 printf "Set-Item -Path Env:STORAGE_CONNECTION_STRING -Value '$storage_connection_string'\r\n" >> activate.ps1
 printf "Set-Item -Path Env:DPS_CONN_STRING_INVALID_CERT -Value '$dps_conn_string_invalid_cert'\r\n" >> activate.ps1
 printf "Set-Item -Path Env:DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT -Value '$dps_global_device_endpoint_invalid_cert'\r\n" >> activate.ps1
@@ -157,6 +159,7 @@ printf "set IOT_PROVISIONING_ROOT_CERT=$root_cert\r\n" >> activate.cmd
 printf "set IOT_PROVISIONING_ROOT_CERT_KEY=$private_key\r\n" >> activate.cmd
 printf "set IOT_PROVISIONING_SERVICE_CONNECTION_STRING=$iot_provisioning_service_connection_string\r\n" >> activate.cmd
 printf "set IOTHUB_CONNECTION_STRING=$iothub_connection_string\r\n" >> activate.cmd
+printf "set EVENTHUB_CONNECTION_STRING=$eventhub_connection_string\r\n" >> activate.cmd
 printf "set STORAGE_CONNECTION_STRING=$storage_connection_string\r\n" >> activate.cmd
 printf "set DPS_CONN_STRING_INVALID_CERT=$dps_conn_string_invalid_cert\r\n" >> activate.cmd
 printf "set DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT=$dps_global_device_endpoint_invalid_cert\r\n" >> activate.cmd
@@ -173,6 +176,7 @@ printf "export IOT_PROVISIONING_ROOT_CERT='$root_cert'\n" >> activate
 printf "export IOT_PROVISIONING_ROOT_CERT_KEY='$private_key'\n" >> activate
 printf "export IOT_PROVISIONING_SERVICE_CONNECTION_STRING='$iot_provisioning_service_connection_string'\n" >> activate
 printf "export IOTHUB_CONNECTION_STRING='$iothub_connection_string'\n" >> activate
+printf "export EVENTHUB_CONNECTION_STRING='$eventhub_connection_string'\n" >> activate
 printf "export STORAGE_CONNECTION_STRING='$storage_connection_string'\n" >> activate
 printf "export DPS_CONN_STRING_INVALID_CERT='$dps_conn_string_invalid_cert'\n" >> activate
 printf "export DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT='$dps_global_device_endpoint_invalid_cert'\n" >> activate
@@ -189,6 +193,7 @@ printf "    \"IOT_PROVISIONING_ROOT_CERT\": \"$root_cert\",\n" >> env.json
 printf "    \"IOT_PROVISIONING_ROOT_CERT_KEY\": \"$private_key\",\n" >> env.json
 printf "    \"IOT_PROVISIONING_SERVICE_CONNECTION_STRING\": \"$iot_provisioning_service_connection_string\",\n" >> env.json
 printf "    \"IOTHUB_CONNECTION_STRING\": \"$iothub_connection_string\",\n" >> env.json
+printf "    \"EVENTHUB_CONNECTION_STRING\": \"$eventhub_connection_string\",\n" >> env.json
 printf "    \"STORAGE_CONNECTION_STRING\": \"$storage_connection_string\",\n" >> env.json
 printf "    \"DPS_CONN_STRING_INVALID_CERT\": \"$dps_conn_string_invalid_cert\",\n" >> env.json
 printf "    \"DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT\": \"$dps_global_device_endpoint_invalid_cert\",\n" >> env.json
