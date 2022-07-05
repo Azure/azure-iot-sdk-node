@@ -26,13 +26,14 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   }
 }
 
-var hashedRgId = uniqueString(rg.id)
+var shortName = take(replace(replace(rgName,'_',''),'-',''),10)
+var uniqueId = take(uniqueString(rg.id),8)
 
 module storageAccount 'storage-account.bicep' = {
   scope: rg
   name: 'storageAccount'
   params: {
-    storageAccountName: toLower('storage${hashedRgId}')
+    storageAccountName: toLower('${shortName}${uniqueId}')
   }
 }
 
@@ -40,7 +41,7 @@ module iotHub 'iot-hub.bicep' = {
   scope: rg
   name: 'iotHub'
   params: {
-    name: 'hub-${hashedRgId}'
+    name: 'hub-${shortName}-${uniqueId}'
     storageConnectionString: storageAccount.outputs.connectionString
   }
 }
@@ -49,7 +50,7 @@ module dps 'dps.bicep' = {
   scope: rg
   name: 'dps'
   params: {
-    name: 'dps-${hashedRgId}'
+    name: 'dps-${shortName}-${uniqueId}'
     iotHubConnectionString: iotHub.outputs.connectionString
   }
 }
@@ -117,7 +118,7 @@ module keyVault 'key-vault.bicep' = {
   scope: rg
   name: 'keyVault'
   params: {
-    keyVaultName: 'kv-${hashedRgId}'
+    keyVaultName: 'kv-${shortName}-${uniqueId}'
     keyVaultSecrets: keyVaultSecrets
     userObjectId: userObjectId
   }
