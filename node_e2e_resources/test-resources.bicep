@@ -72,6 +72,10 @@ var keyVaultSecrets = [
     value: iotHub.outputs.connectionString
   }
   {
+    name: 'EVENTHUB-CONNECTION-STRING'
+    value: iotHub.outputs.eventHubConnectionString
+  }
+  {
     name: 'STORAGE-CONNECTION-STRING'
     value: storageAccount.outputs.connectionString
   }
@@ -126,4 +130,5 @@ output keyVaultName string = keyVault.outputs.name
 output iotProvisioningDeviceIdScope string = dps.outputs.idScope
 output iotProvisioningServiceConnectionString string = dps.outputs.connectionString
 output iotHubConnectionString string = iotHub.outputs.connectionString
+output eventHubConnectionString string = iotHub.outputs.eventHubConnectionString
 output storageConnectionString string = storageAccount.outputs.connectionString
