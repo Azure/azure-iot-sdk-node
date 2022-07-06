@@ -26,13 +26,14 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   }
 }
 
-var hashedRgId = uniqueString(rg.id)
+var shortName = take(replace(replace(rgName,'_',''),'-',''),10)
+var uniqueId = take(uniqueString(rg.id),8)
 
 module storageAccount 'storage-account.bicep' = {
   scope: rg
   name: 'storageAccount'
   params: {
-    storageAccountName: toLower('storage${hashedRgId}')
+    storageAccountName: toLower('${shortName}${uniqueId}')
   }
 }
 
@@ -40,7 +41,7 @@ module iotHub 'iot-hub.bicep' = {
   scope: rg
   name: 'iotHub'
   params: {
-    name: 'hub-${hashedRgId}'
+    name: 'hub-${shortName}-${uniqueId}'
     storageConnectionString: storageAccount.outputs.connectionString
   }
 }
@@ -49,7 +50,7 @@ module dps 'dps.bicep' = {
   scope: rg
   name: 'dps'
   params: {
-    name: 'dps-${hashedRgId}'
+    name: 'dps-${shortName}-${uniqueId}'
     iotHubConnectionString: iotHub.outputs.connectionString
   }
 }
@@ -70,6 +71,10 @@ var keyVaultSecrets = [
   {
     name: 'IOTHUB-CONNECTION-STRING'
     value: iotHub.outputs.connectionString
+  }
+  {
+    name: 'EVENTHUB-CONNECTION-STRING'
+    value: iotHub.outputs.eventHubConnectionString
   }
   {
     name: 'STORAGE-CONNECTION-STRING'
@@ -113,7 +118,7 @@ module keyVault 'key-vault.bicep' = {
   scope: rg
   name: 'keyVault'
   params: {
-    keyVaultName: 'kv-${hashedRgId}'
+    keyVaultName: 'kv-${shortName}-${uniqueId}'
     keyVaultSecrets: keyVaultSecrets
     userObjectId: userObjectId
   }
@@ -126,4 +131,5 @@ output keyVaultName string = keyVault.outputs.name
 output iotProvisioningDeviceIdScope string = dps.outputs.idScope
 output iotProvisioningServiceConnectionString string = dps.outputs.connectionString
 output iotHubConnectionString string = iotHub.outputs.connectionString
+output eventHubConnectionString string = iotHub.outputs.eventHubConnectionString
 output storageConnectionString string = storageAccount.outputs.connectionString

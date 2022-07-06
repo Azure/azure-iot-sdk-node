@@ -23,9 +23,34 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-01' = {
         containerName: 'aziotbld'
       }
     }
+    routing: {
+      routes: [
+        {
+          name: 'twin-update-event'
+          source: 'TwinChangeEvents'
+          condition: 'true'
+          endpointNames: [
+            'events'
+          ]
+          isEnabled: true
+        }
+      ]
+      fallbackRoute: {
+        name: '$fallback'
+        source: 'DeviceMessages'
+        condition: 'true'
+        endpointNames: [
+          'events'
+        ]
+        isEnabled: true
+      }
+    }
   }
 }
 
-var key = listKeys(resourceId('Microsoft.Devices/IotHubs/Iothubkeys', iotHub.name, 'iothubowner'), iotHub.apiVersion).primaryKey
-output connectionString string = 'HostName=${iotHub.properties.hostName};SharedAccessKeyName=iothubowner;SharedAccessKey=${key}'
+var sharedAccessKeyName = '${listKeys(iotHub.id, '2020-04-01').value[0].keyName}'
+var sharedAccessKey = '${listKeys(iotHub.id, '2020-04-01').value[0].primaryKey}'
+
+output connectionString string = 'HostName=${iotHub.name}.azure-devices.net;SharedAccessKeyName=${sharedAccessKeyName};SharedAccessKey=${sharedAccessKey}'
+output eventHubConnectionString string = 'Endpoint=${iotHub.properties.eventHubEndpoints.events.endpoint};SharedAccessKeyName=${sharedAccessKeyName};SharedAccessKey=${sharedAccessKey};EntityPath=${iotHub.properties.eventHubEndpoints.events.path}'
 output name string = name
