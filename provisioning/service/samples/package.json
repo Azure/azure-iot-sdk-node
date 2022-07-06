@@ -5,9 +5,8 @@
   "author": "Microsoft Corporation",
   "license": "MIT",
   "dependencies": {
-    "async": "^3.2.3",
-    "es5-ext": "0.10.53",
-    "azure-iot-provisioning-service": "1.10.0",
+    "@azure/identity": "^2.0.0",
+    "azure-iot-provisioning-service": "1.9.0",
     "yargs": "^15.3.1"
   },
   "devDependencies": {

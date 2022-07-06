@@ -49,6 +49,22 @@ $ npm install
 $ node create_individual_enrollment.js "<the connection string for the Device Provisioning instance enclosed in quotes>" "<an endorsement key in quotes>"
 ```
 
+* For the TokenCredential sample:
+
+For a quick explanation of Role Based Access Control, you can check [this overview][rbac-overview].
+
+Get the following files from the current folder:
+* [package.json][package-json]
+* **__sample_file.js__** (where **__sample_file.js__** is one of the files listed above and available in this folder)
+
+Place the files in the folder of your choice on the target machine/device then go through the following steps:
+
+* From a shell or Node.js command prompt, navigate to the folder where you placed the sample files. For creating an IndividualEnrollment do:
+
+```
+$ npm install
+$ node create_tpm_enrollment_with_token_credential.js -h <The host name of the DPS instance> -t <The AAD tenant ID> -c <The AAD client ID> -s <The AAD client secret>
+```
 
 * For creating an EnrollmentGroup:
  
@@ -91,3 +107,4 @@ For more information on how to use this library refer to the documents below:
 [run-bulk-operation]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/query.js
 [package-json]: https://github.com/azure/azure-iot-sdk-node/tree/main/provisioning/service/samples/package.json
 [create-certificate-for-individual-enrollment]: https://github.com/Azure/azure-iot-sdk-node/tree/main/provisioning/device/samples#creating-x509-device-certificates-for-individual-enrollment
+[rbac-overview]: https://docs.microsoft.com/en-us/azure/role-based-access-control/overview
