@@ -44,7 +44,7 @@ export class X509Registration implements RegistrationClient {
    *
    * @param payload The certificate signing request.
    */
-  setClientCertificateSigningRequest(csr: string):void {
+  setClientCertificateSigningRequest(csr: string): void {
     this._clientCsr = csr;
   }
   /**
