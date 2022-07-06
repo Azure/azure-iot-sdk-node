@@ -25,7 +25,7 @@ export class ProvisioningDeviceConstants {
    */
   // static apiVersion: string = '2019-03-31';
   // To be used for DPS Cert Management
-  static apiVersion: string = '2021-11-01-preview'
+  static apiVersion: string = '2021-11-01-preview';
 
   /**
    * default timeout to use when communicating with the service

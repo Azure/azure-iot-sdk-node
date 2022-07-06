@@ -1,13 +1,11 @@
+import { anHourFromNow, Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
+import * as dbg from 'debug';
 import { EventEmitter } from 'events';
 import * as machina from 'machina';
-import * as dbg from 'debug';
+import { ProvisioningPayload, RegistrationClient, RegistrationResult, TpmProvisioningTransport, TpmRegistrationInfo, TpmSecurityClient } from './interfaces';
+import { PollingStateMachine } from './polling_state_machine';
 const debug = dbg('azure-iot-provisioning-device:TpmRegistration');
 const debugErrors = dbg('azure-iot-provisioning-device:TpmRegistration:Errors');
-import { anHourFromNow, Callback, callbackToPromise, ErrorCallback, errorCallbackToPromise } from 'azure-iot-common';
-import { RegistrationClient, RegistrationResult } from './interfaces';
-import { TpmProvisioningTransport, TpmSecurityClient, TpmRegistrationInfo } from './interfaces';
-import { ProvisioningPayload } from './interfaces';
-import { PollingStateMachine } from './polling_state_machine';
 
 /**
  * @private
@@ -242,7 +240,7 @@ export class TpmRegistration extends EventEmitter implements RegistrationClient 
    *
    * @param payload The certificate signing request.
    */
-   setClientCertificateSigningRequest(csr: string) {
+   setClientCertificateSigningRequest(csr: string): void {
     this._clientCsr = csr;
   }
 
