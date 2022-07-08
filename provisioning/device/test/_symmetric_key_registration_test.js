@@ -86,6 +86,27 @@ describe('Symmetric Key Registration', function () {
       });
     });
 
+    it('sets the certificate signing request property if specified', function(callback) {
+      var transport = {
+        setSharedAccessSignature: sinon.spy(),
+      };
+      var security = {
+        createSharedAccessSignature: sinon.stub().callsArgWith(1, null, fakeSasToken),
+        getRegistrationId: sinon.stub().callsArgWith(0, null, fakeRegistrationId)
+      };
+      var fakeCsr = 'fake csr';
+      var clientObj = new SymmetricKeyRegistration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj.setClientCertificateSigningRequest(fakeCsr);
+      clientObj._pollingStateMachine.register = sinon.stub().callsArgWith(1, null, { registrationState: fakeResponse } );
+      clientObj._pollingStateMachine.disconnect = sinon.stub().callsArgWith(0,null);
+      clientObj.register(function(err, response) {
+        assert.isNotOk(err);
+        assert.strictEqual(response, fakeResponse);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].clientCertificateSigningRequest, fakeCsr);
+        callback();
+      });
+    });
+
     /* Tests_SRS_NODE_DPS_SYMMETRIC_REGISTRATION_06_004: [ `register` shall pass the SAS into the `setSharedAccessSignature` method on the transport. ] */
     it('setSharedAccessSignature shall be invoked', function(callback) {
       var transport = {
