@@ -14,6 +14,8 @@ var MqttWs = require('../dist/mqtt_ws').MqttWs;
 
 var simpleBody = {registrationId: 'fakeRegistrationId'};
 var payload = {a: '__DAta__'};
+var csr = "fake csr";
+
 var bodyWithPayload = {
   registrationId: 'fakeRegistrationId',
   payload: payload
@@ -242,6 +244,18 @@ describe('Mqtt', function () {
       fakeRequest.payload = payload;
       mqtt.registrationRequest(fakeRequest, function(err, result) {
         delete fakeRequest.payload;
+        assert.oneOf(err, [null, undefined]);
+        assert.deepEqual(result, fakeResponse);
+        callback();
+      });
+      assert.isOk(fakeBase.publish.firstCall.args[1], JSON.stringify(simpleBody));
+      respond(fakeBase.publish.firstCall);
+    });
+
+    it ('sends a body with a certificate signing request property', function(callback) {
+      fakeRequest.clientCertificateCsr = csr;
+      mqtt.registrationRequest(fakeRequest, function(err, result) {
+        delete fakeRequest.clientCertificateCsr;
         assert.oneOf(err, [null, undefined]);
         assert.deepEqual(result, fakeResponse);
         callback();
