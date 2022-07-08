@@ -3,20 +3,17 @@
 
 'use strict';
 
-import { EventEmitter } from 'events';
-import * as uuid from 'uuid';
-import * as machina from 'machina';
 import * as dbg from 'debug';
+import { EventEmitter } from 'events';
+import * as machina from 'machina';
 import * as queryString from 'querystring';
+import * as uuid from 'uuid';
 const debug = dbg('azure-iot-provisioning-device-mqtt:Mqtt');
 const debugErrors = dbg('azure-iot-provisioning-device-mqtt:Mqtt:Errors');
 
-import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
 import { errors, X509 } from 'azure-iot-common';
-import { X509ProvisioningTransport, SymmetricKeyProvisioningTransport } from 'azure-iot-provisioning-device';
-import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
-import { DeviceRegistration, RegistrationRequest, DeviceRegistrationResult } from 'azure-iot-provisioning-device';
-import { translateError } from 'azure-iot-provisioning-device';
+import { MqttBase, MqttBaseTransportConfig } from 'azure-iot-mqtt-base';
+import { DeviceRegistration, DeviceRegistrationResult, ProvisioningDeviceConstants, ProvisioningTransportOptions, RegistrationRequest, SymmetricKeyProvisioningTransport, translateError, X509ProvisioningTransport } from 'azure-iot-provisioning-device';
 
 
 /**
@@ -372,7 +369,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
       requestBody.payload = request.payload;
     }
     if (request.clientCertificateSigningRequest) {
-      requestBody.clientCertificateCsr = request.clientCertificateSigningRequest
+      requestBody.clientCertificateCsr = request.clientCertificateSigningRequest;
     }
     debug('registration publish: ' + '$dps/registrations/PUT/iotdps-register/?$rid=' + rid + ' body: ' + JSON.stringify(requestBody));
     /* Codes_SRS_NODE_PROVISIONING_MQTT_18_003: [ `registrationRequest` shall publish to '$dps/registrations/PUT/iotdps-register/?$rid<rid>'.] */
