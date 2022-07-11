@@ -21,6 +21,11 @@ var bodyWithPayload = {
   payload: payload
 };
 
+var bodyWithCsr = {
+  registrationId: 'fakeRegistrationId',
+  clientCertificateCsr: csr
+};
+
 
 describe('Mqtt', function () {
   var fakeBase;
@@ -34,7 +39,8 @@ describe('Mqtt', function () {
   var fakeRequest = {
     provisioningHost: fakeHost,
     requestId: fakeRequestId,
-    idScope: fakeIdScope
+    idScope: fakeIdScope,
+    registrationId: 'fakeRegistrationId'
   };
   var fakeX509 = {
     cert: 'fakeCert',
@@ -248,19 +254,22 @@ describe('Mqtt', function () {
         assert.deepEqual(result, fakeResponse);
         callback();
       });
-      assert.isOk(fakeBase.publish.firstCall.args[1], JSON.stringify(simpleBody));
+      console.log("harry potter");
+      console.log(fakeBase.publish.firstCall.args[1]);
+      console.log( JSON.stringify(simpleBody));
+      assert.deepEqual(fakeBase.publish.firstCall.args[1], JSON.stringify(bodyWithPayload));
       respond(fakeBase.publish.firstCall);
     });
 
     it ('sends a body with a certificate signing request property', function(callback) {
-      fakeRequest.clientCertificateCsr = csr;
+      fakeRequest.clientCertificateSigningRequest = csr;
       mqtt.registrationRequest(fakeRequest, function(err, result) {
-        delete fakeRequest.clientCertificateCsr;
+        delete fakeRequest.clientCertificateSigningRequest;
         assert.oneOf(err, [null, undefined]);
         assert.deepEqual(result, fakeResponse);
         callback();
       });
-      assert.isOk(fakeBase.publish.firstCall.args[1], JSON.stringify(simpleBody));
+      assert.deepEqual(fakeBase.publish.firstCall.args[1], JSON.stringify(bodyWithCsr));
       respond(fakeBase.publish.firstCall);
     });
 
