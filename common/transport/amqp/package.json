@@ -18,6 +18,7 @@
     "ws": "^6.0.0"
   },
   "devDependencies": {
+    "@sinonjs/fake-timers": "^9.1.2",
     "@types/async": "^3.2.8",
     "@types/node": "^16.10.2",
     "@types/sinon-test": "^2.4.3",
