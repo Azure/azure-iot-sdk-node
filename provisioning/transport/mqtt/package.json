@@ -36,7 +36,9 @@
     "unittest": "tsc && nyc --reporter lcov --reporter text ../../../node_modules/mocha/bin/_mocha",
     "alltest": "tsc && nyc --reporter lcov --reporter text ../../../node_modules/mocha/bin/_mocha test/_*_test*.js",
     "ci": "npm -s run lint && npm -s run build && npm -s run alltest-min",
-    "test": "npm -s run lint && npm -s run build && npm -s run alltest"
+    "test": "npm -s run lint && npm -s run build && npm -s run alltest",
+    "onetest": "tsc && nyc --reporter lcov --reporter text ../../../node_modules/mocha/bin/_mocha test/_mqtt_test.js",
+    "testOne": "npm -s run lint && npm -s run build && npm -s run onetest"
   },
   "nyc": {
     "exclude": [
