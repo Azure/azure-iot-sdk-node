@@ -414,6 +414,7 @@ var SymmetricKeyIndividual = function() {
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
       callback(err, result);
+      console.log("check what parts of result can be accessed")
       console.log(result);
     });
   };
