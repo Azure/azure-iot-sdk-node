@@ -455,6 +455,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   this.enroll = function (callback) {
     // enrollment is already created
     console.log("enrollment is already created - ut must use enroll");
+    callback();
   };
   
   this.register = function (Transport, callback) {
