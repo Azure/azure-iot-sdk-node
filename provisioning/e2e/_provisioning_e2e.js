@@ -105,7 +105,7 @@ var createAllCerts = function(callback) {
       debug('creating a certificate signing request');
       certHelper.createCertificateSigningRequest(x509RegistrationId, false, function(err, csrWithKey) {
         certificateSigningRequest = csrWithKey.csr;
-        privateKeyForCsr - csrWithKey.key
+        privateKeyForCsr = csrWithKey.key;
         callback(err);
       });
     },
@@ -414,7 +414,7 @@ var SymmetricKeyIndividual = function() {
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.register(function (err, result) {
       callback(err, result);
-      console.log("check what parts of result can be accessed")
+      console.log("check what parts of result can be accessed");
       console.log(result);
     });
   };
@@ -437,32 +437,32 @@ var SymmetricKeyIndividual = function() {
   };
 };
 
-var SymmetricKeyIndividualDPSCertificateManagement = function() {
+// var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
-  var self = this;
-  var securityClient;
+//   var self = this;
+//   var securityClient;
 
-  this.transports = SymmetricKeyIndividualTransports;
+//   this.transports = SymmetricKeyIndividualTransports;
 
-  this.initialize = function (callback) {
-    self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
-    self.deviceId = self.registrationId;
-    self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
-    securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
-    callback();
-  };
-  // enrollment is already created
-  this.register = function (Transport, callback) {
-    var transport = new Transport();
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    provisioningDeviceClient.setClientCertificateSigningRequest(certificateSigningRequest);
-    provisioningDeviceClient.register(function (err, result) {
-      callback(err, result);
-      console.log(result);
-      console.log(result.issuedClientCertificate);
-    });
-  };
-};
+//   this.initialize = function (callback) {
+//     self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
+//     self.deviceId = self.registrationId;
+//     self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
+//     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
+//     callback();
+//   };
+//   // enrollment is already created
+//   this.register = function (Transport, callback) {
+//     var transport = new Transport();
+//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+//     provisioningDeviceClient.setClientCertificateSigningRequest(certificateSigningRequest);
+//     provisioningDeviceClient.register(function (err, result) {
+//       callback(err, result);
+//       console.log(result);
+//       console.log(result.issuedClientCertificate);
+//     });
+//   };
+// };
 
 function computeDerivedSymmetricKey(masterKey, regId) {
   return crypto.createHmac('SHA256', Buffer.from(masterKey, 'base64'))
