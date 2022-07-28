@@ -451,7 +451,12 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
   };
-  // enrollment is already created
+
+  this.enroll = function (callback) {
+    // enrollment is already created
+    console.log("enrollment is already created - ut must use enroll");
+  };
+  
   this.register = function (Transport, callback) {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
