@@ -469,6 +469,11 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
       console.log(result.issuedClientCertificate);
     });
   };
+
+  this.cleanup = function (callback) {
+    console.log("enrollment cannot  be deleted");
+    callback();
+  };
 };
 
 function computeDerivedSymmetricKey(masterKey, regId) {
