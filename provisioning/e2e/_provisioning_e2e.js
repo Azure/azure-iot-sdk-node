@@ -571,7 +571,7 @@ describe('E2E Device Provisioning', function() {
       testObj: new SymmetricKeyIndividual()
     },
     {
-      testName: '',
+      testName: 'Symmetric Key Individual DPS Certificate Management',
       testObj: new SymmetricKeyIndividualDPSCertificateManagement()
     },
     {
