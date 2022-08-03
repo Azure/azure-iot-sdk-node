@@ -461,11 +461,13 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   this.register = function (Transport, callback) {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    console.log("certificate signing request");
     provisioningDeviceClient.setClientCertificateSigningRequest(certificateSigningRequest);
     provisioningDeviceClient.register(function (err, result) {
       callback(err, result);
       console.log("check what parts of result can be accessed - does it have issued cert");
       console.log(result);
+      console.log("this was supposed to be issued cert");
       console.log(result.issuedClientCertificate);
     });
   };
