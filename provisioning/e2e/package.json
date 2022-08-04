@@ -38,7 +38,7 @@
     "alltest": "mocha -- _*.js",
     "e2e": "npm -s run lint && npm -s run alltest",
     "provisioningTest": "mocha _provisioning_e2e.js",
-    "provisioningE2E": "npm -s run lint && npm -s run provisioningTest"
+    "provisioningE2E": "npm -s run provisioningTest"
   },
   "engines": {
     "node": ">= 14.0.0"
