@@ -106,7 +106,7 @@ var createAllCerts = function(callback) {
       debug('creating a certificate signing request');
       certHelper.createCertificateSigningRequest(x509RegistrationIdForDpsCert, false, function(err, csrWithKey) {
         certificateSigningRequest = csrWithKey.csr;
-        privateKeyForCsr = csrWithKey.key;
+        privateKeyForCsr = csrWithKey.clientKey;
         console.log("what is csr with key?");
         console.log(csrWithKey);
         console.log("did csr work?");

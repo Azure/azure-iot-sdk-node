@@ -91,15 +91,15 @@ module.exports.createCertificateSigningRequest = function(registrationId, is_ca,
   var csrCreateOptions = {
     commonName : registrationId
   };
-  pem.createCSR(csrCreateOptions, function(err, csr, key)
+  pem.createCSR(csrCreateOptions, function(err, csrWithKey, clientKey)
   {
     if (err) {
       callback(err);
     } else {
-      var csrWithKey = {
-        key : key,
-        csr : csr,
-      };
+      // var csrWithKey = {
+      //   key : clientKey,
+      //   csr : csr,
+      // };
       callback(null, csrWithKey);
     }
   });
