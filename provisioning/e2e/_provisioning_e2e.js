@@ -577,30 +577,30 @@ describe('E2E Device Provisioning', function() {
       testObj: new TpmIndividual()
     },
     */
-    {
-      testName: 'Symmetric Key individual enrollment',
-      testObj: new SymmetricKeyIndividual()
-    },
+    // {
+    //   testName: 'Symmetric Key individual enrollment',
+    //   testObj: new SymmetricKeyIndividual()
+    // },
     {
       testName: 'Symmetric Key Individual DPS Certificate Management',
       testObj: new SymmetricKeyIndividualDPSCertificateManagement()
     },
-    {
-      testName: 'Symmetric Key group enrollment',
-      testObj: new SymmetricKeyGroup()
-    },
-    {
-      testName: 'x509 individual enrollment with Self Signed Certificate',
-      testObj: new X509Individual()
-    },
-    {
-      testName: 'x509 group enrollment without cert chain',
-      testObj: new X509Group(createCertWithoutChain)
-    },
-    {
-      testName: 'x509 group enrollment with cert chain',
-      testObj: new X509Group(createCertWithChain)
-    }
+    // {
+    //   testName: 'Symmetric Key group enrollment',
+    //   testObj: new SymmetricKeyGroup()
+    // },
+    // {
+    //   testName: 'x509 individual enrollment with Self Signed Certificate',
+    //   testObj: new X509Individual()
+    // },
+    // {
+    //   testName: 'x509 group enrollment without cert chain',
+    //   testObj: new X509Group(createCertWithoutChain)
+    // },
+    // {
+    //   testName: 'x509 group enrollment with cert chain',
+    //   testObj: new X509Group(createCertWithChain)
+    // }
   ].forEach(function(config) {
 
     describe(config.testName, function() {
