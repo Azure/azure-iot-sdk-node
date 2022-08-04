@@ -107,12 +107,6 @@ var createAllCerts = function(callback) {
       certHelper.createCertificateSigningRequest(x509RegistrationIdForDpsCert, false, function(err, csrWithKey) {
         certificateSigningRequest = csrWithKey.csr;
         privateKeyForCsr = csrWithKey.clientKey;
-        console.log("what is csr with key?");
-        console.log(csrWithKey);
-        console.log("did csr work?");
-        console.log(certificateSigningRequest);
-        console.log("did key work?");
-        console.log(privateKeyForCsr);
         callback(err);
       });
     },
@@ -455,34 +449,31 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
     self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
     self.deviceId = self.registrationId;
     self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
-    console.log('did enrollemnt key work?');
-    console.log(self.primaryKey);
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
   };
 
   this.enroll = function (callback) {
     // enrollment is already created
-    console.log("enrollment is already created - ut must use enroll");
+    console.log("enrollment is already created - but must use enroll");
     callback();
   };
   
   this.register = function (Transport, callback) {
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    console.log("certificate signing request");
     provisioningDeviceClient.setClientCertificateSigningRequest(certificateSigningRequest);
     provisioningDeviceClient.register(function (err, result) {
       callback(err, result);
-      console.log("check what parts of result can be accessed - does it have issued cert");
-      console.log(result);
+      // console.log("check what parts of result can be accessed - does it have issued cert");
+      // console.log(result);
       console.log("this was supposed to be issued cert");
       console.log(result.issuedClientCertificate);
     });
   };
 
   this.cleanup = function (callback) {
-    console.log("enrollment cannot  be deleted");
+    console.log("enrollment cannot be deleted");
     callback();
   };
 };

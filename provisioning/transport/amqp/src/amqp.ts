@@ -4,19 +4,18 @@
 'use strict';
 import { EventEmitter } from 'events';
 
-import * as machina from 'machina';
-import * as dbg from 'debug';
-import * as uuid from 'uuid';
 import * as async from 'async';
+import * as dbg from 'debug';
+import * as machina from 'machina';
+import * as uuid from 'uuid';
 const debug = dbg('azure-iot-provisioning-device-amqp:Amqp');
 const debugErrors = dbg('azure-iot-provisioning-device-amqp:Amqp:Errors');
 
-import { X509, errors } from 'azure-iot-common';
-import { ProvisioningTransportOptions, X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport, RegistrationRequest, RegistrationResult, ProvisioningDeviceConstants } from 'azure-iot-provisioning-device';
-import { DeviceRegistration } from 'azure-iot-provisioning-device';
-import { Amqp as Base, SenderLink, ReceiverLink, AmqpMessage, AmqpBaseTransportConfig, translateError, AmqpTransportError } from 'azure-iot-amqp-base';
-import { GetSasTokenCallback, SaslTpm } from './sasl_tpm';
+import { Amqp as Base, AmqpBaseTransportConfig, AmqpMessage, AmqpTransportError, ReceiverLink, SenderLink, translateError } from 'azure-iot-amqp-base';
+import { errors, X509 } from 'azure-iot-common';
+import { DeviceRegistration, ProvisioningDeviceConstants, ProvisioningTransportOptions, RegistrationRequest, RegistrationResult, SymmetricKeyProvisioningTransport, TpmProvisioningTransport, X509ProvisioningTransport } from 'azure-iot-provisioning-device';
 import { message as rheaMessage } from 'rhea';
+import { GetSasTokenCallback, SaslTpm } from './sasl_tpm';
 /**
  * @private
  */
@@ -318,6 +317,9 @@ export class Amqp extends EventEmitter implements X509ProvisioningTransport, Tpm
             /*Codes_SRS_NODE_PROVISIONING_AMQP_06_005: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
             if (request.payload) {
               requestBody.payload = request.payload;
+            }
+            if (request.clientCertificateSigningRequest) {
+              requestBody.clientCertificateCsr = request.clientCertificateSigningRequest;
             }
             requestMessage.body = rheaMessage.data_section(Buffer.from(JSON.stringify(requestBody)));
             requestMessage.application_properties = {};
