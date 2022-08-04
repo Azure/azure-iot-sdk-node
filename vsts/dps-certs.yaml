@@ -32,7 +32,7 @@ jobs:
     env:
       IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
 
-  - script: 'lerna run e2e'
+  - script: 'lerna run provisioningE2E'
     displayName: 'E2E Tests'
     env:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)

@@ -37,7 +37,8 @@
     "lint": "jshint --show-non-errors .",
     "alltest": "mocha -- _*.js",
     "e2e": "npm -s run lint && npm -s run alltest",
-    "oneE2eTest": "mocha _provisioning_e2e.js"
+    "provisioningTest": "mocha _provisioning_e2e.js",
+    "provisioningE2E": "npm -s run lint && npm -s run provisioningTest"
   },
   "engines": {
     "node": ">= 14.0.0"
