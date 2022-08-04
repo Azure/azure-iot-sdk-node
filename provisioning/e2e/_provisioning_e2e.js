@@ -453,8 +453,8 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
     self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
     self.deviceId = self.registrationId;
     self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
-    console.log('did enrollemnt key work?')
-    console.log(self.primaryKey)
+    console.log('did enrollemnt key work?');
+    console.log(self.primaryKey);
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
   };
