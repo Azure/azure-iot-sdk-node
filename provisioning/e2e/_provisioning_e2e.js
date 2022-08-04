@@ -107,10 +107,10 @@ var createAllCerts = function(callback) {
       certHelper.createCertificateSigningRequest(x509RegistrationIdForDpsCert, false, function(err, csrWithKey) {
         certificateSigningRequest = csrWithKey.csr;
         privateKeyForCsr = csrWithKey.key;
-        console.log("did csr work?")
-        console.log(certificateSigningRequest)
-        console.log("did key work?")
-        console.log(privateKeyForCsr)
+        console.log("did csr work?");
+        console.log(certificateSigningRequest);
+        console.log("did key work?");
+        console.log(privateKeyForCsr);
         callback(err);
       });
     },
