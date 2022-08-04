@@ -48,6 +48,7 @@ var intermediateCert2;
 var certWithChain;
 var x509DeviceId;
 var x509RegistrationId;
+const x509RegistrationIdForDpsCert = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
 var certificateSigningRequest;
 var privateKeyForCsr;
 
@@ -103,9 +104,13 @@ var createAllCerts = function(callback) {
     },
     function(callback) {
       debug('creating a certificate signing request');
-      certHelper.createCertificateSigningRequest(x509RegistrationId, false, function(err, csrWithKey) {
+      certHelper.createCertificateSigningRequest(x509RegistrationIdForDpsCert, false, function(err, csrWithKey) {
         certificateSigningRequest = csrWithKey.csr;
         privateKeyForCsr = csrWithKey.key;
+        console.log("did csr work?")
+        console.log(certificateSigningRequest)
+        console.log("did key work?")
+        console.log(privateKeyForCsr)
         callback(err);
       });
     },
@@ -448,6 +453,8 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
     self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
     self.deviceId = self.registrationId;
     self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
+    console.log('did enrollemnt key work?')
+    console.log(self.primaryKey)
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
   };
