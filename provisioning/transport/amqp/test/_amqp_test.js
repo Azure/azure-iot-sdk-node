@@ -41,6 +41,7 @@ var simpleBody = {registrationId: 'fakeRegistrationId'};
 var fakeEk = '__FAKE_KEY__';
 var fakeSrk = '__FAKE_STORAGE_KEY__';
 var payload = {a: '__DAta__'};
+var csr = 'fake csr';
 var bodyWithTpm = {
   registrationId: 'fakeRegistrationId',
   tpm: {
@@ -51,6 +52,11 @@ var bodyWithTpm = {
 var bodyWithPayload = {
   registrationId: 'fakeRegistrationId',
   payload: payload
+};
+
+var bodyWithCsr = {
+  registrationId: 'fakeRegistrationId',
+  clientCertificateCsr: csr
 };
 
 describe('Amqp', function () {
@@ -341,6 +347,17 @@ describe('Amqp', function () {
             assert.equal(((retryableError.info) ? (dpsProvidedInterval * 1000) : (defaultPollingInterval)), pollingInterval);
             testCallback();
           });
+        });
+      });
+
+      it ('Sends a body with a certificate signing request property', function (testCallback) {
+
+        amqp.registrationRequest({ registrationId: 'fakeRegistrationId', clientCertificateSigningRequest: csr }, function () {
+          assert.isTrue(fakeSenderLink.send.calledOnce);
+          var sentMessage = fakeSenderLink.send.firstCall.args[0];
+          var encodedBody = rheaMessage.data_section(Buffer.from(JSON.stringify(bodyWithCsr)));
+          assert.deepEqual(sentMessage.body, encodedBody);
+          testCallback();
         });
       });
 

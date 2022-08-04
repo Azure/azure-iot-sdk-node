@@ -14,7 +14,7 @@ var MqttWs = require('../dist/mqtt_ws').MqttWs;
 
 var simpleBody = {registrationId: 'fakeRegistrationId'};
 var payload = {a: '__DAta__'};
-var csr = "fake csr";
+var csr = 'fake csr';
 
 var bodyWithPayload = {
   registrationId: 'fakeRegistrationId',
@@ -254,9 +254,6 @@ describe('Mqtt', function () {
         assert.deepEqual(result, fakeResponse);
         callback();
       });
-      console.log("harry potter");
-      console.log(fakeBase.publish.firstCall.args[1]);
-      console.log( JSON.stringify(simpleBody));
       assert.deepEqual(fakeBase.publish.firstCall.args[1], JSON.stringify(bodyWithPayload));
       respond(fakeBase.publish.firstCall);
     });
