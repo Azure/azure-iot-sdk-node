@@ -445,18 +445,61 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
   this.transports = SymmetricKeyIndividualTransports;
 
+  // this.initialize = function (callback) {
+  //   self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
+  //   self.deviceId = self.registrationId;
+  //   self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
+  //   securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
+  //   callback();
+  // };
+
   this.initialize = function (callback) {
-    self.registrationId = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
-    self.deviceId = self.registrationId;
-    self.primaryKey = process.env.DPS_CERT_ISSUANCE_SYM_KEY_INDIVIDUAL;
+    var id = uuid.v4();
+    self.deviceId = 'deleteMe_provisioning_node_e2e_check_ca';
+    self.registrationId = 'reg-check-ca';
+    self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
   };
 
-  this.enroll = function (callback) {
-    // enrollment is already created
-    console.log("enrollment is already created - but must use enroll");
-    callback();
+  // this.enroll = function (callback) {
+  //   // enrollment is already created
+  //   console.log("enrollment is already created - but must use enroll");
+  //   callback();
+  // };
+
+    this.enroll = function (callback) {
+    self._testProp = uuid.v4();
+    var enrollment = {
+      registrationId: self.registrationId,
+      deviceId: self.deviceId,
+      clientCertificateIssuancePolicy: {
+        certificateAuthorityName: "olkarca"
+      },
+      attestation: {
+        type: 'symmetricKey',
+        symmetricKey: {
+          primaryKey: self.primaryKey,
+          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
+        }
+      },
+      provisioningStatus: "enabled",
+      initialTwin: {
+        properties: {
+          desired: {
+            testProp: self._testProp
+          }
+        }
+      }
+    };
+
+    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    });
   };
   
   this.register = function (Transport, callback) {
@@ -472,10 +515,27 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
     });
   };
 
+  // this.cleanup = function (callback) {
+  //   console.log("enrollment cannot be deleted");
+  //   callback();
+  // };
   this.cleanup = function (callback) {
-    console.log("enrollment cannot be deleted");
-    callback();
+    debug('deleting enrollment');
+    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+      if (err) {
+        debug('ignoring deleteIndividualEnrollment error');
+      }
+      debug('deleting device');
+      registry.delete(self.deviceId, function (err) {
+        if (err) {
+          debug('ignoring delete error');
+        }
+        debug('done with Symmetric Key individual cleanup');
+        callback();
+      });
+    });
   };
+  
 };
 
 function computeDerivedSymmetricKey(masterKey, regId) {
