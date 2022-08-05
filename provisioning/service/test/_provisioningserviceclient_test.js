@@ -58,7 +58,8 @@ var fakeRegistrationNoEtag = {
 };
 
 function _versionQueryString() {
-  return '?api-version=2021-10-01';
+  // return '?api-version=2021-10-01';
+  return '?api-version=2021-11-01-preview'
 }
 
 
