@@ -506,9 +506,8 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   this.transports = SymmetricKeyIndividualTransports;
 
   this.initialize = function (callback) {
-    var id = uuid.v4();
-    self.deviceId = x509RegistrationIdForDpsCert + id;
-    self.registrationId = x509RegistrationIdForDpsCert + id;
+    self.deviceId = x509RegistrationIdForDpsCert;
+    self.registrationId = x509RegistrationIdForDpsCert;
     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
