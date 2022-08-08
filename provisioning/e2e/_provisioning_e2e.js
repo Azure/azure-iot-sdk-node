@@ -22,6 +22,7 @@ var TpmSecurityClient = require('azure-iot-security-tpm').TpmSecurityClient;
 var SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 var TssJs = require("tss.js");
 var DeviceClient = require('azure-iot-device').Client;
+var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
 
 var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
 var provisioningConnectionString = process.env.IOT_PROVISIONING_SERVICE_CONNECTION_STRING;
@@ -561,8 +562,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
     });
   };
 
-  this.sendToHub = function (Transport, callback) {
-    var iotHubTransport = new Transport();
+  this.sendToHub = function (callback) {
     var connectionString = 'HostName=' + registrationResult.assignedHub + ';DeviceId=' + registrationResult.deviceId + ';x509=true';
     var deviceClient = DeviceClient.fromConnectionString(connectionString, iotHubTransport);
 
@@ -797,7 +797,7 @@ describe('E2E Device Provisioning For DPS Certificate Management', function() {
             },
             function(callback) {
               debug('sending message to hub');
-              config.testObj.sendToHub(Transport, callback);
+              config.testObj.sendToHub(callback);
             }
           ], callback);
         });
