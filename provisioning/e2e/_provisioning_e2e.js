@@ -48,7 +48,8 @@ var intermediateCert2;
 var certWithChain;
 var x509DeviceId;
 var x509RegistrationId;
-const x509RegistrationIdForDpsCert = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
+// const x509RegistrationIdForDpsCert = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
+const x509RegistrationIdForDpsCert = 'deleteMe-reg-dps-cert';
 var certificateSigningRequest;
 var privateKeyForCsr;
 
@@ -455,8 +456,8 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
   this.initialize = function (callback) {
     var id = uuid.v4();
-    self.deviceId = 'deleteMe_provisioning_node_e2e_check_ca';
-    self.registrationId = 'reg-check-ca';
+    self.deviceId = x509RegistrationIdForDpsCert;
+    self.registrationId = x509RegistrationIdForDpsCert;
     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
@@ -468,7 +469,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   //   callback();
   // };
 
-    this.enroll = function (callback) {
+  this.enroll = function (callback) {
     self._testProp = uuid.v4();
     var enrollment = {
       registrationId: self.registrationId,
