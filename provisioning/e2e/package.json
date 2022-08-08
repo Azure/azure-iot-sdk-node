@@ -9,6 +9,7 @@
     "es5-ext": "0.10.53",
     "azure-iot-common": "1.13.0",
     "azure-iot-device": "1.18.0",
+    "azure-iot-device-mqtt": "1.16.0",
     "azure-iot-provisioning-device": "1.9.0",
     "azure-iot-provisioning-device-amqp": "1.9.0",
     "azure-iot-provisioning-device-http": "1.9.0",
