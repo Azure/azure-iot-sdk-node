@@ -577,6 +577,8 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
       if (err) console.log('send error: ' + err.toString());
       if (res) console.log('send status: ' + res.constructor.name);
     });
+    debug('done with sending message');
+    callback();
   };
 
   this.cleanup = function (callback) {
