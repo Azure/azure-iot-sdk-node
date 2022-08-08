@@ -22,6 +22,7 @@ var TpmSecurityClient = require('azure-iot-security-tpm').TpmSecurityClient;
 var SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 var TssJs = require("tss.js");
 var DeviceClient = require('azure-iot-device').Client;
+var Message = require('azure-iot-device').Message;
 var iotHubTransport = require('azure-iot-device-mqtt').Mqtt;
 
 var idScope = process.env.IOT_PROVISIONING_DEVICE_IDSCOPE;
