@@ -113,16 +113,15 @@ var createAllCerts = function(callback) {
 
 var createAllCertsForDPSCertMgmt = function(callback) {
   async.waterfall([
-    function(callback) {
+    function(callbackMain) {
       debug('creating a certificate signing request');
       Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
         certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
-          csrAndKeys[key] = csrWithKey
-          // certificateSigningRequest = csrWithKey.csr;
-          // privateKeyForCsr = csrWithKey.clientKey;
+          csrAndKeys[key] = csrWithKey;
           callback(err);
         });
       });
+      callbackMain();
     },
     function(callback) {
       debug('sleeping to account for clock skew');
