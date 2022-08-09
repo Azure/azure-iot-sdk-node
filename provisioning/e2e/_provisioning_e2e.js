@@ -52,9 +52,11 @@ var certWithChain;
 var x509DeviceId;
 var x509RegistrationId;
 // const x509RegistrationIdForDpsCert = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
-const x509RegistrationIdForDpsCert = 'deleteMe-reg-dps-cert';
-var certificateSigningRequest;
-var privateKeyForCsr;
+const registrationIdForDpsCertMgmt = {
+  'Symmetric Key Individual':'deleteMe-reg-dps-cert-sym-key-individual',
+  'Symmetric Key Group':'deleteMe-reg-dps-cert-sym-key-group'};
+const csrAndKeys = {};
+const CLIENT_CERT_AUTHORITY_NAME = 'olkarca';
 
 // ignore warning about unused object until we can enable TPM E2E tests in Jenkins
 /* exported TpmIndividual  */
@@ -105,66 +107,21 @@ var createAllCerts = function(callback) {
     function(callback) {
       debug('sleeping to account for clock skew');
       setTimeout(callback, 60000);
-    },
-    function(callback) {
-      debug('creating a certificate signing request');
-      certHelper.createCertificateSigningRequest(x509RegistrationIdForDpsCert, false, function(err, csrWithKey) {
-        certificateSigningRequest = csrWithKey.csr;
-        privateKeyForCsr = csrWithKey.clientKey;
-        callback(err);
-      });
-    },
+    }
   ], callback);
 };
 
 var createAllCertsForDPSCertMgmt = function(callback) {
-  var id = uuid.v4();
-  x509DeviceId = 'deleteMe_provisioning_node_e2e_' + id;
-  x509RegistrationId = 'reg-' + id;
-
   async.waterfall([
-    // function(callback) {
-    //   debug('creating self-signed cert');
-    //   certHelper.createSelfSignedCert(x509RegistrationId, function(err, cert) {
-    //     selfSignedCert = cert;
-    //     callback(err);
-    //   });
-    // },
-    // function(callback) {
-    //   debug('creating cert without chain');
-    //   certHelper.createDeviceCert(x509RegistrationId, rootCert, function(err, cert) {
-    //     certWithoutChain = cert;
-    //     callback(err);
-    //   });
-    // },
-    // function(callback) {
-    //   debug('creating intermediate CA cert #1');
-    //   certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
-    //     intermediateCert1 = cert;
-    //     callback(err);
-    //   });
-    // },
-    // function(callback) {
-    //   debug('creating intermediate CA cert #2');
-    //   certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, cert) {
-    //     intermediateCert2 = cert;
-    //     callback(err);
-    //   });
-    // },
-    // function(callback) {
-    //   debug('creating cert with chain');
-    //   certHelper.createDeviceCert(x509RegistrationId, intermediateCert2, function(err, cert) {
-    //     cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
-    //     certWithChain = cert;
-    //     callback(err);
-    //   });
-    // },
     function(callback) {
       debug('creating a certificate signing request');
-      certHelper.createCertificateSigningRequest(x509RegistrationIdForDpsCert, false, function(err, csrWithKey) {
-        certificateSigningRequest = csrWithKey.csr;
-        privateKeyForCsr = csrWithKey.clientKey;
-        callback(err);
+      Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
+        certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
+          csrAndKeys[key] = csrWithKey
+          // certificateSigningRequest = csrWithKey.csr;
+          // privateKeyForCsr = csrWithKey.clientKey;
+          callback(err);
+        });
       });
     },
     function(callback) {
@@ -173,6 +130,12 @@ var createAllCertsForDPSCertMgmt = function(callback) {
     },
   ], callback);
 };
+
+function computeDerivedSymmetricKey(masterKey, regId) {
+  return crypto.createHmac('SHA256', Buffer.from(masterKey, 'base64'))
+    .update(regId, 'utf8')
+    .digest('base64');
+}
 
 // var X509Individual = function() {
 
@@ -499,6 +462,7 @@ var createCertWithChain = function(callback) {
 //   };
 // };
 
+
 var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
   var self = this;
@@ -508,8 +472,8 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   this.transports = SymmetricKeyIndividualTransports;
 
   this.initialize = function (callback) {
-    self.deviceId = x509RegistrationIdForDpsCert;
-    self.registrationId = x509RegistrationIdForDpsCert;
+    self.deviceId = registrationIdForDpsCertMgmt;
+    self.registrationId = registrationIdForDpsCertMgmt['Symmetric Key Individual'];
     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
@@ -521,7 +485,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
       registrationId: self.registrationId,
       deviceId: self.deviceId,
       clientCertificateIssuancePolicy: {
-        certificateAuthorityName: "olkarca"
+        certificateAuthorityName: CLIENT_CERT_AUTHORITY_NAME,
       },
       attestation: {
         type: 'symmetricKey',
@@ -550,6 +514,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   };
   
   this.register = function (Transport, callback) {
+    certificateSigningRequest = csrAndKeys['Symmetric Key Individual'].csr
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.setClientCertificateSigningRequest(certificateSigningRequest);
@@ -569,7 +534,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
     var options = {
       cert : registrationResult.issuedClientCertificate,
-      key : privateKeyForCsr,
+      key :  csrAndKeys['Symmetric Key Individual'].clientKey,
     };
     deviceClient.setOptions(options);
     var message = new Message('Hello world');
@@ -599,11 +564,102 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   };
 };
 
-function computeDerivedSymmetricKey(masterKey, regId) {
-  return crypto.createHmac('SHA256', Buffer.from(masterKey, 'base64'))
-    .update(regId, 'utf8')
-    .digest('base64');
-}
+var SymmetricKeyGroupDPSCertificateManagement = function() {
+
+  var self = this;
+  var securityClient;
+  var registrationResult;
+
+  this.transports = SymmetricKeyGroupTransports;
+
+  this.initialize = function (callback) {
+    self.groupId = 'sym-key-group'
+    self.registrationId = registrationIdForDpsCertMgmt['Symmetric Key Group'];
+    self.deviceId = self.registrationId;
+    self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
+    callback();
+  };
+
+  this.enroll = function (callback) {
+    self._testProp = uuid.v4();
+    var enrollment = {
+      enrollmentGroupId: self.groupId,
+      clientCertificateIssuancePolicy: {
+        certificateAuthorityName: CLIENT_CERT_AUTHORITY_NAME,
+      },
+      attestation: {
+        type: 'symmetricKey',
+        symmetricKey: {
+          primaryKey: self.primaryKey,
+          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
+        }
+      },
+      provisioningStatus: "enabled",
+      initialTwin: {
+        properties: {
+          desired: {
+            testProp: self._testProp
+          }
+        }
+      }
+    };
+
+    provisioningServiceClient.createOrUpdateEnrollmentGroup(enrollment, function (err) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    });
+  };
+
+  this.register = function (Transport, callback) {
+    var transport = new Transport();
+    securityClient = new SymmetricKeySecurityClient(self.registrationId, computeDerivedSymmetricKey(self.primaryKey, self.registrationId));
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.register(function (err, result) {
+      callback(err, result);
+      registrationResult = result;
+      console.log("this is supposed to be issued cert");
+      console.log(result.issuedClientCertificate);
+    });
+  };
+  this.sendToHub = function (callback) {
+    var connectionString = 'HostName=' + registrationResult.assignedHub + ';DeviceId=' + registrationResult.deviceId + ';x509=true';
+    var deviceClient = DeviceClient.fromConnectionString(connectionString, iotHubTransport);
+
+    var options = {
+      cert : registrationResult.issuedClientCertificate,
+      key :  csrAndKeys['Symmetric Key Group'].clientKey,
+    };
+    deviceClient.setOptions(options);
+    var message = new Message('Hello world');
+    deviceClient.sendEvent(message, function(err, res) {
+      if (err) console.log('send error: ' + err.toString());
+      if (res) console.log('send status: ' + res.constructor.name);
+    });
+    debug('done with sending message');
+    callback();
+  };
+
+  this.cleanup = function (callback) {
+    debug('deleting enrollment');
+    provisioningServiceClient.deleteEnrollmentGroup(self.groupId, function (err) {
+      if (err) {
+        debug('ignoring deleteEnrollmentGroup error');
+      }
+      debug('deleting device');
+      registry.delete(self.deviceId, function (err) {
+        if (err) {
+          debug('ignoring delete error');
+        }
+        debug('done with Symmetric Key group cleanup');
+        callback();
+      });
+    });
+  };
+};
+
 
 // var SymmetricKeyGroup = function() {
 
@@ -760,6 +816,10 @@ describe('E2E Device Provisioning For DPS Certificate Management', function() {
       testName: 'Symmetric Key Individual DPS Certificate Management',
       testObj: new SymmetricKeyIndividualDPSCertificateManagement()
     },
+    {
+      testName: 'Symmetric Key Group DPS Certificate Management',
+      testObj: new SymmetricKeyGroupDPSCertificateManagement()
+    }
   ].forEach(function(config) {
 
     describe(config.testName, function() {
