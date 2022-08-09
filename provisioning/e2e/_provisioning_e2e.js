@@ -111,6 +111,13 @@ var createAllCerts = function(callback) {
   ], callback);
 };
 
+// function createCSRs(cb) {
+//   Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
+//     certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
+//       csrAndKeys[key] = csrWithKey;
+//     });
+//   });
+// }
 var createAllCertsForDPSCertMgmt = function(callback) {
   async.waterfall([
     function(callbackMain) {
@@ -118,10 +125,11 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
         certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
           csrAndKeys[key] = csrWithKey;
-          callback(err);
+          debug(err)
+          // callback(err);
         });
       });
-      callbackMain();
+      callbackMain(err);
     },
     function(callback) {
       debug('sleeping to account for clock skew');
