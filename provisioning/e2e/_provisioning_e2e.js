@@ -137,7 +137,7 @@ var createAllCertsForDPSCertMgmt = function(callback) {
         console.log(console.log(csrAndKeys[SYMKEYIND].csr));
         callback(err);
       });
-      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtSymKeyGrps, false, function(err, csrWithKey) {
+      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtSymKeyGrp, false, function(err, csrWithKey) {
         csrAndKeys[SYMKEYGRP] = csrWithKey;
         console.log('CSR of group');
         console.log(console.log(csrAndKeys[SYMKEYGRP].csr));
