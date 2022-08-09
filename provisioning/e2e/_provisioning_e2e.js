@@ -130,7 +130,6 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       //   });
       // });
       certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmt, false, function(err, csrWithKey) {
-        
         csrAndKeys[SYMKEYIND] = csrWithKey;
         console.log(console.log(csrAndKeys[SYMKEYIND].csr))
         callback(err);
@@ -527,7 +526,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
   };
   
   this.register = function (Transport, callback) {
-    certificateSigningRequest = csrAndKeys[SYMKEYIND].csr
+    let certificateSigningRequest = csrAndKeys[SYMKEYIND].csr
     debug("certificateSigningRequest");
     debug(certificateSigningRequest);
     var transport = new Transport();
