@@ -51,10 +51,10 @@ var intermediateCert2;
 var certWithChain;
 var x509DeviceId;
 var x509RegistrationId;
-// const x509RegistrationIdForDpsCert = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
-const registrationIdForDpsCertMgmt = {
-  'Symmetric Key Individual':'deleteMe-reg-dps-cert-sym-key-individual',
-  'Symmetric Key Group':'deleteMe-reg-dps-cert-sym-key-group'};
+const registrationIdForDpsCertMgmt = 'do-not-delete-dps-cert-mgmt-individual-sym-key';
+// const registrationIdForDpsCertMgmt = {
+//   'Symmetric Key Individual':'deleteMe-reg-dps-cert-sym-key-individual',
+//   'Symmetric Key Group':'deleteMe-reg-dps-cert-sym-key-group'};
 const csrAndKeys = {};
 const CLIENT_CERT_AUTHORITY_NAME = 'olkarca';
 
@@ -122,14 +122,17 @@ var createAllCertsForDPSCertMgmt = function(callback) {
   async.waterfall([
     function(callback) {
       debug('creating a certificate signing request');
-      Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
-        certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
-          csrAndKeys[key] = csrWithKey;
-          debug(err)
-          // callback(err);
-        });
+      // Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
+      //   certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
+      //     csrAndKeys[key] = csrWithKey;
+      //     debug(err)
+      //   });
+      // });
+      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmt, false, function(err, csrWithKey) {
+        csrAndKeys['Symmetric Key Individual'] = csrWithKey;
+        callback(err);
       });
-      callback();
+      // callback();
     },
     function(callback) {
       debug('sleeping to account for clock skew');
@@ -480,7 +483,7 @@ var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
   this.initialize = function (callback) {
     self.deviceId = registrationIdForDpsCertMgmt;
-    self.registrationId = registrationIdForDpsCertMgmt['Symmetric Key Individual'];
+    self.registrationId = registrationIdForDpsCertMgmt;//registrationIdForDpsCertMgmt['Symmetric Key Individual'];
     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
     callback();
