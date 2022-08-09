@@ -597,7 +597,7 @@ var SymmetricKeyGroupDPSCertificateManagement = function() {
 
   this.initialize = function (callback) {
     self.groupId = 'sym-key-group'
-    self.registrationId = registrationIdForDpsCertMgmt['Symmetric Key Group'];
+    self.registrationId = registrationIdForDpsCertMgmtSymKeyGrp;//registrationIdForDpsCertMgmt['Symmetric Key Group'];
     self.deviceId = self.registrationId;
     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
     callback();
@@ -640,6 +640,7 @@ var SymmetricKeyGroupDPSCertificateManagement = function() {
     var transport = new Transport();
     securityClient = new SymmetricKeySecurityClient(self.registrationId, computeDerivedSymmetricKey(self.primaryKey, self.registrationId));
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.setClientCertificateSigningRequest(csrAndKeys[SYMKEYGRP].csr)
     provisioningDeviceClient.register(function (err, result) {
       callback(err, result);
       registrationResult = result;
@@ -653,7 +654,7 @@ var SymmetricKeyGroupDPSCertificateManagement = function() {
 
     var options = {
       cert : registrationResult.issuedClientCertificate,
-      key :  csrAndKeys['Symmetric Key Group'].clientKey,
+      key :  csrAndKeys[SYMKEYGRP].clientKey,
     };
     deviceClient.setOptions(options);
     var message = new Message('Hello world');
