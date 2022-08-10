@@ -866,10 +866,10 @@ describe('E2E Device Provisioning For DPS Certificate Management', function() {
               debug('enrolling');
               config.testObj.enroll(callback);
             },
-            // function(callback) {
-            //   debug('sleeping to check enrollment group creation');
-            //   setTimeout(callback, 60000);
-            // },
+            function(callback) {
+              debug('sleeping as enrollment group not getting created in time');
+              setTimeout(callback, 30000);
+            },
             function(callback) {
               debug('registering device');
               config.testObj.register(Transport, callback);
