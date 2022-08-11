@@ -824,6 +824,7 @@ var X509IndividualDPSCertificateManagement = function() {
     var securityClient = new X509Security(self.registrationId, self._cert);
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.setClientCertificateSigningRequest(csrAndKeys[X509IND].csr);
     provisioningDeviceClient.register(function (err, result) {
       registrationResult = result;
       callback(err, result);
