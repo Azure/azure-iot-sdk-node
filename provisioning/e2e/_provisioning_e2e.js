@@ -77,62 +77,55 @@ var certWithChainDpsCertMgmt;
 /* exported TpmIndividual  */
 
 
-var createAllCerts = function(callback) {
-  var id = uuid.v4();
-  x509DeviceId = 'deleteMe_provisioning_node_e2e_' + id;
-  x509RegistrationId = 'reg-' + id;
+// var createAllCerts = function(callback) {
+//   var id = uuid.v4();
+//   x509DeviceId = 'deleteMe_provisioning_node_e2e_' + id;
+//   x509RegistrationId = 'reg-' + id;
 
-  async.waterfall([
-    function(callback) {
-      debug('creating self-signed cert');
-      certHelper.createSelfSignedCert(x509RegistrationId, function(err, cert) {
-        selfSignedCert = cert;
-        callback(err);
-      });
-    },
-    function(callback) {
-      debug('creating cert without chain');
-      certHelper.createDeviceCert(x509RegistrationId, rootCert, function(err, cert) {
-        certWithoutChain = cert;
-        callback(err);
-      });
-    },
-    function(callback) {
-      debug('creating intermediate CA cert #1');
-      certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
-        intermediateCert1 = cert;
-        callback(err);
-      });
-    },
-    function(callback) {
-      debug('creating intermediate CA cert #2');
-      certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, cert) {
-        intermediateCert2 = cert;
-        callback(err);
-      });
-    },
-    function(callback) {
-      debug('creating cert with chain');
-      certHelper.createDeviceCert(x509RegistrationId, intermediateCert2, function(err, cert) {
-        cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
-        certWithChain = cert;
-        callback(err);
-      });
-    },
-    function(callback) {
-      debug('sleeping to account for clock skew');
-      setTimeout(callback, 60000);
-    }
-  ], callback);
-};
+//   async.waterfall([
+//     function(callback) {
+//       debug('creating self-signed cert');
+//       certHelper.createSelfSignedCert(x509RegistrationId, function(err, cert) {
+//         selfSignedCert = cert;
+//         callback(err);
+//       });
+//     },
+//     function(callback) {
+//       debug('creating cert without chain');
+//       certHelper.createDeviceCert(x509RegistrationId, rootCert, function(err, cert) {
+//         certWithoutChain = cert;
+//         callback(err);
+//       });
+//     },
+//     function(callback) {
+//       debug('creating intermediate CA cert #1');
+//       certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
+//         intermediateCert1 = cert;
+//         callback(err);
+//       });
+//     },
+//     function(callback) {
+//       debug('creating intermediate CA cert #2');
+//       certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, cert) {
+//         intermediateCert2 = cert;
+//         callback(err);
+//       });
+//     },
+//     function(callback) {
+//       debug('creating cert with chain');
+//       certHelper.createDeviceCert(x509RegistrationId, intermediateCert2, function(err, cert) {
+//         cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
+//         certWithChain = cert;
+//         callback(err);
+//       });
+//     },
+//     function(callback) {
+//       debug('sleeping to account for clock skew');
+//       setTimeout(callback, 60000);
+//     }
+//   ], callback);
+// };
 
-// function createCSRs(cb) {
-//   Object.entries(registrationIdForDpsCertMgmt).forEach(([key, regId]) => {
-//     certHelper.createCertificateSigningRequest(regId, false, function(err, csrWithKey) {
-//       csrAndKeys[key] = csrWithKey;
-//     });
-//   });
-// }
 var createAllCertsForDPSCertMgmt = function(callback) {
   async.waterfall([
     function(callback) {
@@ -176,79 +169,6 @@ function computeDerivedSymmetricKey(masterKey, regId) {
     .digest('base64');
 }
 
-var X509Individual = function() {
-
-  var self = this;
-
-  this.transports = X509IndividualTransports;
-
-  this.initialize = function (callback) {
-    self._cert = selfSignedCert;
-    self.deviceId = x509DeviceId;
-    self.registrationId = x509RegistrationId;
-    callback();
-  };
-
-  this.enroll = function (callback) {
-    self._testProp = uuid.v4();
-    var enrollment = {
-      registrationId: self.registrationId,
-      deviceId: self.deviceId,
-      attestation: {
-        type: 'x509',
-        x509: {
-          clientCertificates: {
-            primary: {
-              certificate: self._cert.cert
-            }
-          }
-        }
-      },
-      initialTwin: {
-        properties: {
-          desired: {
-            testProp: self._testProp
-          }
-        }
-      }
-    };
-
-    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
-      if (err) {
-        callback(err);
-      } else {
-        callback();
-      }
-    });
-  };
-
-  this.register = function (Transport, callback) {
-    var securityClient = new X509Security(self.registrationId, self._cert);
-    var transport = new Transport();
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    provisioningDeviceClient.register(function (err, result) {
-      callback(err, result);
-    });
-  };
-
-  this.cleanup = function (callback) {
-    debug('deleting enrollment');
-    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
-      if (err) {
-        debug('ignoring deleteIndividualEnrollment error');
-      }
-      debug('deleting device');
-      registry.delete(self.deviceId, function (err) {
-        if (err) {
-          debug('ignoring delete error');
-        }
-        debug('done with X509 individual cleanup');
-        callback();
-      });
-    });
-  };
-};
-
 var createCertWithoutChain = function(callback) {
   callback(null, rootCert, certWithoutChain);
 };
@@ -257,322 +177,395 @@ var createCertWithChain = function(callback) {
   callback(null, intermediateCert2, certWithChain);
 };
 
-var X509Group = function(certFactory) {
+// var X509Individual = function() {
 
-  var self = this;
+//   var self = this;
 
-  this.transports = X509GroupTransports;
-  this._groupId = 'testgroup';
+//   this.transports = X509IndividualTransports;
 
-  this.initialize = function(callback) {
-    self.registrationId = x509RegistrationId;
-    certFactory(function(err, enrollmentCert, deviceCert) {
-      if (err) {
-        callback(err);
-      } else {
-        self._enrollmentCert = enrollmentCert;
-        self._cert = deviceCert;
-        callback();
-      }
-    });
-  };
+//   this.initialize = function (callback) {
+//     self._cert = selfSignedCert;
+//     self.deviceId = x509DeviceId;
+//     self.registrationId = x509RegistrationId;
+//     callback();
+//   };
 
-  this.enroll = function(callback) {
+//   this.enroll = function (callback) {
+//     self._testProp = uuid.v4();
+//     var enrollment = {
+//       registrationId: self.registrationId,
+//       deviceId: self.deviceId,
+//       attestation: {
+//         type: 'x509',
+//         x509: {
+//           clientCertificates: {
+//             primary: {
+//               certificate: self._cert.cert
+//             }
+//           }
+//         }
+//       },
+//       initialTwin: {
+//         properties: {
+//           desired: {
+//             testProp: self._testProp
+//           }
+//         }
+//       }
+//     };
 
-    self._testProp = uuid.v4();
-    var enrollmentGroup = {
-      enrollmentGroupId: self._groupId,
-      attestation: {
-        type: 'x509',
-        x509: {
-          signingCertificates: {
-            primary: {
-              certificate: Buffer.from(self._enrollmentCert.cert).toString('base64')
-            }
-          }
-        }
-      },
-      initialTwin: {
-        properties: {
-          desired: {
-            testProp: self._testProp
-          }
-        }
-      }
-    };
+//     provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+//       if (err) {
+//         callback(err);
+//       } else {
+//         callback();
+//       }
+//     });
+//   };
 
-    provisioningServiceClient.deleteEnrollmentGroup(enrollmentGroup.enrollmentGroupId, function() {
-      // ignore delete error.  We're just cleaning up from a previous run.
-      provisioningServiceClient.createOrUpdateEnrollmentGroup(enrollmentGroup, function(err) {
-        if (err) {
-          callback(err);
-        } else {
-          callback();
-        }
-      });
-    });
-  };
+//   this.register = function (Transport, callback) {
+//     var securityClient = new X509Security(self.registrationId, self._cert);
+//     var transport = new Transport();
+//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+//     provisioningDeviceClient.register(function (err, result) {
+//       callback(err, result);
+//     });
+//   };
 
-  this.register = function (Transport, callback) {
-    var securityClient = new X509Security(self.registrationId, self._cert);
-    var transport = new Transport();
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    provisioningDeviceClient.register(function (err, result) {
-      assert.isNotOk(err);
-      assert.isOk(result.deviceId);
-      self.deviceId = result.deviceId;
-      callback(err, result);
-    });
-  };
+//   this.cleanup = function (callback) {
+//     debug('deleting enrollment');
+//     provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+//       if (err) {
+//         debug('ignoring deleteIndividualEnrollment error');
+//       }
+//       debug('deleting device');
+//       registry.delete(self.deviceId, function (err) {
+//         if (err) {
+//           debug('ignoring delete error');
+//         }
+//         debug('done with X509 individual cleanup');
+//         callback();
+//       });
+//     });
+//   };
+// };
 
-  this.cleanup = function (callback) {
-    debug('deleting device');
-    registry.delete(self.deviceId, function (err) {
-      if (err) {
-        debug('ignoring delete error');
-      }
-      debug('deleting enrollment group');
-      provisioningServiceClient.deleteEnrollmentGroup(self._groupId, function(err) {
-        if (err) {
-          debug('ignoring deleteEnrollmentGroup error');
-        }
-        debug('done with group cleanup');
-        callback();
-      });
-    });
-  };
-};
+// var X509Group = function(certFactory) {
 
-var tpm = null;
-var TpmIndividual = function() {
+//   var self = this;
 
-  var self = this;
-  var ek;
-  var securityClient;
+//   this.transports = X509GroupTransports;
+//   this._groupId = 'testgroup';
 
-  this.transports = TpmIndividualTransports;
+//   this.initialize = function(callback) {
+//     self.registrationId = x509RegistrationId;
+//     certFactory(function(err, enrollmentCert, deviceCert) {
+//       if (err) {
+//         callback(err);
+//       } else {
+//         self._enrollmentCert = enrollmentCert;
+//         self._cert = deviceCert;
+//         callback();
+//       }
+//     });
+//   };
 
-  this.initialize = function (callback) {
-    var id = uuid.v4();
-    self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
-    self.registrationId = 'reg-' + id;
-      if (!tpm) {
-      tpm = new TssJs.Tpm(false);
-    }
-    securityClient = new TpmSecurityClient(self.registrationId, tpm);
-    securityClient.getEndorsementKey(function(err, endorsementKey) {
-      if (err) {
-        callback(err);
-      } else {
-        ek = endorsementKey.toString('base64');
-        callback();
-      }
-    });
-  };
+//   this.enroll = function(callback) {
 
-  this.enroll = function (callback) {
-    self._testProp = uuid.v4();
-    var enrollment = {
-      registrationId: self.registrationId,
-      deviceId: self.deviceId,
-      attestation: {
-        type: 'tpm',
-        tpm: {
-          endorsementKey: ek
-        }
-      },
-      provisioningStatus: "enabled",
-      initialTwin: {
-        properties: {
-          desired: {
-            testProp: self._testProp
-          }
-        }
-      }
-    };
+//     self._testProp = uuid.v4();
+//     var enrollmentGroup = {
+//       enrollmentGroupId: self._groupId,
+//       attestation: {
+//         type: 'x509',
+//         x509: {
+//           signingCertificates: {
+//             primary: {
+//               certificate: Buffer.from(self._enrollmentCert.cert).toString('base64')
+//             }
+//           }
+//         }
+//       },
+//       initialTwin: {
+//         properties: {
+//           desired: {
+//             testProp: self._testProp
+//           }
+//         }
+//       }
+//     };
 
-    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
-      if (err) {
-        callback(err);
-      } else {
-        callback();
-      }
-    });
-  };
+//     provisioningServiceClient.deleteEnrollmentGroup(enrollmentGroup.enrollmentGroupId, function() {
+//       // ignore delete error.  We're just cleaning up from a previous run.
+//       provisioningServiceClient.createOrUpdateEnrollmentGroup(enrollmentGroup, function(err) {
+//         if (err) {
+//           callback(err);
+//         } else {
+//           callback();
+//         }
+//       });
+//     });
+//   };
 
-  this.register = function (Transport, callback) {
-    var transport = new Transport();
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    provisioningDeviceClient.register(function (err, result) {
-      callback(err, result);
-    });
-  };
+//   this.register = function (Transport, callback) {
+//     var securityClient = new X509Security(self.registrationId, self._cert);
+//     var transport = new Transport();
+//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+//     provisioningDeviceClient.register(function (err, result) {
+//       assert.isNotOk(err);
+//       assert.isOk(result.deviceId);
+//       self.deviceId = result.deviceId;
+//       callback(err, result);
+//     });
+//   };
 
-  this.cleanup = function (callback) {
-    debug('deleting enrollment');
-    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
-      if (err) {
-        debug('ignoring deleteIndividualEnrollment error');
-      }
-      debug('deleting device');
-      registry.delete(self.deviceId, function (err) {
-        if (err) {
-          debug('ignoring delete error');
-        }
-        debug('done with TPM individual cleanup');
-        callback();
-      });
-    });
-  };
-};
+//   this.cleanup = function (callback) {
+//     debug('deleting device');
+//     registry.delete(self.deviceId, function (err) {
+//       if (err) {
+//         debug('ignoring delete error');
+//       }
+//       debug('deleting enrollment group');
+//       provisioningServiceClient.deleteEnrollmentGroup(self._groupId, function(err) {
+//         if (err) {
+//           debug('ignoring deleteEnrollmentGroup error');
+//         }
+//         debug('done with group cleanup');
+//         callback();
+//       });
+//     });
+//   };
+// };
 
-var SymmetricKeyIndividual = function() {
+// var tpm = null;
+// var TpmIndividual = function() {
 
-  var self = this;
-  var securityClient;
+//   var self = this;
+//   var ek;
+//   var securityClient;
 
-  this.transports = SymmetricKeyIndividualTransports;
+//   this.transports = TpmIndividualTransports;
 
-  this.initialize = function (callback) {
-    var id = uuid.v4();
-    self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
-    self.registrationId = 'reg-' + id;
-    self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
-    securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
-    callback();
-  };
+//   this.initialize = function (callback) {
+//     var id = uuid.v4();
+//     self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
+//     self.registrationId = 'reg-' + id;
+//       if (!tpm) {
+//       tpm = new TssJs.Tpm(false);
+//     }
+//     securityClient = new TpmSecurityClient(self.registrationId, tpm);
+//     securityClient.getEndorsementKey(function(err, endorsementKey) {
+//       if (err) {
+//         callback(err);
+//       } else {
+//         ek = endorsementKey.toString('base64');
+//         callback();
+//       }
+//     });
+//   };
 
-  this.enroll = function (callback) {
-    self._testProp = uuid.v4();
-    var enrollment = {
-      registrationId: self.registrationId,
-      deviceId: self.deviceId,
-      attestation: {
-        type: 'symmetricKey',
-        symmetricKey: {
-          primaryKey: self.primaryKey,
-          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
-        }
-      },
-      provisioningStatus: "enabled",
-      initialTwin: {
-        properties: {
-          desired: {
-            testProp: self._testProp
-          }
-        }
-      }
-    };
+//   this.enroll = function (callback) {
+//     self._testProp = uuid.v4();
+//     var enrollment = {
+//       registrationId: self.registrationId,
+//       deviceId: self.deviceId,
+//       attestation: {
+//         type: 'tpm',
+//         tpm: {
+//           endorsementKey: ek
+//         }
+//       },
+//       provisioningStatus: "enabled",
+//       initialTwin: {
+//         properties: {
+//           desired: {
+//             testProp: self._testProp
+//           }
+//         }
+//       }
+//     };
 
-    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
-      if (err) {
-        callback(err);
-      } else {
-        callback();
-      }
-    });
-  };
+//     provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+//       if (err) {
+//         callback(err);
+//       } else {
+//         callback();
+//       }
+//     });
+//   };
 
-  this.register = function (Transport, callback) {
-    var transport = new Transport();
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    provisioningDeviceClient.register(function (err, result) {
-      callback(err, result);
-      console.log("check what parts of result can be accessed");
-      console.log(result);
-    });
-  };
+//   this.register = function (Transport, callback) {
+//     var transport = new Transport();
+//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+//     provisioningDeviceClient.register(function (err, result) {
+//       callback(err, result);
+//     });
+//   };
 
-  this.cleanup = function (callback) {
-    debug('deleting enrollment');
-    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
-      if (err) {
-        debug('ignoring deleteIndividualEnrollment error');
-      }
-      debug('deleting device');
-      registry.delete(self.deviceId, function (err) {
-        if (err) {
-          debug('ignoring delete error');
-        }
-        debug('done with Symmetric Key individual cleanup');
-        callback();
-      });
-    });
-  };
-};
+//   this.cleanup = function (callback) {
+//     debug('deleting enrollment');
+//     provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+//       if (err) {
+//         debug('ignoring deleteIndividualEnrollment error');
+//       }
+//       debug('deleting device');
+//       registry.delete(self.deviceId, function (err) {
+//         if (err) {
+//           debug('ignoring delete error');
+//         }
+//         debug('done with TPM individual cleanup');
+//         callback();
+//       });
+//     });
+//   };
+// };
 
-var SymmetricKeyGroup = function() {
+// var SymmetricKeyIndividual = function() {
 
-  var self = this;
-  var securityClient;
+//   var self = this;
+//   var securityClient;
 
-  this.transports = SymmetricKeyGroupTransports;
+//   this.transports = SymmetricKeyIndividualTransports;
 
-  this.initialize = function (callback) {
-    var id = uuid.v4();
-    self.groupId = 'deleteMe-node-' + id;
-    self.registrationId = 'reg-' + id;
-    self.deviceId = self.registrationId;
-    self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
-    callback();
-  };
+//   this.initialize = function (callback) {
+//     var id = uuid.v4();
+//     self.deviceId = 'deleteMe_provisioning_node_e2e_' + id;
+//     self.registrationId = 'reg-' + id;
+//     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
+//     securityClient = new SymmetricKeySecurityClient(self.registrationId, self.primaryKey);
+//     callback();
+//   };
 
-  this.enroll = function (callback) {
-    self._testProp = uuid.v4();
-    var enrollment = {
-      enrollmentGroupId: self.groupId,
-      attestation: {
-        type: 'symmetricKey',
-        symmetricKey: {
-          primaryKey: self.primaryKey,
-          secondaryKey: Buffer.from(uuid.v4()).toString('base64')
-        }
-      },
-      provisioningStatus: "enabled",
-      initialTwin: {
-        properties: {
-          desired: {
-            testProp: self._testProp
-          }
-        }
-      }
-    };
+//   this.enroll = function (callback) {
+//     self._testProp = uuid.v4();
+//     var enrollment = {
+//       registrationId: self.registrationId,
+//       deviceId: self.deviceId,
+//       attestation: {
+//         type: 'symmetricKey',
+//         symmetricKey: {
+//           primaryKey: self.primaryKey,
+//           secondaryKey: Buffer.from(uuid.v4()).toString('base64')
+//         }
+//       },
+//       provisioningStatus: "enabled",
+//       initialTwin: {
+//         properties: {
+//           desired: {
+//             testProp: self._testProp
+//           }
+//         }
+//       }
+//     };
 
-    provisioningServiceClient.createOrUpdateEnrollmentGroup(enrollment, function (err) {
-      if (err) {
-        callback(err);
-      } else {
-        callback();
-      }
-    });
-  };
+//     provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+//       if (err) {
+//         callback(err);
+//       } else {
+//         callback();
+//       }
+//     });
+//   };
 
-  this.register = function (Transport, callback) {
-    var transport = new Transport();
-    securityClient = new SymmetricKeySecurityClient(self.registrationId, computeDerivedSymmetricKey(self.primaryKey, self.registrationId));
-    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-    provisioningDeviceClient.register(function (err, result) {
-      callback(err, result);
-    });
-  };
+//   this.register = function (Transport, callback) {
+//     var transport = new Transport();
+//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+//     provisioningDeviceClient.register(function (err, result) {
+//       callback(err, result);
+//       console.log("check what parts of result can be accessed");
+//       console.log(result);
+//     });
+//   };
 
-  this.cleanup = function (callback) {
-    debug('deleting enrollment');
-    provisioningServiceClient.deleteEnrollmentGroup(self.groupId, function (err) {
-      if (err) {
-        debug('ignoring deleteEnrollmentGroup error');
-      }
-      debug('deleting device');
-      registry.delete(self.deviceId, function (err) {
-        if (err) {
-          debug('ignoring delete error');
-        }
-        debug('done with Symmetric Key group cleanup');
-        callback();
-      });
-    });
-  };
-};
+//   this.cleanup = function (callback) {
+//     debug('deleting enrollment');
+//     provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+//       if (err) {
+//         debug('ignoring deleteIndividualEnrollment error');
+//       }
+//       debug('deleting device');
+//       registry.delete(self.deviceId, function (err) {
+//         if (err) {
+//           debug('ignoring delete error');
+//         }
+//         debug('done with Symmetric Key individual cleanup');
+//         callback();
+//       });
+//     });
+//   };
+// };
+
+// var SymmetricKeyGroup = function() {
+
+//   var self = this;
+//   var securityClient;
+
+//   this.transports = SymmetricKeyGroupTransports;
+
+//   this.initialize = function (callback) {
+//     var id = uuid.v4();
+//     self.groupId = 'deleteMe-node-' + id;
+//     self.registrationId = 'reg-' + id;
+//     self.deviceId = self.registrationId;
+//     self.primaryKey = Buffer.from(uuid.v4()).toString('base64');
+//     callback();
+//   };
+
+//   this.enroll = function (callback) {
+//     self._testProp = uuid.v4();
+//     var enrollment = {
+//       enrollmentGroupId: self.groupId,
+//       attestation: {
+//         type: 'symmetricKey',
+//         symmetricKey: {
+//           primaryKey: self.primaryKey,
+//           secondaryKey: Buffer.from(uuid.v4()).toString('base64')
+//         }
+//       },
+//       provisioningStatus: "enabled",
+//       initialTwin: {
+//         properties: {
+//           desired: {
+//             testProp: self._testProp
+//           }
+//         }
+//       }
+//     };
+
+//     provisioningServiceClient.createOrUpdateEnrollmentGroup(enrollment, function (err) {
+//       if (err) {
+//         callback(err);
+//       } else {
+//         callback();
+//       }
+//     });
+//   };
+
+//   this.register = function (Transport, callback) {
+//     var transport = new Transport();
+//     securityClient = new SymmetricKeySecurityClient(self.registrationId, computeDerivedSymmetricKey(self.primaryKey, self.registrationId));
+//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+//     provisioningDeviceClient.register(function (err, result) {
+//       callback(err, result);
+//     });
+//   };
+
+//   this.cleanup = function (callback) {
+//     debug('deleting enrollment');
+//     provisioningServiceClient.deleteEnrollmentGroup(self.groupId, function (err) {
+//       if (err) {
+//         debug('ignoring deleteEnrollmentGroup error');
+//       }
+//       debug('deleting device');
+//       registry.delete(self.deviceId, function (err) {
+//         if (err) {
+//           debug('ignoring delete error');
+//         }
+//         debug('done with Symmetric Key group cleanup');
+//         callback();
+//       });
+//     });
+//   };
+// };
 
 // var SymmetricKeyIndividualDPSCertificateManagement = function() {
 
@@ -943,71 +936,71 @@ describe('E2E Device Provisioning', function() {
   });
 });
 
-// describe('E2E Device Provisioning For DPS Certificate Management', function() {
-//   this.timeout(120000);
-//   before(createAllCertsForDPSCertMgmt);
-//   [
-//     // {
-//     //   testName: 'Symmetric Key Individual DPS Certificate Management',
-//     //   testObj: new SymmetricKeyIndividualDPSCertificateManagement()
-//     // },
-//     // {
-//     //   testName: 'Symmetric Key Group DPS Certificate Management',
-//     //   testObj: new SymmetricKeyGroupDPSCertificateManagement()
-//     // },
-//         {
-//       testName: 'X509 Individual DPS Certificate Management',
-//       testObj: new X509IndividualDPSCertificateManagement()
-//     },
-//   ].forEach(function(config) {
+describe('E2E Device Provisioning For DPS Certificate Management', function() {
+  this.timeout(120000);
+  before(createAllCertsForDPSCertMgmt);
+  [
+    // {
+    //   testName: 'Symmetric Key Individual DPS Certificate Management',
+    //   testObj: new SymmetricKeyIndividualDPSCertificateManagement()
+    // },
+    // {
+    //   testName: 'Symmetric Key Group DPS Certificate Management',
+    //   testObj: new SymmetricKeyGroupDPSCertificateManagement()
+    // },
+        {
+      testName: 'X509 Individual DPS Certificate Management',
+      testObj: new X509IndividualDPSCertificateManagement()
+    },
+  ].forEach(function(config) {
 
-//     describe(config.testName, function() {
-//       this.timeout(120000);
+    describe(config.testName, function() {
+      this.timeout(120000);
 
-//       afterEach(function(callback) {
-//         config.testObj.cleanup(callback);
-//       });
+      afterEach(function(callback) {
+        config.testObj.cleanup(callback);
+      });
 
-//       config.testObj.transports.forEach(function (Transport) {
-//         it ('can create an enrollment, register it using ' + Transport.name + ', and verify twin contents', function(callback) {
+      config.testObj.transports.forEach(function (Transport) {
+        it ('can create an enrollment, register it using ' + Transport.name + ', and verify twin contents', function(callback) {
 
-//           async.waterfall([
-//             function(callback) {
-//               debug('initializing');
-//               config.testObj.initialize(callback);
-//             },
-//             function(callback) {
-//               debug('enrolling');
-//               config.testObj.enroll(callback);
-//             },
-//             function(callback) {
-//               debug('sleeping as enrollment group not getting created in time');
-//               setTimeout(callback, 30000);
-//             },
-//             function(callback) {
-//               debug('registering device');
-//               config.testObj.register(Transport, callback);
-//             },
-//             function(result, callback) {
-//               debug('success registering device');
-//               debug(JSON.stringify(result,null,'  '));
-//               debug('getting twin');
-//               registry.getTwin(config.testObj.deviceId,function(err, twin) {
-//                 callback(err, twin);
-//               });
-//             },
-//             function(twin, callback) {
-//               debug('asserting twin contents');
-//               assert.strictEqual(twin.properties.desired.testProp, config.testObj._testProp);
-//               callback();
-//             },
-//             function(callback) {
-//               debug('sending message to hub');
-//               config.testObj.sendToHub(callback);
-//             }
-//           ], callback);
-//         });
-//       });
-//     });
-//   });
-// });
+          async.waterfall([
+            function(callback) {
+              debug('initializing');
+              config.testObj.initialize(callback);
+            },
+            function(callback) {
+              debug('enrolling');
+              config.testObj.enroll(callback);
+            },
+            function(callback) {
+              debug('sleeping as enrollment group not getting created in time');
+              setTimeout(callback, 30000);
+            },
+            function(callback) {
+              debug('registering device');
+              config.testObj.register(Transport, callback);
+            },
+            function(result, callback) {
+              debug('success registering device');
+              debug(JSON.stringify(result,null,'  '));
+              debug('getting twin');
+              registry.getTwin(config.testObj.deviceId,function(err, twin) {
+                callback(err, twin);
+              });
+            },
+            function(twin, callback) {
+              debug('asserting twin contents');
+              assert.strictEqual(twin.properties.desired.testProp, config.testObj._testProp);
+              callback();
+            },
+            function(callback) {
+              debug('sending message to hub');
+              config.testObj.sendToHub(callback);
+            }
+          ], callback);
+        });
+      });
+    });
+  });
+});
