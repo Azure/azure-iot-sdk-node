@@ -764,102 +764,102 @@ var createCertWithChain = function(callback) {
 //   };
 // };
 
-// var X509IndividualDPSCertificateManagement = function() {
+var X509IndividualDPSCertificateManagement = function() {
 
-//   var self = this;
-//   var registrationResult;
-//   this.transports = X509IndividualTransports;
+  var self = this;
+  var registrationResult;
+  this.transports = X509IndividualTransports;
 
-//   this.initialize = function (callback) {
-//     self._cert = selfSignedCertDpsCertMgmt;
-//     self.deviceId = registrationIdForDpsCertMgmtX509Ind;
-//     self.registrationId = registrationIdForDpsCertMgmtX509Ind;
-//     callback();
-//   };
+  this.initialize = function (callback) {
+    self._cert = selfSignedCertDpsCertMgmt;
+    self.deviceId = registrationIdForDpsCertMgmtX509Ind;
+    self.registrationId = registrationIdForDpsCertMgmtX509Ind;
+    callback();
+  };
 
-//   this.enroll = function (callback) {
-//     self._testProp = uuid.v4();
-//     var enrollment = {
-//       registrationId: self.registrationId,
-//       deviceId: self.deviceId,
-//       clientCertificateIssuancePolicy: {
-//         certificateAuthorityName: CLIENT_CERT_AUTHORITY_NAME,
-//       },
-//       attestation: {
-//         type: 'x509',
-//         x509: {
-//           clientCertificates: {
-//             primary: {
-//               certificate: self._cert.cert
-//             }
-//           }
-//         }
-//       },
-//       initialTwin: {
-//         properties: {
-//           desired: {
-//             testProp: self._testProp
-//           }
-//         }
-//       }
-//     };
+  this.enroll = function (callback) {
+    self._testProp = uuid.v4();
+    var enrollment = {
+      registrationId: self.registrationId,
+      deviceId: self.deviceId,
+      clientCertificateIssuancePolicy: {
+        certificateAuthorityName: CLIENT_CERT_AUTHORITY_NAME,
+      },
+      attestation: {
+        type: 'x509',
+        x509: {
+          clientCertificates: {
+            primary: {
+              certificate: self._cert.cert
+            }
+          }
+        }
+      },
+      initialTwin: {
+        properties: {
+          desired: {
+            testProp: self._testProp
+          }
+        }
+      }
+    };
 
-//     provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
-//       if (err) {
-//         callback(err);
-//       } else {
-//         callback();
-//       }
-//     });
-//   };
+    provisioningServiceClient.createOrUpdateIndividualEnrollment(enrollment, function (err) {
+      if (err) {
+        callback(err);
+      } else {
+        callback();
+      }
+    });
+  };
 
-//   this.register = function (Transport, callback) {
-//     var securityClient = new X509Security(self.registrationId, self._cert);
-//     var transport = new Transport();
-//     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
-//     provisioningDeviceClient.setClientCertificateSigningRequest(csrAndKeys[X509IND].csr);
-//     provisioningDeviceClient.register(function (err, result) {
-//       registrationResult = result;
-//       callback(err, result);
-//     });
-//   };
+  this.register = function (Transport, callback) {
+    var securityClient = new X509Security(self.registrationId, self._cert);
+    var transport = new Transport();
+    var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
+    provisioningDeviceClient.setClientCertificateSigningRequest(csrAndKeys[X509IND].csr);
+    provisioningDeviceClient.register(function (err, result) {
+      registrationResult = result;
+      callback(err, result);
+    });
+  };
 
-//   this.sendToHub = function (callback) {
-//     var connectionString = 'HostName=' + registrationResult.assignedHub + ';DeviceId=' + registrationResult.deviceId + ';x509=true';
-//     var deviceClient = DeviceClient.fromConnectionString(connectionString, iotHubTransport);
+  this.sendToHub = function (callback) {
+    var connectionString = 'HostName=' + registrationResult.assignedHub + ';DeviceId=' + registrationResult.deviceId + ';x509=true';
+    var deviceClient = DeviceClient.fromConnectionString(connectionString, iotHubTransport);
 
-//     var options = {
-//       cert : registrationResult.issuedClientCertificate,
-//       key :  csrAndKeys[X509IND].clientKey,
-//     };
-//     deviceClient.setOptions(options);
-//     var message = new Message('Hello world');
-//     deviceClient.sendEvent(message, function(err, res) {
-//       if (err) console.log('send error: ' + err.toString());
-//       if (res) console.log('send status: ' + res.constructor.name);
-//     });
-//     debug('done with sending message for X509 individual');
-//     callback();
-//   };
+    var options = {
+      cert : registrationResult.issuedClientCertificate,
+      key :  csrAndKeys[X509IND].clientKey,
+    };
+    deviceClient.setOptions(options);
+    var message = new Message('Hello world');
+    deviceClient.sendEvent(message, function(err, res) {
+      if (err) console.log('send error: ' + err.toString());
+      if (res) console.log('send status: ' + res.constructor.name);
+    });
+    debug('done with sending message for X509 individual');
+    callback();
+  };
 
 
-//   this.cleanup = function (callback) {
-//     debug('deleting enrollment');
-//     provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
-//       if (err) {
-//         debug('ignoring deleteIndividualEnrollment error');
-//       }
-//       debug('deleting device');
-//       registry.delete(self.deviceId, function (err) {
-//         if (err) {
-//           debug('ignoring delete error');
-//         }
-//         debug('done with X509 individual cleanup');
-//         callback();
-//       });
-//     });
-//   };
-// };
+  this.cleanup = function (callback) {
+    debug('deleting enrollment');
+    provisioningServiceClient.deleteIndividualEnrollment(self.registrationId, function (err) {
+      if (err) {
+        debug('ignoring deleteIndividualEnrollment error');
+      }
+      debug('deleting device');
+      registry.delete(self.deviceId, function (err) {
+        if (err) {
+          debug('ignoring delete error');
+        }
+        debug('done with X509 individual cleanup');
+        callback();
+      });
+    });
+  };
+};
 
 
 // describe('E2E Device Provisioning', function() {
