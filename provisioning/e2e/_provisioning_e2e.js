@@ -77,54 +77,54 @@ var certWithChainDpsCertMgmt;
 /* exported TpmIndividual  */
 
 
-// var createAllCerts = function(callback) {
-//   var id = uuid.v4();
-//   x509DeviceId = 'deleteMe_provisioning_node_e2e_' + id;
-//   x509RegistrationId = 'reg-' + id;
+var createAllCerts = function(callback) {
+  var id = uuid.v4();
+  x509DeviceId = 'deleteMe_provisioning_node_e2e_' + id;
+  x509RegistrationId = 'reg-' + id;
 
-//   async.waterfall([
-//     function(callback) {
-//       debug('creating self-signed cert');
-//       certHelper.createSelfSignedCert(x509RegistrationId, function(err, cert) {
-//         selfSignedCert = cert;
-//         callback(err);
-//       });
-//     },
-//     function(callback) {
-//       debug('creating cert without chain');
-//       certHelper.createDeviceCert(x509RegistrationId, rootCert, function(err, cert) {
-//         certWithoutChain = cert;
-//         callback(err);
-//       });
-//     },
-//     function(callback) {
-//       debug('creating intermediate CA cert #1');
-//       certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
-//         intermediateCert1 = cert;
-//         callback(err);
-//       });
-//     },
-//     function(callback) {
-//       debug('creating intermediate CA cert #2');
-//       certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, cert) {
-//         intermediateCert2 = cert;
-//         callback(err);
-//       });
-//     },
-//     function(callback) {
-//       debug('creating cert with chain');
-//       certHelper.createDeviceCert(x509RegistrationId, intermediateCert2, function(err, cert) {
-//         cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
-//         certWithChain = cert;
-//         callback(err);
-//       });
-//     },
-//     function(callback) {
-//       debug('sleeping to account for clock skew');
-//       setTimeout(callback, 60000);
-//     }
-//   ], callback);
-// };
+  async.waterfall([
+    function(callback) {
+      debug('creating self-signed cert');
+      certHelper.createSelfSignedCert(x509RegistrationId, function(err, cert) {
+        selfSignedCert = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating cert without chain');
+      certHelper.createDeviceCert(x509RegistrationId, rootCert, function(err, cert) {
+        certWithoutChain = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating intermediate CA cert #1');
+      certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
+        intermediateCert1 = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating intermediate CA cert #2');
+      certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1, function(err, cert) {
+        intermediateCert2 = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating cert with chain');
+      certHelper.createDeviceCert(x509RegistrationId, intermediateCert2, function(err, cert) {
+        cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
+        certWithChain = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('sleeping to account for clock skew');
+      setTimeout(callback, 60000);
+    }
+  ], callback);
+};
 
 var createAllCertsForDPSCertMgmt = function(callback) {
   async.waterfall([
@@ -143,16 +143,16 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       });
     },
     function(callback) {
-      debug('creating self-signed cert');
-      certHelper.createSelfSignedCert(registrationIdForDpsCertMgmtX509Ind, function(err, cert) {
-        selfSignedCertDpsCertMgmt = cert;
+      debug('creating a certificate signing request');
+      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509Ind, false, function(err, csrWithKey) {
+        csrAndKeys[X509IND] = csrWithKey;
         callback(err);
       });
     },
     function(callback) {
-      debug('creating a certificate signing request');
-      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509Ind, false, function(err, csrWithKey) {
-        csrAndKeys[X509IND] = csrWithKey;
+      debug('creating self-signed cert');
+      certHelper.createSelfSignedCert(registrationIdForDpsCertMgmtX509Ind, function(err, cert) {
+        selfSignedCertDpsCertMgmt = cert;
         callback(err);
       });
     },
@@ -862,83 +862,83 @@ var createCertWithChain = function(callback) {
 // };
 
 
-describe('E2E Device Provisioning', function() {
-  this.timeout(120000);
-  before(createAllCerts);
-  [
-    /*
-    {
-      testName: 'TPM Individual Enrollment',
-      testObj: new TpmIndividual()
-    },
-    */
-    {
-      testName: 'Symmetric Key individual enrollment',
-      testObj: new SymmetricKeyIndividual()
-    },
-    {
-      testName: 'Symmetric Key group enrollment',
-      testObj: new SymmetricKeyGroup()
-    },
-    {
-      testName: 'x509 individual enrollment with Self Signed Certificate',
-      testObj: new X509Individual()
-    },
-    {
-      testName: 'x509 group enrollment without cert chain',
-      testObj: new X509Group(createCertWithoutChain)
-    },
-    {
-      testName: 'x509 group enrollment with cert chain',
-      testObj: new X509Group(createCertWithChain)
-    }
-  ].forEach(function(config) {
-    describe(config.testName, function() {
-      this.timeout(120000);
+// describe('E2E Device Provisioning', function() {
+//   this.timeout(120000);
+//   before(createAllCerts);
+//   [
+//     /*
+//     {
+//       testName: 'TPM Individual Enrollment',
+//       testObj: new TpmIndividual()
+//     },
+//     */
+//     {
+//       testName: 'Symmetric Key individual enrollment',
+//       testObj: new SymmetricKeyIndividual()
+//     },
+//     {
+//       testName: 'Symmetric Key group enrollment',
+//       testObj: new SymmetricKeyGroup()
+//     },
+//     {
+//       testName: 'x509 individual enrollment with Self Signed Certificate',
+//       testObj: new X509Individual()
+//     },
+//     {
+//       testName: 'x509 group enrollment without cert chain',
+//       testObj: new X509Group(createCertWithoutChain)
+//     },
+//     {
+//       testName: 'x509 group enrollment with cert chain',
+//       testObj: new X509Group(createCertWithChain)
+//     }
+//   ].forEach(function(config) {
+//     describe(config.testName, function() {
+//       this.timeout(120000);
 
-      afterEach(function(callback) {
-        config.testObj.cleanup(callback);
-      });
+//       afterEach(function(callback) {
+//         config.testObj.cleanup(callback);
+//       });
 
-      config.testObj.transports.forEach(function (Transport) {
-        it ('can create an enrollment, register it using ' + Transport.name + ', and verify twin contents', function(callback) {
+//       config.testObj.transports.forEach(function (Transport) {
+//         it ('can create an enrollment, register it using ' + Transport.name + ', and verify twin contents', function(callback) {
 
-          async.waterfall([
-            function(callback) {
-              debug('initializing');
-              config.testObj.initialize(callback);
-            },
-            function(callback) {
-              debug('enrolling');
-              config.testObj.enroll(callback);
-            },
-            function(callback) {
-              debug('registering device');
-              config.testObj.register(Transport, callback);
-            },
-            function(result, callback) {
-              debug('success registering device');
-              debug(JSON.stringify(result,null,'  '));
-              debug('getting twin');
-              registry.getTwin(config.testObj.deviceId,function(err, twin) {
-                callback(err, twin);
-              });
-            },
-            function(twin, callback) {
-              debug('asserting twin contents');
-              assert.strictEqual(twin.properties.desired.testProp, config.testObj._testProp);
-              callback();
-            }
-          ], callback);
-        });
-      });
-    });
-  });
-});
+//           async.waterfall([
+//             function(callback) {
+//               debug('initializing');
+//               config.testObj.initialize(callback);
+//             },
+//             function(callback) {
+//               debug('enrolling');
+//               config.testObj.enroll(callback);
+//             },
+//             function(callback) {
+//               debug('registering device');
+//               config.testObj.register(Transport, callback);
+//             },
+//             function(result, callback) {
+//               debug('success registering device');
+//               debug(JSON.stringify(result,null,'  '));
+//               debug('getting twin');
+//               registry.getTwin(config.testObj.deviceId,function(err, twin) {
+//                 callback(err, twin);
+//               });
+//             },
+//             function(twin, callback) {
+//               debug('asserting twin contents');
+//               assert.strictEqual(twin.properties.desired.testProp, config.testObj._testProp);
+//               callback();
+//             }
+//           ], callback);
+//         });
+//       });
+//     });
+//   });
+// });
 
 describe('E2E Device Provisioning For DPS Certificate Management', function() {
   this.timeout(120000);
-  before(createAllCertsForDPSCertMgmt);
+  before(createAllCertsForDPSCertMgmt, createAllCerts);
   [
     // {
     //   testName: 'Symmetric Key Individual DPS Certificate Management',
