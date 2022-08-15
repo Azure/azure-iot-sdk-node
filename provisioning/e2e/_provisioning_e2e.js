@@ -181,24 +181,24 @@ var createAllCertsForDPSCertMgmt = function(callback) {
         callback(err);
       });
     },
-    // function(callback) {
-    //   debug('creating intermediate CA cert #1 for DPS Cert Mgmt');
-    //   certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
-    //     intermediateCert1DpsCertMgmt = cert;
-    //     callback(err);
-    //   });
-    // },
-    // function(callback) {
-    //   debug('creating intermediate CA cert #2 for DPS Cert Mgmt');
-    //   certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1DpsCertMgmt, function(err, cert) {
-    //     intermediateCert2DpsCertMgmt = cert;
-    //     callback(err);
-    //   });
-    // },
+    function(callback) {
+      debug('creating intermediate CA cert #1 for DPS Cert Mgmt');
+      certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
+        intermediateCert1DpsCertMgmt = cert;
+        callback(err);
+      });
+    },
+    function(callback) {
+      debug('creating intermediate CA cert #2 for DPS Cert Mgmt');
+      certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1DpsCertMgmt, function(err, cert) {
+        intermediateCert2DpsCertMgmt = cert;
+        callback(err);
+      });
+    },
     function(callback) {
       debug('creating cert with chain for DPS Cert Mgmt');
-      certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509GrpWithChain, intermediateCert2, function(err, cert) {
-        cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
+      certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509GrpWithChain, intermediateCert2DpsCertMgmt, function(err, cert) {
+        cert.cert = cert.cert + '\n' + intermediateCert2DpsCertMgmt.cert + '\n' + intermediateCert1DpsCertMgmt.cert;
         certWithChainDpsCertMgmt = cert;
         callback(err);
       });
