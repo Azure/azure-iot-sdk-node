@@ -57,12 +57,14 @@ const registrationIdForDpsCertMgmtSymKeyInd = 'deleteMe-reg-dps-cert-sym-key-ind
 const registrationIdForDpsCertMgmtSymKeyGrp = 'deleteMe-reg-dps-cert-sym-key-group'
 const registrationIdForDpsCertMgmtX509Ind = 'deleteMe-reg-dps-cert-x509-individual';
 const registrationIdForDpsCertMgmtX509Grp = 'deleteMe-reg-dps-cert-x509-group'
+const registrationIdForDpsCertMgmtX509GrpWithChain = 'deleteMe-reg-dps-cert-x509-group-with-chain'
 const csrAndKeys = {};
 const CLIENT_CERT_AUTHORITY_NAME = 'olkarca';
 const SYMKEYIND = 'Symmetric Key Individual';
 const SYMKEYGRP = 'Symmetric Key Group';
 const X509IND = 'X509 Individual';
 const X509GRP = 'X509 Group';
+const X509GRPCHAIN = 'X509 Group Chain';
 
 var selfSignedCertDpsCertMgmt;
 var certWithoutChainDpsCertMgmt;
@@ -157,6 +159,13 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       });
     },
     function(callback) {
+      debug('creating a CSR for x509 group with chain');
+      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509GrpWithChain, false, function(err, csrWithKey) {
+        csrAndKeys[X509GRPCHAIN] = csrWithKey;
+        callback(err);
+      });
+    },
+    function(callback) {
       debug('creating self-signed cert for DPS Cert Mgmt');
       certHelper.createSelfSignedCert(registrationIdForDpsCertMgmtX509Ind, function(err, cert) {
         selfSignedCertDpsCertMgmt = cert;
@@ -167,8 +176,30 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       debug('creating cert without chain for DPS Cert Mgmt');
       certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509Grp, rootCert, function(err, cert) {
         certWithoutChainDpsCertMgmt = cert;
-        console.log('device cert for creating cert without chain for DPS Cert Mgmt');
-        console.log(certWithoutChainDpsCertMgmt)
+        // console.log('device cert for creating cert without chain for DPS Cert Mgmt');
+        // console.log(certWithoutChainDpsCertMgmt)
+        callback(err);
+      });
+    },
+    // function(callback) {
+    //   debug('creating intermediate CA cert #1 for DPS Cert Mgmt');
+    //   certHelper.createIntermediateCaCert('Intermediate CA 1', rootCert, function(err, cert) {
+    //     intermediateCert1DpsCertMgmt = cert;
+    //     callback(err);
+    //   });
+    // },
+    // function(callback) {
+    //   debug('creating intermediate CA cert #2 for DPS Cert Mgmt');
+    //   certHelper.createIntermediateCaCert('Intermediate CA 2', intermediateCert1DpsCertMgmt, function(err, cert) {
+    //     intermediateCert2DpsCertMgmt = cert;
+    //     callback(err);
+    //   });
+    // },
+    function(callback) {
+      debug('creating cert with chain for DPS Cert Mgmt');
+      certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509GrpWithChain, intermediateCert2, function(err, cert) {
+        cert.cert = cert.cert + '\n' + intermediateCert2.cert + '\n' + intermediateCert1.cert;
+        certWithChainDpsCertMgmt = cert;
         callback(err);
       });
     },
@@ -947,6 +978,7 @@ var X509GroupDPSCertificateManagement = function(certFactory) {
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
     provisioningDeviceClient.setClientCertificateSigningRequest(csrAndKeys[X509GRP].csr);
     provisioningDeviceClient.register(function (err, result) {
+      registrationResult = result;
       assert.isNotOk(err);
       assert.isOk(result.deviceId);
       self.deviceId = result.deviceId;
