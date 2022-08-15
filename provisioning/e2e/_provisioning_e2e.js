@@ -150,6 +150,13 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       });
     },
     function(callback) {
+      debug('creating a CSR for x509 group');
+      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509Ind, false, function(err, csrWithKey) {
+        csrAndKeys[X509GRP] = csrWithKey;
+        callback(err);
+      });
+    },
+    function(callback) {
       debug('creating self-signed cert for DPS Cert Mgmt');
       certHelper.createSelfSignedCert(registrationIdForDpsCertMgmtX509Ind, function(err, cert) {
         selfSignedCertDpsCertMgmt = cert;
@@ -1055,7 +1062,7 @@ var X509GroupDPSCertificateManagement = function(certFactory) {
 
 describe('E2E Device Provisioning For DPS Certificate Management', function() {
   this.timeout(120000);
-  before(createAllCertsForDPSCertMgmt, createAllCerts);
+  before(createAllCertsForDPSCertMgmt);
   [
     // {
     //   testName: 'Symmetric Key Individual DPS Certificate Management',
