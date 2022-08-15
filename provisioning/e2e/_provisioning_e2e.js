@@ -160,7 +160,7 @@ var createAllCertsForDPSCertMgmt = function(callback) {
     },
     function(callback) {
       debug('creating a CSR for x509 group with chain');
-      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509GrpWithChain, false, function(err, csrWithKey) {
+      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509Grp, false, function(err, csrWithKey) {
         csrAndKeys[X509GRPCHAIN] = csrWithKey;
         callback(err);
       });
