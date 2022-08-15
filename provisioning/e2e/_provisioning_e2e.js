@@ -57,14 +57,14 @@ const registrationIdForDpsCertMgmtSymKeyInd = 'deleteMe-reg-dps-cert-sym-key-ind
 const registrationIdForDpsCertMgmtSymKeyGrp = 'deleteMe-reg-dps-cert-sym-key-group'
 const registrationIdForDpsCertMgmtX509Ind = 'deleteMe-reg-dps-cert-x509-individual';
 const registrationIdForDpsCertMgmtX509Grp = 'deleteMe-reg-dps-cert-x509-group'
-const registrationIdForDpsCertMgmtX509GrpWithChain = 'deleteMe-reg-dps-cert-x509-group-with-chain'
+// const registrationIdForDpsCertMgmtX509GrpWithChain = 'deleteMe-reg-dps-cert-x509-group-with-chain'
 const csrAndKeys = {};
 const CLIENT_CERT_AUTHORITY_NAME = 'olkarca';
 const SYMKEYIND = 'Symmetric Key Individual';
 const SYMKEYGRP = 'Symmetric Key Group';
 const X509IND = 'X509 Individual';
 const X509GRP = 'X509 Group';
-const X509GRPCHAIN = 'X509 Group Chain';
+// const X509GRPCHAIN = 'X509 Group Chain';
 
 var selfSignedCertDpsCertMgmt;
 var certWithoutChainDpsCertMgmt;
@@ -197,7 +197,7 @@ var createAllCertsForDPSCertMgmt = function(callback) {
     },
     function(callback) {
       debug('creating cert with chain for DPS Cert Mgmt');
-      certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509GrpWithChain, intermediateCert2DpsCertMgmt, function(err, cert) {
+      certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509Grp, intermediateCert2DpsCertMgmt, function(err, cert) {
         cert.cert = cert.cert + '\n' + intermediateCert2DpsCertMgmt.cert + '\n' + intermediateCert1DpsCertMgmt.cert;
         certWithChainDpsCertMgmt = cert;
         callback(err);
@@ -226,6 +226,10 @@ var createCertWithoutChainDPSCertMgmt = function(callback) {
 
 var createCertWithChain = function(callback) {
   callback(null, intermediateCert2, certWithChain);
+};
+
+var createCertWithChainDPSCertMgmt = function(callback) {
+  callback(null, intermediateCert2DpsCertMgmt, certWithChainDpsCertMgmt);
 };
 
 // var X509Individual = function() {
@@ -1116,6 +1120,10 @@ describe('E2E Device Provisioning For DPS Certificate Management', function() {
       testName: 'x509 group enrollment DPS Certificate Management without cert chain',
       testObj: new X509GroupDPSCertificateManagement(createCertWithoutChainDPSCertMgmt)
     },
+    {
+      testName: 'x509 group enrollment with cert chain',
+      testObj: new X509GroupDPSCertificateManagement(createCertWithChainDPSCertMgmt)
+    }
   ].forEach(function(config) {
 
     describe(config.testName, function() {
