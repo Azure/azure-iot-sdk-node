@@ -167,6 +167,8 @@ var createAllCertsForDPSCertMgmt = function(callback) {
       debug('creating cert without chain for DPS Cert Mgmt');
       certHelper.createDeviceCert(registrationIdForDpsCertMgmtX509Grp, rootCert, function(err, cert) {
         certWithoutChainDpsCertMgmt = cert;
+        console.log('device cert for creating cert without chain for DPS Cert Mgmt');
+        console.log(certWithoutChainDpsCertMgmt)
         callback(err);
       });
     },
@@ -938,6 +940,8 @@ var X509GroupDPSCertificateManagement = function(certFactory) {
   };
 
   this.register = function (Transport, callback) {
+    console.log('Security client created with device cert DPS Cert Mgmt');
+    console.log(self._cert)
     var securityClient = new X509Security(self.registrationId, self._cert);
     var transport = new Transport();
     var provisioningDeviceClient = ProvisioningDeviceClient.create(provisioningHost, idScope, transport, securityClient);
