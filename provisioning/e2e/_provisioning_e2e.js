@@ -158,13 +158,13 @@ var createAllCertsForDPSCertMgmt = function(callback) {
         callback(err);
       });
     },
-    function(callback) {
-      debug('creating a CSR for x509 group with chain');
-      certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509Grp, false, function(err, csrWithKey) {
-        csrAndKeys[X509GRPCHAIN] = csrWithKey;
-        callback(err);
-      });
-    },
+    // function(callback) {
+    //   debug('creating a CSR for x509 group with chain');
+    //   certHelper.createCertificateSigningRequest(registrationIdForDpsCertMgmtX509Grp, false, function(err, csrWithKey) {
+    //     csrAndKeys[X509GRPCHAIN] = csrWithKey;
+    //     callback(err);
+    //   });
+    // },
     function(callback) {
       debug('creating self-signed cert for DPS Cert Mgmt');
       certHelper.createSelfSignedCert(registrationIdForDpsCertMgmtX509Ind, function(err, cert) {
