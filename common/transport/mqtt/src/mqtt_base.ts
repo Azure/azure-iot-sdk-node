@@ -134,6 +134,43 @@ class OnTheWireMessageContainer {
   }
 }
 
+class ExternalEventTracker {
+  private _emitter: EventEmitter;
+  private _listenerContainer: Map<string, ((...args: any[]) => void)[]> = new Map();
+  constructor(emitter: EventEmitter) {
+    this._emitter = emitter;
+  }
+
+  addTrackedListener(eventName: string, listener: (...args: any[]) => void): void {
+    this._emitter.addListener(eventName, listener);
+    this._listenerContainer.has(eventName)
+      ? this._listenerContainer.get(eventName).push(listener)
+      : this._listenerContainer.set(eventName, [listener]);
+  }
+
+  removeTrackedListener(eventName: string, listener: (...args: any[]) => void): void {
+    const listeners = this._listenerContainer.get(eventName);
+    const index = listeners?.indexOf(listener);
+    if (listeners === undefined || index === -1) return;
+
+    listeners.length === 1
+      ? this._listenerContainer.delete(eventName)
+      : listeners.splice(index, 1);
+
+    this._emitter.removeListener(eventName, listener);
+  }
+
+  removeAllTrackedListeners(eventName?: string): void {
+    const eventsToRemove = eventName ? [eventName] : this._listenerContainer.keys();
+    for (const event of eventsToRemove) {
+      for (const listener of (this._listenerContainer.get(event) ?? [])) {
+        this._emitter.removeListener(event, listener);
+      }
+      this._listenerContainer.delete(event);
+    }
+  }
+}
+
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_004: [The `MqttBase` constructor shall instantiate the default MQTT.JS library if no argument is passed to it.]*/
 /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_005: [The `MqttBase` constructor shall use the object passed as argument instead of the default MQTT.JS library if it's not falsy.]*/
 /**
@@ -146,6 +183,7 @@ export class MqttBase extends EventEmitter {
   private _fsm: any;
   private _options: any;
   private _onTheWirePublishes: OnTheWireMessageContainer;
+  private _mqttTrackedListeners: ExternalEventTracker;
 
   constructor(mqttProvider?: any) {
     super();
@@ -209,7 +247,7 @@ export class MqttBase extends EventEmitter {
               if (err) {
                 this._fsm.transition('disconnecting', connectCallback, err);
               } else {
-                this._mqttClient.on('error', this._errorCallback.bind(this));
+                this._mqttTrackedListeners.addTrackedListener('error', this._errorCallback.bind(this));
                 this._fsm.transition('connected', connectCallback, connack);
               }
             });
@@ -221,7 +259,7 @@ export class MqttBase extends EventEmitter {
         },
         connected: {
           _onEnter: (connectCallback, connack) => {
-            this._mqttClient.on('close', this._closeCallback.bind(this));
+            this._mqttTrackedListeners.addTrackedListener('close', this._closeCallback.bind(this));
             connectCallback(null, new results.Connected(connack));
           },
           connect: (callback) => callback(null, new results.Connected()),
@@ -288,7 +326,7 @@ export class MqttBase extends EventEmitter {
                     this._fsm.transition('disconnected', callback, err);
                   } else {
                     debug('mqtt client reconnected successfully');
-                    this._mqttClient.on('error', this._errorCallback.bind(this));
+                    this._mqttTrackedListeners.addTrackedListener('error', this._errorCallback.bind(this));
                     this._fsm.transition('connected', callback, connack);
                   }
                 });
@@ -444,20 +482,22 @@ export class MqttBase extends EventEmitter {
     const disconnectCallback = createErrorCallback('disconnect');
 
     this._mqttClient = this.mqttProvider.connect(this._config.uri, options);
-    this._mqttClient.on('message', this._messageCallback.bind(this));
-    this._mqttClient.on('error', errorCallback);
-    this._mqttClient.on('close', closeCallback);
-    this._mqttClient.on('offline', offlineCallback);
-    this._mqttClient.on('disconnect', disconnectCallback);
+    this._mqttTrackedListeners = new ExternalEventTracker(this._mqttClient);
 
-    this._mqttClient.on('connect', (connack) => {
+    this._mqttTrackedListeners.addTrackedListener('message', this._messageCallback.bind(this));
+    this._mqttTrackedListeners.addTrackedListener('error', errorCallback);
+    this._mqttTrackedListeners.addTrackedListener('close', closeCallback);
+    this._mqttTrackedListeners.addTrackedListener('offline', offlineCallback);
+    this._mqttTrackedListeners.addTrackedListener('disconnect', disconnectCallback);
+
+    this._mqttTrackedListeners.addTrackedListener('connect', (connack) => {
       debug('Device is connected');
       debug('CONNACK: ' + JSON.stringify(connack));
 
-      this._mqttClient.removeListener('error', errorCallback);
-      this._mqttClient.removeListener('close', closeCallback);
-      this._mqttClient.removeListener('offline', offlineCallback);
-      this._mqttClient.removeListener('disconnect', disconnectCallback);
+      this._mqttTrackedListeners.removeTrackedListener('error', errorCallback);
+      this._mqttTrackedListeners.removeTrackedListener('close', closeCallback);
+      this._mqttTrackedListeners.removeTrackedListener('offline', offlineCallback);
+      this._mqttTrackedListeners.removeTrackedListener('disconnect', disconnectCallback);
 
       callback(null, connack);
     });
@@ -466,9 +506,9 @@ export class MqttBase extends EventEmitter {
   private _disconnectClient(forceDisconnect: boolean, callback: () => void): void {
     if (this._mqttClient) {
       debug('removing all listeners');
-      this._mqttClient.removeAllListeners();
+      this._mqttTrackedListeners.removeAllTrackedListeners();
       debug('adding null error listener');
-      this._mqttClient.on('error', this._nullErrorCallback);
+      this._mqttTrackedListeners.addTrackedListener('error', this._nullErrorCallback);
       /* Codes_SRS_NODE_COMMON_MQTT_BASE_16_001: [The disconnect method shall call the done callback when the connection to the server has been closed.] */
       this._mqttClient.end(forceDisconnect, callback);
     } else {
