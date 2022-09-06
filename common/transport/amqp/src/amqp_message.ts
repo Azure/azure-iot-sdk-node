@@ -117,15 +117,26 @@ export class AmqpMessage {
       const props = message.properties;
       const propsCount = props.count();
       if (propsCount > 0) {
-        if (!amqpMessage.application_properties) {
-          ensureApplicationPropertiesCreated();
-        }
+        const DT_SUBJECT = 'dt-subject';
         for (let index = 0; index < propsCount; index++) {
           const item = props.getItem(index);
           if (!!item) {
-            /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_013: [If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` `rhea` type.]*/
-            const val = (item.key === 'IoThub-status') ? rheaTypes.wrap_int(parseInt(item.value)) : item.value;
-            amqpMessage.application_properties[item.key] = val;
+            if (item.key === DT_SUBJECT) {
+              if (!amqpMessage.message_annotations) {
+                amqpMessage.message_annotations = {
+                  [DT_SUBJECT]: item.value
+                };
+              } else {
+                amqpMessage.message_annotations[DT_SUBJECT] = item.value;
+              }
+            } else {
+              if (!amqpMessage.application_properties) {
+                ensureApplicationPropertiesCreated();
+              }
+              /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_013: [If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` `rhea` type.]*/
+              const val = (item.key === 'IoThub-status') ? rheaTypes.wrap_int(parseInt(item.value)) : item.value;
+              amqpMessage.application_properties[item.key] = val;
+            }
           }
         }
       }

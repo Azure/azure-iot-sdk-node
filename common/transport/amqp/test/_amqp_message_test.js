@@ -164,6 +164,18 @@ describe('AmqpMessage', function () {
       }
     });
 
+    it('SPECIAL cases the message property \'dt-subject\' to be placed into the message annotations.', function() {
+      var message = new Message();
+      const DT_SUBJECT = 'dt-subject';
+      const DT_VALUE = 'abcd';
+      message.properties.add(DT_SUBJECT, DT_VALUE);
+
+      var amqpMessage = AmqpMessage.fromMessage(message);
+      assert.isOk(amqpMessage.message_annotations[DT_SUBJECT]);
+      assert.strictEqual(amqpMessage.message_annotations[DT_SUBJECT], DT_VALUE);
+
+    });
+
     /*Tests_SRS_NODE_IOTHUB_AMQPMSG_16_013: [If one of the property key is `IoThub-status`, this property is reserved and shall be forced to an `int` `rhea` type.]*/
     it('forces the IoThub-status property encoding to \'int\' if it exists', function() {
       var message = new Message();

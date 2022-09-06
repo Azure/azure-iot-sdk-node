@@ -19,6 +19,7 @@ import { DeviceClientOptions, HttpReceiverOptions } from 'azure-iot-device';
 import { getUserAgentString } from 'azure-iot-device';
 
 const MESSAGE_PROP_HEADER_PREFIX = 'iothub-app-';
+const MESSAGE_PROP_DT_SUBJECT = 'dt-subject';
 
 /*Codes_SRS_NODE_DEVICE_HTTP_05_009: [When any Http method receives an HTTP response with a status code >= 300, it shall invoke the done callback function with the following arguments:
 err - the standard JavaScript Error object, with the Node.js http.ServerResponse object attached as the property response]*/
@@ -174,7 +175,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           for (let i = 0; i < message.properties.count(); i++) {
             const propItem = message.properties.getItem(i);
             /*Codes_SRS_NODE_DEVICE_HTTP_13_001: [ sendEvent shall add message properties as HTTP headers and prefix the key name with the string iothub-app. ]*/
-            httpHeaders[MESSAGE_PROP_HEADER_PREFIX + propItem.key] = propItem.value;
+            httpHeaders[((propItem.key !== MESSAGE_PROP_DT_SUBJECT) ? (MESSAGE_PROP_HEADER_PREFIX) : (''))  + propItem.key] = propItem.value;
           }
 
           if (message.messageId) {
@@ -275,7 +276,7 @@ export class Http extends EventEmitter implements DeviceTransport {
                   property += ',';
                 const propItem = message.properties.getItem(propertyIdx);
                 /*Codes_SRS_NODE_DEVICE_HTTP_13_002: [ sendEventBatch shall prefix the key name for all message properties with the string iothub-app. ]*/
-                property += '\"' + MESSAGE_PROP_HEADER_PREFIX + propItem.key + '\":\"' + propItem.value + '\"';
+                property += '\"' + ((propItem.key !== MESSAGE_PROP_DT_SUBJECT) ? (MESSAGE_PROP_HEADER_PREFIX) : '') + propItem.key + '\":\"' + propItem.value + '\"';
               }
               if (propertyIdx > 0) {
                 property += '}';

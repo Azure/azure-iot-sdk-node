@@ -962,6 +962,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
   private _getEventTopicFromMessage(message: Message, extraSystemProperties?: { [key: string]: string }): string {
 
+    const DT_SUBJECT = 'dt-subject';
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_008: [The `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_036: [ If a `moduleId` was not specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/messages/events/`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_037: [ If a `moduleId` was specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/`. ]*/
@@ -1002,7 +1003,9 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     if (message.properties && message.properties.count() > 0) {
       for (let i = 0; i < message.properties.count(); i++) {
         if (i > 0 || sysPropString) topic += '&';
-        topic += encodeURIComponent(message.properties.propertyList[i].key) + '=' + encodeURIComponent(message.properties.propertyList[i].value);
+        const keyName = message.properties.propertyList[i].key;
+        topic += encodeURIComponent(((keyName === DT_SUBJECT) ? ('$.sub') : (keyName)))
+                   + '=' + encodeURIComponent(message.properties.propertyList[i].value);
       }
     }
 

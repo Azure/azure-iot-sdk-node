@@ -219,12 +219,15 @@ describe('Http', function () {
       });
       transport._http = MockHttp;
 
+      const dtSubject = 'dt-subject';
+      const dtValue = 'value';
       var msg = new Message("boo");
       var i;
-      var propsCount = 3;
-      for(i = 1; i <= propsCount; ++i) {
+      var propsCount = 4;
+      for(i = 1; i <= propsCount-1; ++i) {
         msg.properties.add('k' + i.toString(), 'v' + i.toString());
       }
+      msg.properties.add(dtSubject, dtValue);
 
       // act
       transport.sendEvent(msg, function() {});
@@ -234,11 +237,13 @@ describe('Http', function () {
       assert.isOk(spy.args[0]);
       assert.isOk(spy.args[0][2]);
       var headers = spy.args[0][2];
-      for(i = 1; i <= propsCount; ++i) {
+      for(i = 1; i <= propsCount-1; ++i) {
         var key = 'iothub-app-k' + i.toString();
         assert.isOk(headers[key]);
         assert.strictEqual(headers[key], 'v' + i.toString());
       }
+      assert.isOk(headers[dtSubject]);
+      assert.strictEqual(headers[dtSubject],dtValue);
 
       // cleanup
       done();

@@ -272,11 +272,12 @@ describe('Mqtt', function () {
         testMessage.properties.add('key1', 'value1');
         testMessage.properties.add('key2', 'value2');
         testMessage.properties.add('key$', 'value$');
+        testMessage.properties.add('dt-subject','abcd$');
 
         const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         transport.connect(function () {
           testConfig.sendFunc(transport, testMessage, function () {
-            assert.equal(fakeMqttBase.publish.firstCall.args[0], testConfig.baseTopicWithProps+'key1=value1&key2=value2&key%24=value%24' + testConfig.topicEnder);
+            assert.equal(fakeMqttBase.publish.firstCall.args[0], testConfig.baseTopicWithProps+'key1=value1&key2=value2&key%24=value%24&%24.sub=abcd%24' + testConfig.topicEnder);
             done();
           });
         });
