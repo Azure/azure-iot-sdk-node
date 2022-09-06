@@ -200,11 +200,13 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       debug(' message max send: maximum message size ' + maximumMessageSize);
       message.messageId = uuidData;
       message.properties.add('a', uuidData);
+      message.properties.add('dt-subject', uuidData);
       buffer.fill(uuidData);
 
       var onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
+            assert.strictEqual(eventData.annotations['dt-subject'], uuidData);
             debug('trying to finish from the receiving side');
             rdv.imDone('ehClient');
           } else {
