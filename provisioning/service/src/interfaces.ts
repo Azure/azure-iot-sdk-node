@@ -412,6 +412,8 @@ export interface IndividualEnrollment {
    * Custom allocation definition.
    */
   customAllocationDefinition?: CustomAllocationDefinition;
+
+  clientCertificateIssuancePolicy?: ClientCertificateIssuancePolicy;
 }
 
 /**
@@ -536,4 +538,11 @@ export interface InitialTwin {
   properties: {
     desired: TwinCollection;
   };
+}
+
+/**
+ * Client certificate policy.
+ */
+export interface ClientCertificateIssuancePolicy {
+  certificateAuthorityName: string;
 }

@@ -14,6 +14,8 @@ var simpleBody = {registrationId: 'fakeRegistrationId'};
 var fakeEk = '__FAKE_KEY__';
 var fakeSrk = '__FAKE_STORAGE_KEY__';
 var payload = {a: '__DAta__'};
+var csr = 'fake csr';
+
 var bodyWithTpm = {
   registrationId: 'fakeRegistrationId',
   tpm: {
@@ -24,6 +26,10 @@ var bodyWithTpm = {
 var bodyWithPayload = {
   registrationId: 'fakeRegistrationId',
   payload: payload
+};
+var bodyWithCsr = {
+  registrationId: 'fakeRegistrationId',
+  clientCertificateCsr: csr
 };
 
 describe('Http', function() {
@@ -303,6 +309,19 @@ describe('Http', function() {
         assert.oneOf(err, [null, undefined]);
         var body = fakeHttpRequest.write.firstCall.args[0];
         assert.equal(body, JSON.stringify(bodyWithPayload));
+        callback();
+      });
+      respond_x509(null, fakeAssignedResponse, 200);
+    });
+
+    it ('sends a body with a client certificate request property', function(callback) {
+      http.setAuthentication(fakeX509);
+      fakeRequest.clientCertificateSigningRequest = csr;
+      http.registrationRequest(fakeRequest, function(err) {
+        delete fakeRequest.clientCertificateSigningRequest;
+        assert.oneOf(err, [null, undefined]);
+        var body = fakeHttpRequest.write.firstCall.args[0];
+        assert.equal(body, JSON.stringify(bodyWithCsr));
         callback();
       });
       respond_x509(null, fakeAssignedResponse, 200);

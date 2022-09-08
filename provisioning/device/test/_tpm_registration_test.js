@@ -24,7 +24,7 @@ describe('TpmRegistration', function () {
       idScope: fakeIdScope
     }
     var fakeProvisioningPayload = {a: 'b'};
-
+    var fakeCsr = 'fake csr';
     var fakeTpmChallenge = Buffer.from('fakeSessionKey','base64');
 
     var fakeTpmRegistrationResult = {
@@ -102,6 +102,16 @@ describe('TpmRegistration', function () {
       });
     });
 
+    it('sets the client certificate request property if specified', function (testCallback) {
+      tpmReg.setClientCertificateSigningRequest(fakeCsr);
+      tpmReg.register(function () {
+        assert.isTrue(fakeProvisioningTransport.getAuthenticationChallenge.calledOnce);
+        var authArg = fakeProvisioningTransport.getAuthenticationChallenge.firstCall.args[0];
+        assert.strictEqual(authArg.clientCertificateSigningRequest, fakeCsr);
+        testCallback();
+      });
+    });
+
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_004: [The `register` method shall store the session key in the TPM by calling the `activateIdentityKey` method of the `TpmSecurityClient` object passed to the constructor with the following arguments:
     - `sessionKey`: the session key returned by the previous call to `TpmProvisioningTransport.getAuthenticationChallenge`
@@ -153,7 +163,7 @@ describe('TpmRegistration', function () {
 
 
     /*Tests_SRS_NODE_DPS_TPM_REGISTRATION_16_009: [Once the symmetric key has been stored, the `register` method shall call its own callback with a `null` error object and a `TpmRegistrationResult` object containing the information that the `TpmProvisioningTransport` returned once the registration was successful.]*/
-    it('calls the register callback once the registration is successful', function (testCallback) {
+    it('callfs the register callback once the registration is successful', function (testCallback) {
       tpmReg.register(function (err, result) {
         assert.isNull(err);
         assert.strictEqual(result.symmetricKey, fakeTpmRegistrationResult.symmetricKey);

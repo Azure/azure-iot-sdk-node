@@ -3,14 +3,11 @@
 
 'use strict';
 
-import { EventEmitter } from 'events';
-import { HttpTransportError, RestApiClient, Http as Base } from 'azure-iot-http-base';
-import { X509, errors } from 'azure-iot-common';
-import { X509ProvisioningTransport, TpmProvisioningTransport, SymmetricKeyProvisioningTransport, DeviceRegistration } from 'azure-iot-provisioning-device';
-import { RegistrationRequest, DeviceRegistrationResult, TpmAttestation } from 'azure-iot-provisioning-device';
-import { ProvisioningDeviceConstants, ProvisioningTransportOptions } from 'azure-iot-provisioning-device';
-import { translateError } from 'azure-iot-provisioning-device';
+import { errors, X509 } from 'azure-iot-common';
+import { Http as Base, HttpTransportError, RestApiClient } from 'azure-iot-http-base';
+import { DeviceRegistration, DeviceRegistrationResult, ProvisioningDeviceConstants, ProvisioningTransportOptions, RegistrationRequest, SymmetricKeyProvisioningTransport, TpmAttestation, TpmProvisioningTransport, translateError, X509ProvisioningTransport } from 'azure-iot-provisioning-device';
 import * as dbg from 'debug';
+import { EventEmitter } from 'events';
 const debug = dbg('azure-iot-provisioning-device-http:Http');
 const debugErrors = dbg('azure-iot-provisioning-device-http:Http:Errors');
 
@@ -166,6 +163,9 @@ export class Http extends EventEmitter implements X509ProvisioningTransport, Tpm
     /*Codes_SRS_NODE_PROVISIONING_HTTP_06_008: [The `registrationRequest` will, if utilizing custom allocation data, send a `payload` property in the JSON body.] */
     if (request.payload) {
       requestBody.payload = request.payload;
+    }
+    if (request.clientCertificateSigningRequest) {
+      requestBody.clientCertificateCsr = request.clientCertificateSigningRequest;
     }
 
     /* Codes_SRS_NODE_PROVISIONING_HTTP_18_005: [ `registrationRequest` shall include the current `api-version` as a URL query string value named 'api-version'. ] */

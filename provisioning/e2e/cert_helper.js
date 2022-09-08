@@ -87,3 +87,17 @@ module.exports.createDeviceCert = function(registrationId, parentCert, callback)
   });
 };
 
+module.exports.createCertificateSigningRequest = function(registrationId, is_ca, callback) {
+  var csrCreateOptions = {
+    commonName : registrationId
+  };
+  pem.createCSR(csrCreateOptions, function(err, csrWithKey, clientKey)
+  {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, csrWithKey);
+    }
+  });
+};
+

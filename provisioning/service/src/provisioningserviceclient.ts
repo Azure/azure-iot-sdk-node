@@ -3,14 +3,14 @@
 
 'use strict';
 
-import { errors, SharedAccessSignature, ConnectionString, httpCallbackToPromise, encodeUriComponentStrict } from 'azure-iot-common';
+import { ConnectionString, encodeUriComponentStrict, errors, httpCallbackToPromise, SharedAccessSignature } from 'azure-iot-common';
 import { RestApiClient } from 'azure-iot-http-base';
-import { QuerySpecification, Query, QueryResult } from './query';
+import { Query, QueryResult, QuerySpecification } from './query';
 // tslint seems to think AttestationMechanism isn't used on the next import statement so disabling this warning.
 // tslint:disable-next-line:no-unused-variable
-import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult, AttestationMechanism } from './interfaces';
-import { ErrorCallback, errorCallbackToPromise, HttpResponseCallback, ResultWithHttpResponse } from 'azure-iot-common';
 import { TokenCredential } from '@azure/core-http';
+import { ErrorCallback, errorCallbackToPromise, HttpResponseCallback, ResultWithHttpResponse } from 'azure-iot-common';
+import { AttestationMechanism, BulkEnrollmentOperation, BulkEnrollmentOperationResult, DeviceRegistrationState, EnrollmentGroup, IndividualEnrollment } from './interfaces';
 
 // tslint:disable-next-line:no-var-requires
 const packageJson = require('../package.json');
@@ -351,7 +351,8 @@ export class ProvisioningServiceClient {
   }
 
   private _versionQueryString(): string {
-    return '?api-version=2021-10-01';
+    // return '?api-version=2021-10-01';
+    return '?api-version=2021-11-01-preview';
   }
 
   private _createOrUpdate(endpointPrefix: string, enrollment: any, callback?: (err: Error, enrollmentResponse?: any, response?: any) => void): void {

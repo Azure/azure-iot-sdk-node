@@ -74,6 +74,27 @@ describe('X509Registration', function () {
       });
     });
 
+    it ('sets the client certificate request property if specified', function(callback) {
+      var transport = {
+        setAuthentication: sinon.spy(),
+      };
+      var security = {
+        getCertificate: sinon.stub().callsArgWith(0, null, fakeX509Cert),
+        getRegistrationId: sinon.stub().returns(fakeRegistrationId)
+      };
+      var fakecsr = "fake csr"
+      var clientObj = new X509Registration(fakeProvisioningHost, fakeIdScope, transport, security);
+      clientObj._pollingStateMachine.register = sinon.stub().callsArgWith(1, null, { registrationState: fakeResponse } );
+      clientObj.setClientCertificateSigningRequest(fakecsr);
+      clientObj.register(function(err, response) {
+        assert.isNotOk(err);
+        assert.strictEqual(response, fakeResponse);
+        assert(clientObj._pollingStateMachine.register.calledOnce);
+        assert.strictEqual(clientObj._pollingStateMachine.register.firstCall.args[0].clientCertificateSigningRequest, fakecsr);
+        callback();
+      });
+    });
+
 
     /* Tests_SRS_NODE_DPS_X509_REGISTRATION_18_006: [ If `getCertificate`fails, `register` shall call `callback` with the error ] */
     it ('fails if getCertificate fails', function(callback) {
