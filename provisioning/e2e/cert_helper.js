@@ -96,10 +96,6 @@ module.exports.createCertificateSigningRequest = function(registrationId, is_ca,
     if (err) {
       callback(err);
     } else {
-      // var csrWithKey = {
-      //   key : clientKey,
-      //   csr : csr,
-      // };
       callback(null, csrWithKey);
     }
   });

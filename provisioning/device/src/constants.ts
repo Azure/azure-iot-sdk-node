@@ -23,8 +23,7 @@ export class ProvisioningDeviceConstants {
   /**
    * apiVersion to use while communicating with service.
    */
-  // static apiVersion: string = '2019-03-31';
-  // To be used for DPS Cert Management
+  // TODO : To be used for DPS Cert Management and should be changed after release.
   static apiVersion: string = '2021-11-01-preview';
 
   /**

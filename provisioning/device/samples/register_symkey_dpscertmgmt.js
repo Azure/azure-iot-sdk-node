@@ -55,7 +55,6 @@ var provisioningSecurityClient = new SymmetricKeySecurityClient(registrationId, 
 
 var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvisioningTransport(), provisioningSecurityClient);
 // Register the device.
-provisioningClient.setProvisioningPayload({a: 'b'});
 provisioningClient.setClientCertificateSigningRequest(csrData)
 provisioningClient.register(function(err, result) {
   if (err) {
@@ -64,7 +63,6 @@ provisioningClient.register(function(err, result) {
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);
     console.log('deviceId=' + result.deviceId);
-    console.log('payload=' + JSON.stringify(result.payload));
     // connect to hub via the issued certificate
     var connectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';x509=true';
     var hubClient = Client.fromConnectionString(connectionString, iotHubTransport);
