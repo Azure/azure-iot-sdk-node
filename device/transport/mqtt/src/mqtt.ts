@@ -813,7 +813,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       /*Codes_SRS_NODE_DEVICE_MQTT_16_052: [`enableC2D` shall call its callback with an `Error` if subscribing to the topic fails.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_053: [`enableMethods` shall call its callback with an `Error` if subscribing to the topic fails.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_18_063: [`enableInputMessages` shall call its callback with an `Error` if subscribing to the topic fails. ]*/
-      callback(err);
+      this._ignoreConnectionClosedInErrorCallback(callback)(err);
     });
   }
 
@@ -831,7 +831,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       /*Codes_SRS_NODE_DEVICE_MQTT_16_043: [`disableC2D` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_16_046: [`disableMethods` shall call its callback with an `Error` if an error is received while unsubscribing.]*/
       /*Codes_SRS_NODE_DEVICE_MQTT_18_067: [ `disableInputMessages` shall call its callback with an `Error` if an error is received while unsubscribing. ]*/
-      callback(err);
+      this._ignoreConnectionClosedInErrorCallback(callback)(err);
     });
   }
 
@@ -1019,6 +1019,16 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
         done();
       });
     }
+  }
+
+  private _ignoreConnectionClosedInErrorCallback(callback: (err?: Error, ...args: any[]) => void): (err?: Error, ...args: any[]) => void {
+    return (err: Error, ...args: any[]) => {
+      if (err?.name === 'Error' && err?.message === 'Connection closed') {
+        debug('Mqtt subscribe/unsubscribe operation failed due to MQTT.js connection closed error. MqttBase will handle this when MQTT.js emits the close event.');
+        return;
+      }
+      callback(err, ...args);
+    };
   }
 }
 
