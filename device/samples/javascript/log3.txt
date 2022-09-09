@@ -1,0 +1,512 @@
+/home/vishnureddy/.nvm/versions/node/v16.9.1/bin/node ./device/samples/javascript/test.js
+Debugger attached.
+2022-08-29T14:52:34.948Z azure-iot-mqtt-base:MqttBase In MQTT base FSM - entered onEnter for disconnect
+2022-08-29T14:52:34.950Z azure-iot-device:DeviceClient in newListener, enabling C2D.
+2022-08-29T14:52:34.950Z azure-iot-device:DeviceClient enabling C2D
+2022-08-29T14:52:34.950Z azure-iot-common:RetryOperation _enableC2D:0:ExponentialBackOffWithJitter Operation started at 1661784754950 - Will stop retrying after: 1661784994950
+2022-08-29T14:52:34.952Z azure-iot-device-mqtt:Mqtt disconnected -> connecting (disconnected.connect)
+2022-08-29T14:52:34.954Z azure-iot-device-mqtt:Mqtt topic publish: devices/vishnureddy-test/messages/events/
+2022-08-29T14:52:34.954Z azure-iot-device-mqtt:Mqtt message topic subscribe: devices/vishnureddy-test/messages/devicebound/#
+2022-08-29T14:52:34.955Z azure-iot-common:RetryOperation open:1:ExponentialBackOffWithJitter Operation started at 1661784754955 - Will stop retrying after: 1661784994955
+2022-08-29T14:52:34.960Z azure-iot-mqtt-base:MqttBase disconnected -> connecting (disconnected.connect)
+2022-08-29T14:52:34.961Z azure-iot-mqtt-base:MqttBase username: vishnureddy-s1.azure-devices.net/vishnureddy-test/?api-version=2021-04-12&DeviceClientType=azure-iot-device%2F1.18.0%20(node%20v16.9.1%3B%20Ubuntu%2020.04%3B%20x64)
+2022-08-29T14:52:34.961Z azure-iot-mqtt-base:MqttBase uri:      wss://vishnureddy-s1.azure-devices.net:443/$iothub/websocket
+2022-08-29T14:52:34.961Z mqttjs connecting to an MQTT broker...
+2022-08-29T14:52:34.962Z mqttjs:client MqttClient :: options.protocol wss
+2022-08-29T14:52:34.962Z mqttjs:client MqttClient :: options.protocolVersion 4
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: options.username vishnureddy-s1.azure-devices.net/vishnureddy-test/?api-version=2021-04-12&DeviceClientType=azure-iot-device%2F1.18.0%20(node%20v16.9.1%3B%20Ubuntu%2020.04%3B%20x64)
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: options.keepalive 180
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: options.reconnectPeriod 0
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: options.rejectUnauthorized true
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: options.topicAliasMaximum undefined
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: clientId vishnureddy-test
+2022-08-29T14:52:34.963Z mqttjs:client MqttClient :: setting up stream
+2022-08-29T14:52:34.964Z mqtt-packet:parser _resetState: resetting packet, error, _list, and _stateCounter
+2022-08-29T14:52:34.964Z mqttjs:client _setupStream :: calling method to clear reconnect
+2022-08-29T14:52:34.964Z mqttjs:client _clearReconnect : clearing reconnect timer
+2022-08-29T14:52:34.964Z mqttjs:client _setupStream :: using streamBuilder provided to client to create stream
+2022-08-29T14:52:34.964Z mqttjs calling streambuilder for wss
+2022-08-29T14:52:34.965Z mqttjs:ws streamBuilder
+2022-08-29T14:52:34.965Z mqttjs:ws createWebSocket
+2022-08-29T14:52:34.965Z mqttjs:ws protocol: MQTT 4
+2022-08-29T14:52:34.965Z mqttjs:ws creating new Websocket for url: wss://vishnureddy-s1.azure-devices.net:443/$iothub/websocket and protocol: mqtt
+2022-08-29T14:52:34.983Z mqttjs:client _setupStream :: pipe stream to writable stream
+2022-08-29T14:52:34.984Z mqttjs:client _setupStream: sending packet `connect`
+2022-08-29T14:52:34.985Z mqttjs:client sendPacket :: packet: { cmd: 'connect' }
+2022-08-29T14:52:34.985Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:52:34.985Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:52:34.985Z mqtt-packet:writeToStream generate called
+2022-08-29T14:52:35.006Z mqtt-packet:writeToStream generate: packet.cmd: connect
+2022-08-29T14:52:35.007Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer dd 02>
+2022-08-29T14:52:35.007Z mqtt-packet:writeToStream writeNumberCached: number: 4
+2022-08-29T14:52:35.007Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 04>
+2022-08-29T14:52:35.007Z mqtt-packet:writeToStream writeString: MQTT
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: number: 180
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 b4>
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: number: 16
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 10>
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeString: vishnureddy-test
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: number: 164
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 a4>
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeString: vishnureddy-s1.azure-devices.net/vishnureddy-test/?api-version=2021-04-12&DeviceClientType=azure-iot-device%2F1.18.0%20(node%20v16.9.1%3B%20Ubuntu%2020.04%3B%20x64)
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: number: 153
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 99>
+2022-08-29T14:52:35.008Z mqtt-packet:writeToStream writeString: SharedAccessSignature sr=vishnureddy-s1.azure-devices.net%2Fdevices%2Fvishnureddy-test&sig=BYsKSYG0GXyYYVnFDMC2duyU6oSyRDB5RdrsNng%2Fcy8%3D&se=1661788354
+2022-08-29T14:52:35.008Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:52:36.035Z mqttjs:client writable stream :: parsing buffer
+2022-08-29T14:52:36.035Z mqtt-packet:parser parse: current state: _parseHeader
+2022-08-29T14:52:36.037Z mqtt-packet:parser _parseHeader: packet: Packet { cmd: 'connack', retain: false, qos: 0, dup: false, length: -1, topic: null, payload: null }
+2022-08-29T14:52:36.037Z mqtt-packet:parser parse: state complete. _stateCounter is now: 1
+2022-08-29T14:52:36.037Z mqtt-packet:parser parse: packet.length: -1, buffer list length: 3
+2022-08-29T14:52:36.037Z mqtt-packet:parser _parseVarByteNum
+2022-08-29T14:52:36.037Z mqtt-packet:parser _parseVarByteNum: result: { bytes: 1, value: 2 }
+2022-08-29T14:52:36.037Z mqtt-packet:parser _parseLength 2
+2022-08-29T14:52:36.037Z mqtt-packet:parser parse: state complete. _stateCounter is now: 2
+2022-08-29T14:52:36.037Z mqtt-packet:parser parse: packet.length: 2, buffer list length: 2
+2022-08-29T14:52:36.038Z mqtt-packet:parser _parsePayload: payload BufferListStream {
+  _bufs: [ <Buffer 01 00> ],
+  length: 2,
+  _readableState: ReadableState {
+    objectMode: false,
+    highWaterMark: 16384,
+    buffer: BufferList { head: null, tail: null, length: 0 },
+    length: 0,
+    pipes: null,
+    pipesCount: 0,
+    flowing: null,
+    ended: false,
+    endEmitted: false,
+    reading: false,
+    sync: true,
+    needReadable: false,
+    emittedReadable: false,
+    readableListening: false,
+    resumeScheduled: false,
+    paused: true,
+    emitClose: true,
+    autoDestroy: false,
+    destroyed: false,
+    defaultEncoding: 'utf8',
+    awaitDrain: 0,
+    readingMore: false,
+    decoder: null,
+    encoding: null
+  },
+  readable: true,
+  _events: [Object: null prototype] {},
+  _eventsCount: 0,
+  _maxListeners: undefined,
+  _writableState: WritableState {
+    objectMode: false,
+    highWaterMark: 16384,
+    finalCalled: false,
+    needDrain: false,
+    ending: false,
+    ended: false,
+    finished: false,
+    destroyed: false,
+    decodeStrings: true,
+    defaultEncoding: 'utf8',
+    length: 0,
+    writing: false,
+    corked: 0,
+    sync: true,
+    bufferProcessing: false,
+    onwrite: [Function (anonymous)],
+    writecb: null,
+    writelen: 0,
+    bufferedRequest: null,
+    lastBufferedRequest: null,
+    pendingcb: 0,
+    prefinished: false,
+    errorEmitted: false,
+    emitClose: true,
+    autoDestroy: false,
+    bufferedRequestCount: 0,
+    corkedRequestsFree: CorkedRequest {
+      next: null,
+      entry: null,
+      finish: [Function (anonymous)]
+    }
+  },
+  writable: true,
+  allowHalfOpen: true,
+  [Symbol(kCapture)]: false
+}
+2022-08-29T14:52:36.038Z mqtt-packet:parser _parseConnack
+2022-08-29T14:52:36.038Z mqtt-packet:parser _parseConnack: complete
+2022-08-29T14:52:36.039Z mqtt-packet:parser _parsePayload complete result: true
+2022-08-29T14:52:36.039Z mqtt-packet:parser parse: state complete. _stateCounter is now: 3
+2022-08-29T14:52:36.039Z mqtt-packet:parser parse: packet.length: 2, buffer list length: 2
+2022-08-29T14:52:36.039Z mqtt-packet:parser _newPacket
+2022-08-29T14:52:36.039Z mqtt-packet:parser _newPacket: parser emit packet: packet.cmd: connack, packet.payload: null, packet.length: 2
+2022-08-29T14:52:36.039Z mqttjs:client parser :: on packet push to packets array.
+2022-08-29T14:52:36.039Z mqtt-packet:parser _newPacket: new packet
+2022-08-29T14:52:36.039Z mqtt-packet:parser parse: state complete. _stateCounter is now: 4
+2022-08-29T14:52:36.039Z mqtt-packet:parser parse: packet.length: -1, buffer list length: 0
+2022-08-29T14:52:36.039Z mqtt-packet:parser parse: exited while loop. packet: -1, buffer list length: 0
+2022-08-29T14:52:36.039Z mqttjs:client work :: getting next packet in queue
+2022-08-29T14:52:36.039Z mqttjs:client work :: packet pulled from queue
+2022-08-29T14:52:36.039Z mqttjs:client _handlePacket :: emitting packetreceive
+2022-08-29T14:52:36.039Z mqttjs:client _handleConnack
+2022-08-29T14:52:36.039Z mqttjs:client _setupPingTimer :: keepalive 180 (seconds)
+2022-08-29T14:52:36.041Z mqttjs:client connect :: sending queued packets
+2022-08-29T14:52:36.042Z mqttjs:client deliver :: entry undefined
+2022-08-29T14:52:36.042Z mqttjs:client _resubscribe
+2022-08-29T14:52:36.042Z azure-iot-mqtt-base:MqttBase Device is connected
+2022-08-29T14:52:36.042Z azure-iot-mqtt-base:MqttBase CONNACK: {"cmd":"connack","retain":false,"qos":0,"dup":false,"length":2,"topic":null,"payload":null,"sessionPresent":true,"returnCode":0}
+2022-08-29T14:52:36.042Z azure-iot-mqtt-base:MqttBase connecting -> connected ()
+2022-08-29T14:52:36.042Z azure-iot-device-mqtt:Mqtt connect
+2022-08-29T14:52:36.042Z azure-iot-device-mqtt:Mqtt connecting -> connected ()
+2022-08-29T14:52:36.043Z azure-iot-device-mqtt:Mqtt subscribe: {"name":"devices/vishnureddy-test/messages/devicebound/#","subscribeInProgress":false,"subscribed":false,"topicMatchRegex":{}}
+2022-08-29T14:52:36.043Z mqttjs:client subscribe: array topic devices/vishnureddy-test/messages/devicebound/#
+2022-08-29T14:52:36.043Z mqttjs:client subscribe: pushing topic `devices/vishnureddy-test/messages/devicebound/#` and qos `1` to subs list
+2022-08-29T14:52:36.043Z mqttjs:client subscribe :: resubscribe true
+2022-08-29T14:52:36.044Z mqttjs:client subscribe :: call _sendPacket
+2022-08-29T14:52:36.044Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:52:36.044Z mqttjs:client sendPacket :: packet: {
+  cmd: 'subscribe',
+  subscriptions: [
+    {
+      topic: 'devices/vishnureddy-test/messages/devicebound/#',
+      qos: 1
+    }
+  ],
+  qos: 1,
+  retain: false,
+  dup: false,
+  messageId: 52996
+}
+2022-08-29T14:52:36.044Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:52:36.044Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:52:36.044Z mqtt-packet:writeToStream generate called
+2022-08-29T14:52:36.044Z mqtt-packet:writeToStream generate: packet.cmd: subscribe
+2022-08-29T14:52:36.045Z mqtt-packet:writeToStream subscribe: packet:
+2022-08-29T14:52:36.047Z mqtt-packet:writeToStream subscribe: writing to stream: [ [ [ <Buffer 80>, <Buffer 81> ], [ <Buffer 88>, <Buffer 89> ] ], [ [ <Buffer 82>, <Buffer 83> ], [ <Buffer 8a>, <Buffer 8b> ] ], [ [ <Buffer 84>, <Buffer 85> ], [ <Buffer 8c>, <Buffer 8d> ] ] ]
+2022-08-29T14:52:36.048Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 34>
+2022-08-29T14:52:36.048Z mqtt-packet:writeToStream writeNumberCached: number: 52996
+2022-08-29T14:52:36.048Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 04>
+2022-08-29T14:52:36.049Z mqtt-packet:writeToStream writeNumberCached: number: 47
+2022-08-29T14:52:36.049Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 2f>
+2022-08-29T14:52:36.049Z mqtt-packet:writeToStream writeString: devices/vishnureddy-test/messages/devicebound/#
+2022-08-29T14:52:36.049Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:52:36.049Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:52:36.049Z mqttjs:client nop :: undefined
+2022-08-29T14:52:36.050Z azure-iot-common:RetryOperation open:1 Complete
+Client connected
+2022-08-29T14:53:09.442Z azure-iot-common:RetryOperation sendEvent:2:ExponentialBackOffWithJitter Operation started at 1661784789442 - Will stop retrying after: 1661785029442
+2022-08-29T14:53:09.443Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:53:09.444Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:53:09.444Z mqttjs:client publish :: qos 1
+2022-08-29T14:53:09.444Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:53:09.444Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:53:09.444Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:53:09.445Z mqttjs:client nop :: undefined
+2022-08-29T14:53:09.445Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 52997,
+  dup: false
+}
+2022-08-29T14:53:09.445Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:53:09.445Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:53:09.445Z mqtt-packet:writeToStream generate called
+2022-08-29T14:53:09.445Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 52997, dup: false }
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream writeNumberCached: number: 52997
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 05>
+2022-08-29T14:53:09.446Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:53:09.446Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:53:09.446Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:53:09.446Z mqttjs:client nop :: undefined
+2022-08-29T14:53:09.446Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:53:39.477Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:53:39.478Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:53:39.479Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 100 milliseconds
+2022-08-29T14:53:39.579Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:53:39.581Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:53:39.582Z mqttjs:client publish :: qos 1
+2022-08-29T14:53:39.582Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:53:39.582Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:53:39.582Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:53:39.583Z mqttjs:client nop :: undefined
+2022-08-29T14:53:39.584Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 52998,
+  dup: false
+}
+2022-08-29T14:53:39.584Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:53:39.584Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:53:39.584Z mqtt-packet:writeToStream generate called
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 52998, dup: false }
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream writeNumberCached: number: 52998
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 06>
+2022-08-29T14:53:39.585Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:53:39.585Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:53:39.585Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:53:39.585Z mqttjs:client nop :: undefined
+2022-08-29T14:53:39.585Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:54:09.612Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:54:09.612Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:54:09.612Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 109.89461443176737 milliseconds
+2022-08-29T14:54:09.722Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:54:09.722Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:54:09.722Z mqttjs:client publish :: qos 1
+2022-08-29T14:54:09.722Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:54:09.722Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:54:09.722Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:54:09.722Z mqttjs:client nop :: undefined
+2022-08-29T14:54:09.723Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 52999,
+  dup: false
+}
+2022-08-29T14:54:09.723Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:54:09.723Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:54:09.723Z mqtt-packet:writeToStream generate called
+2022-08-29T14:54:09.724Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:54:09.724Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 52999, dup: false }
+2022-08-29T14:54:09.725Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:54:09.725Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:54:09.725Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:54:09.725Z mqtt-packet:writeToStream writeNumberCached: number: 52999
+2022-08-29T14:54:09.725Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 07>
+2022-08-29T14:54:09.725Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:54:09.725Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:54:09.725Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:54:09.725Z mqttjs:client nop :: undefined
+2022-08-29T14:54:09.725Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:54:39.754Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:54:39.754Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:54:39.754Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 151.07045582931312 milliseconds
+2022-08-29T14:54:39.906Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:54:39.906Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:54:39.906Z mqttjs:client publish :: qos 1
+2022-08-29T14:54:39.906Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:54:39.906Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:54:39.906Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:54:39.906Z mqttjs:client nop :: undefined
+2022-08-29T14:54:39.906Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 53000,
+  dup: false
+}
+2022-08-29T14:54:39.906Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:54:39.906Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:54:39.906Z mqtt-packet:writeToStream generate called
+2022-08-29T14:54:39.906Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:54:39.906Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 53000, dup: false }
+2022-08-29T14:54:39.906Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:54:39.906Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:54:39.907Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:54:39.907Z mqtt-packet:writeToStream writeNumberCached: number: 53000
+2022-08-29T14:54:39.907Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 08>
+2022-08-29T14:54:39.907Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:54:39.907Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:54:39.907Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:54:39.907Z mqttjs:client nop :: undefined
+2022-08-29T14:54:39.907Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:55:09.937Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:55:09.937Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:55:09.937Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 195.8353517851956 milliseconds
+2022-08-29T14:55:10.133Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:55:10.133Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:55:10.133Z mqttjs:client publish :: qos 1
+2022-08-29T14:55:10.133Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:55:10.133Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:55:10.133Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:55:10.133Z mqttjs:client nop :: undefined
+2022-08-29T14:55:10.134Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 53001,
+  dup: false
+}
+2022-08-29T14:55:10.134Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:55:10.134Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream generate called
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 53001, dup: false }
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream writeNumberCached: number: 53001
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 09>
+2022-08-29T14:55:10.134Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:55:10.134Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:55:10.134Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:55:10.134Z mqttjs:client nop :: undefined
+2022-08-29T14:55:10.134Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:55:36.047Z mqttjs:client _checkPing :: checking ping...
+2022-08-29T14:55:36.047Z mqttjs:client _checkPing :: ping response received. Clearing flag and sending `pingreq`
+2022-08-29T14:55:36.047Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:55:36.047Z mqttjs:client sendPacket :: packet: { cmd: 'pingreq' }
+2022-08-29T14:55:36.047Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:55:36.047Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:55:36.047Z mqtt-packet:writeToStream generate called
+2022-08-29T14:55:36.047Z mqtt-packet:writeToStream generate: packet.cmd: pingreq
+2022-08-29T14:55:36.047Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:55:36.047Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:55:36.047Z mqttjs:client nop :: undefined
+2022-08-29T14:55:40.158Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:55:40.159Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:55:40.159Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 347.8601430788168 milliseconds
+2022-08-29T14:55:40.507Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:55:40.507Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:55:40.507Z mqttjs:client publish :: qos 1
+2022-08-29T14:55:40.507Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:55:40.507Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:55:40.507Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:55:40.507Z mqttjs:client nop :: undefined
+2022-08-29T14:55:40.507Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 53002,
+  dup: false
+}
+2022-08-29T14:55:40.507Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:55:40.507Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:55:40.507Z mqtt-packet:writeToStream generate called
+2022-08-29T14:55:40.507Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:55:40.507Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 53002, dup: false }
+2022-08-29T14:55:40.508Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:55:40.508Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:55:40.508Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:55:40.508Z mqtt-packet:writeToStream writeNumberCached: number: 53002
+2022-08-29T14:55:40.508Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 0a>
+2022-08-29T14:55:40.508Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:55:40.508Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:55:40.508Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:55:40.508Z mqttjs:client nop :: undefined
+2022-08-29T14:55:40.508Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:56:10.538Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:56:10.538Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:56:10.538Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 832.8904540651629 milliseconds
+2022-08-29T14:56:11.371Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:56:11.371Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:56:11.372Z mqttjs:client publish :: qos 1
+2022-08-29T14:56:11.372Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:56:11.372Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:56:11.372Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:56:11.372Z mqttjs:client nop :: undefined
+2022-08-29T14:56:11.372Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 53003,
+  dup: false
+}
+2022-08-29T14:56:11.372Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:56:11.372Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream generate called
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 53003, dup: false }
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream writeNumberCached: number: 53003
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 0b>
+2022-08-29T14:56:11.372Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:56:11.372Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:56:11.372Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:56:11.373Z mqttjs:client nop :: undefined
+2022-08-29T14:56:11.373Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:56:41.403Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:56:41.403Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:56:41.403Z azure-iot-common:RetryOperation sendEvent:2 Will retry after: 211.13126878306804 milliseconds
+2022-08-29T14:56:41.614Z azure-iot-device-mqtt:Mqtt Invoking sendEvent handler in the device client FSM{"data":"Hello World","properties":{"propertyList":[]},"messageId":"","to":"","lockToken":"","correlationId":"","userId":""}
+2022-08-29T14:56:41.614Z mqttjs:client publish :: message `Hello World` to topic `devices/vishnureddy-test/messages/events/`
+2022-08-29T14:56:41.614Z mqttjs:client publish :: qos 1
+2022-08-29T14:56:41.614Z mqttjs:client MqttClient:publish: packet cmd: publish
+2022-08-29T14:56:41.615Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  start
+2022-08-29T14:56:41.615Z mqttjs:client storeAndSend :: store packet with cmd publish to outgoingStore
+2022-08-29T14:56:41.615Z mqttjs:client nop :: undefined
+2022-08-29T14:56:41.615Z mqttjs:client sendPacket :: packet: {
+  cmd: 'publish',
+  topic: 'devices/vishnureddy-test/messages/events/',
+  payload: 'Hello World',
+  qos: 1,
+  retain: false,
+  messageId: 53004,
+  dup: false
+}
+2022-08-29T14:56:41.615Z mqttjs:client sendPacket :: emitting `packetsend`
+2022-08-29T14:56:41.615Z mqttjs:client sendPacket :: writing to stream
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream generate called
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream generate: packet.cmd: publish
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream publish: packet: { cmd: 'publish', topic: 'devices/vishnureddy-test/messages/events/', payload: 'Hello World', qos: 1, retain: false, messageId: 53004, dup: false }
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream writeVarByteInt: writing to stream: <Buffer 38>
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream writeNumberCached: number: 41
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream writeNumberCached: <Buffer 00 29>
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream writeNumberCached: number: 53004
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream writeNumberCached: <Buffer cf 0c>
+2022-08-29T14:56:41.615Z mqtt-packet:writeToStream publish: payload: 'Hello World'
+2022-08-29T14:56:41.615Z mqttjs:client sendPacket :: writeToStream result true
+2022-08-29T14:56:41.615Z mqttjs:client sendPacket :: invoking cb
+2022-08-29T14:56:41.615Z mqttjs:client nop :: undefined
+2022-08-29T14:56:41.615Z mqttjs:client _sendPacket :: (vishnureddy-test) ::  end
+2022-08-29T14:57:11.643Z azure-iot-mqtt-base:translateError:Errors translating: TimeoutError: Message not acknowledged to TimeoutError: Message not acknowledged
+2022-08-29T14:57:11.643Z azure-iot-device-mqtt:Mqtt:Errors send error: TimeoutError: Message not acknowledged
+2022-08-29T14:57:11.643Z azure-iot-common:RetryOperation:Errors sendEvent:2 Past the maximum timeout for the operation. failing with the latest error: TimeoutError: Message not acknowledged.
+send err TimeoutError: Message not acknowledged
+2022-08-29T14:58:36.054Z mqttjs:client _checkPing :: checking ping...
+2022-08-29T14:58:36.054Z mqttjs:client _checkPing :: calling _cleanUp with force true
+2022-08-29T14:58:36.054Z mqttjs:client _cleanUp :: forced? true
+2022-08-29T14:58:36.054Z mqttjs:client _cleanUp :: (vishnureddy-test) :: destroying stream
+2022-08-29T14:58:36.055Z mqttjs:client _cleanUp :: client not disconnecting. Clearing and resetting reconnect.
+2022-08-29T14:58:36.055Z mqttjs:client _clearReconnect : clearing reconnect timer
+2022-08-29T14:58:36.055Z mqttjs:client _setupReconnect :: doing nothing...
+2022-08-29T14:58:36.055Z mqttjs:client _cleanUp :: clearing pingTimer
+2022-08-29T14:58:36.056Z mqttjs:client (vishnureddy-test)stream :: on close
+
+// flushes volatile which errors out the operations before the SDK is even aware that the connection is closed
+2022-08-29T14:58:36.056Z mqttjs:client flushVolatile :: deleting volatile messages from the queue and setting their callbacks as error function
+2022-08-29T14:58:36.057Z azure-iot-common:RetryOperation:Errors _enableC2D:0 Error: Error: Connection closed is not retriable
+2022-08-29T14:58:36.057Z azure-iot-device:DeviceClient:Errors Error while enabling C2D: Error: Connection closed
+2022-08-29T14:58:36.057Z azure-iot-device:DeviceClient:Errors in newListener, error enabling C2D: Error: Connection closed
+Entered errorHandler with err Error: Connection closed
+2022-08-29T14:58:36.057Z azure-iot-device-mqtt:Mqtt connected -> disconnecting (connected.disconnect)
+2022-08-29T14:58:36.058Z azure-iot-mqtt-base:MqttBase connected -> disconnecting (connected.disconnect)
+2022-08-29T14:58:36.058Z azure-iot-mqtt-base:MqttBase removing all listeners
+2022-08-29T14:58:36.058Z azure-iot-mqtt-base:MqttBase adding null error listener
+2022-08-29T14:58:36.058Z mqttjs:client end :: (vishnureddy-test)
+2022-08-29T14:58:36.058Z mqttjs:client end :: cb? true
+2022-08-29T14:58:36.058Z mqttjs:client _clearReconnect : clearing reconnect timer
+2022-08-29T14:58:36.058Z mqttjs:client end :: (vishnureddy-test) :: calling finish in 10ms once outgoing is empty
+2022-08-29T14:58:36.058Z mqttjs:client stream: emit close to MqttClient
+2022-08-29T14:58:36.058Z mqttjs:client close :: connected set to `false`
+2022-08-29T14:58:36.058Z mqttjs:client close :: clearing connackTimer
+2022-08-29T14:58:36.058Z mqttjs:client close :: clearing ping timer
+2022-08-29T14:58:36.058Z mqttjs:client close :: calling _setupReconnect
+2022-08-29T14:58:36.058Z mqttjs:client _setupReconnect :: doing nothing...
+CLOSE FIRED
