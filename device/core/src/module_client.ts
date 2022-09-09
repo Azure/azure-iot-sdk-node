@@ -30,7 +30,7 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
  * to create an IoT Hub device client.
  */
 export class ModuleClient extends InternalClient {
-  private _inputMessagesEnabled: boolean;
+  private _userRegisteredInputMessageListener: boolean;
   private _moduleDisconnectHandler: (err?: Error, result?: any) => void;
   private _methodClient: MethodClient;
 
@@ -44,7 +44,7 @@ export class ModuleClient extends InternalClient {
    */
   constructor(transport: DeviceTransport, methodClient: MethodClient) {
     super(transport, undefined);
-    this._inputMessagesEnabled = false;
+    this._userRegisteredInputMessageListener = false;
     this._methodClient = methodClient;
 
     /* Codes_SRS_NODE_MODULE_CLIENT_18_012: [ The `inputMessage` event shall be emitted when an inputMessage is received from the IoT Hub service. ]*/
@@ -53,12 +53,17 @@ export class ModuleClient extends InternalClient {
       this.emit('inputMessage', inputName, msg);
     });
 
-    this.on('removeListener', (eventName) => {
-      if (eventName === 'inputMessage' && this.listeners('inputMessage').length === 0) {
+    this.on('removeListener', () => {
+      if (this.listenerCount('inputMessage') === 0) {
+        this._userRegisteredInputMessageListener = false;
         /* Codes_SRS_NODE_MODULE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
+        debug('in removeListener, disabling input messages')
         this._disableInputMessages((err) => {
           if (err) {
+            debugErrors('in removeListener, error disabling input messages: ' + err);
             this.emit('error', err);
+          } else {
+            debug('removeListener successfully disabled input messages.');
           }
         });
       }
@@ -66,11 +71,15 @@ export class ModuleClient extends InternalClient {
 
     this.on('newListener', (eventName) => {
       if (eventName === 'inputMessage') {
+        this._userRegisteredInputMessageListener = true;
         /* Codes_SRS_NODE_MODULE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
+        debug('in newListener, enabling input messages')
         this._enableInputMessages((err) => {
           if (err) {
-            /*Codes_SRS_NODE_MODULE_CLIENT_18_017: [The client shall emit an `error` if connecting the transport fails while subscribing to `inputMessage` events.]*/
+            debugErrors('in newListener, error enabling input messages: ' + err);
             this.emit('error', err);
+          } else {
+            debug('in newListener, successfully enabled input messages');
           }
         });
       }
@@ -83,8 +92,7 @@ export class ModuleClient extends InternalClient {
         debug('transport disconnect event:  no error');
       }
       if (err && this._retryPolicy.shouldRetry(err)) {
-        if (this._inputMessagesEnabled) {
-          this._inputMessagesEnabled = false;
+        if (this._userRegisteredInputMessageListener) {
           debug('re-enabling input message link');
           this._enableInputMessages((err) => {
             if (err) {
@@ -251,33 +259,30 @@ export class ModuleClient extends InternalClient {
   }
 
   private _disableInputMessages(callback: (err?: Error) => void): void {
-    if (this._inputMessagesEnabled) {
-      this._transport.disableInputMessages((err) => {
-        if (!err) {
-          this._inputMessagesEnabled = false;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
+    debug('disabling input messages');
+    this._transport.disableInputMessages((err) => {
+      if (!err) {
+        debug('disabled input messages');
+      } else {
+        debugErrors('Error while disabling input messages: ' + err);
+      }
+      callback(err);
+    });
   }
 
   private _enableInputMessages(callback: (err?: Error) => void): void {
-    if (!this._inputMessagesEnabled) {
-      const retryOp = new RetryOperation('_enableInputMessages', this._retryPolicy, this._maxOperationTimeout);
-      retryOp.retry((opCallback) => {
-        /* Codes_SRS_NODE_MODULE_CLIENT_18_016: [ The client shall connect the transport if needed in order to receive inputMessages. ]*/
-        this._transport.enableInputMessages(opCallback);
-      }, (err) => {
-        if (!err) {
-          this._inputMessagesEnabled = true;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
+    debug('enabling input messages');
+    const retryOp = new RetryOperation('_enableInputMessages', this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.enableInputMessages(opCallback);
+    }, (err) => {
+      if (!err) {
+        debug('enabled input messages');
+      } else {
+        debugErrors('Error while enabling input messages: ' + err);
+      }
+      callback(err);
+    });
   }
 
   /**
