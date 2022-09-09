@@ -57,7 +57,7 @@ export class ModuleClient extends InternalClient {
       if (this.listenerCount('inputMessage') === 0) {
         this._userRegisteredInputMessageListener = false;
         /* Codes_SRS_NODE_MODULE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
-        debug('in removeListener, disabling input messages')
+        debug('in removeListener, disabling input messages');
         this._disableInputMessages((err) => {
           if (err) {
             debugErrors('in removeListener, error disabling input messages: ' + err);
@@ -73,7 +73,7 @@ export class ModuleClient extends InternalClient {
       if (eventName === 'inputMessage') {
         this._userRegisteredInputMessageListener = true;
         /* Codes_SRS_NODE_MODULE_CLIENT_18_014: [ The client shall start listening for messages from the service whenever there is a listener subscribed to the `inputMessage` event. ]*/
-        debug('in newListener, enabling input messages')
+        debug('in newListener, enabling input messages');
         this._enableInputMessages((err) => {
           if (err) {
             debugErrors('in newListener, error enabling input messages: ' + err);

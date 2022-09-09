@@ -17,7 +17,6 @@ import { ExponentialBackOffWithJitter, RetryPolicy, RetryOperation } from 'azure
 import { DeviceMethodRequest, DeviceMethodResponse } from './device_method';
 import { Twin, TwinProperties } from './twin';
 import { DeviceClientOptions } from './interfaces';
-import { throws } from 'assert';
 
 /**
  * @private
@@ -105,7 +104,7 @@ export abstract class InternalClient extends EventEmitter {
         }
 
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
-        if (this._twin && this._twin.desiredPropertiesUpdatesEnabled) {
+        if (this._twin && this._twin.userRegisteredDesiredPropertiesListener) {
           debug('re-enabling Twin');
           this._twin.enableTwinDesiredPropertiesUpdates((err) => {
             if (err) {
@@ -349,7 +348,7 @@ export abstract class InternalClient extends EventEmitter {
 
   protected _onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
     this._userRegisteredMethodListener = true;
-    
+
     // validate input args
     this._validateDeviceMethodInputs(methodName, callback);
 
@@ -435,7 +434,6 @@ export abstract class InternalClient extends EventEmitter {
     }, (err) => {
       if (!err) {
         debug('enabled methods');
-        this._methodsEnabled = true;
       } else {
         debugErrors('Error while enabling methods: ' + err);
       }
