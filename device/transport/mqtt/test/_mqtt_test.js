@@ -1061,6 +1061,20 @@ describe('Mqtt', function () {
         });
       });
 
+      it('Does NOT invoke callback if subscribing fails with closed error', function (testCallback) {
+        const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const closedError = new Error();
+        closedError.name = 'Error';
+        closedError.message = 'Connection closed';
+        fakeMqttBase.subscribe = sinon.stub().callsArgWith(2, closedError);
+        transport.connect(function () {
+          transport[testConfig.methodName](function (err) {
+            assert.fail('Should not have invoked the callback if the mqtt transport was closed');
+          });
+          testCallback();
+        });
+      });
+
       it('will not subscribe multiple times to the same topic', function (testCallback) {
         const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         transport[testConfig.methodName](function (err) {
@@ -1122,6 +1136,22 @@ describe('Mqtt', function () {
               testCallback();
             });
           });
+        });
+      });
+
+      it('Does NOT invoke its callback if err is closed on fail of unsubscribe', function (testCallback) {
+        const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const closedError = new Error();
+        closedError.name = 'Error';
+        closedError.message = 'Connection closed';
+        fakeMqttBase.unsubscribe = sinon.stub().callsArgWith(1, closedError);
+        transport.connect(function () {
+          transport[testConfig.enableFeatureMethod](function () {
+            transport[testConfig.disableFeatureMethod](function (err) {
+              assert.fail('Should NOT have invoked callback');
+            });
+          });
+          testCallback();
         });
       });
 
@@ -1253,6 +1283,38 @@ describe('Mqtt', function () {
         testCallback();
       });
     });
+
+    it('Does NOT invoke its callback if subscribe fails with connection closed', function (testCallback) {
+      const closedError = new Error();
+      closedError.name = 'Error';
+      closedError.message = 'Connection closed';
+      fakeMqttBase.subscribe = sinon.stub().callsArgWith(2, closedError);
+      const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      transport.connect(function () {
+        transport.enableTwinDesiredPropertiesUpdates(function (err) {
+          assert.fail('Should NOT have invoked the callback');
+        })
+      });
+      testCallback();
+    });
+
+    it('Does NOT invoke its callback if unsubscribe fails with connection closed', function (testCallback) {
+      const closedError = new Error();
+      closedError.name = 'Error';
+      closedError.message = 'Connection closed';
+      fakeMqttBase.unsubscribe = sinon.stub().callsArgWith(1, closedError);
+      const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      transport.connect(function () {
+        transport.enableTwinDesiredPropertiesUpdates(function (err) {
+          assert.isUndefined(err, 'Subscribe yielded error');
+          transport.disableTwinDesiredPropertiesUpdates(function (err) {
+            assert.fail('Should NOT have invoked the callback');
+          });
+        });
+      });
+      testCallback();
+    });
+
 
     /* Tests_SRS_NODE_DEVICE_MQTT_16_059: [`enableTwinDesiredPropertiesUpdates` shall call the `enableTwinDesiredPropertiesUpdates` on the `MqttTwinClient` object created by the constructor and pass it its callback.]*/
     it('calls \'enableTwinDesiredPropertiesUpdates\' on the MqttTwinClient and passes its callback', function () {

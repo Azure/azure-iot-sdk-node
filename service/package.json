@@ -10,7 +10,7 @@
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
     "@azure/core-http": "1.2.3",
-    "@azure/identity": "1.2.5",
+    "@azure/identity": "2.0.0",
     "@azure/ms-rest-js": "^2.0.5",
     "azure-iot-amqp-base": "2.5.0",
     "azure-iot-common": "1.13.0",

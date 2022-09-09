@@ -50,7 +50,7 @@ export class Twin extends EventEmitter {
    * The desired and reported properties dictionaries (respectively in `properties.desired` and `properties.reported`).
    */
   properties: TwinProperties;
-  desiredPropertiesUpdatesEnabled: boolean;
+  userRegisteredDesiredPropertiesListener: boolean;
   private _transport: DeviceTransport;
   private _retryPolicy: RetryPolicy;
   private _maxOperationTimeout: number;
@@ -68,7 +68,7 @@ export class Twin extends EventEmitter {
     this._transport = transport;
     this._retryPolicy = retryPolicy;
     this._maxOperationTimeout = maxTimeout;
-    this.desiredPropertiesUpdatesEnabled = false;
+    this.userRegisteredDesiredPropertiesListener = false;
     this.on('newListener', this._handleNewListener.bind(this));
     /*Codes_SRS_NODE_DEVICE_TWIN_16_001: [The `Twin` constructor shall subscribe to the `twinDesiredPropertiesUpdate` event off the `transport` object.]*/
     this._transport.on('twinDesiredPropertiesUpdate', this._onDesiredPropertiesUpdate.bind(this));
@@ -119,13 +119,18 @@ export class Twin extends EventEmitter {
    * @private
    */
   enableTwinDesiredPropertiesUpdates(callback: (err?: Error) => void): void {
+    debug('enabling twin desired properties updates');
     const retryOp = new RetryOperation('enableTwinDesiredPropertiesUpdates', this._retryPolicy, this._maxOperationTimeout);
     retryOp.retry((opCallback) => {
-      this._transport.enableTwinDesiredPropertiesUpdates((err) => {
-        this.desiredPropertiesUpdatesEnabled = !err;
-        opCallback(err);
-      });
-    }, callback);
+      this._transport.enableTwinDesiredPropertiesUpdates(opCallback);
+    }, (err) => {
+      if (!err) {
+        debug('enabled twin desired properties updates');
+      } else {
+        debugErrors('Error while enabling twin desired properties updates: ' + err);
+      }
+      callback(err);
+    });
   }
 
   // Note: Since we currently don't keep track of listeners, so we don't "disable" the twin properties updates when no one is listening.
@@ -212,6 +217,15 @@ export class Twin extends EventEmitter {
           self.emit(eventName, propertyValue);
         });
       }
+      //
+      // We want to always retain that the we want to have this feature enabled because the API (.on) doesn't really
+      // provide for the capability to say it failed.  It can certainly fail because a network operation is required to
+      // enable.
+      // By saving this off, we are strictly honoring that the feature is enabled.  If it doesn't turn on we signal via
+      // the emitted 'error' that something bad happened.
+      // But if we ever again attain a connected state, this feature will be operational.
+      //
+      this.userRegisteredDesiredPropertiesListener = true;
 
       /*Codes_SRS_NODE_DEVICE_TWIN_16_010: [When a listener is added for the first time on an event which name starts with `properties.desired`, the twin shall call the `enableTwinDesiredPropertiesUpdates` method of the `Transport` object.]*/
       this.enableTwinDesiredPropertiesUpdates((err) => {

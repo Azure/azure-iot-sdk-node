@@ -168,7 +168,7 @@ export class MqttTwinClient extends EventEmitter {
       if (err) {
         debugErrors('failed to subscribe to desired properties updates: ' + err);
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_021: [if subscribing fails with an error the `enableTwinDesiredPropertiesUpdates` shall call its callback with the translated version of this error obtained by using the `translateError` method of the `azure-iot-mqtt-base` package.]*/
-        callback(translateError(err));
+        this._ignoreConnectionClosedInErrorCallback(callback)(err);
       } else {
         debug('suback: ' + JSON.stringify(suback));
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_020: [The `enableTwinDesiredPropertiesUpdates` shall call its callback with no arguments if the subscription is successful.]*/
@@ -183,7 +183,7 @@ export class MqttTwinClient extends EventEmitter {
       if (err) {
         debugErrors('failed to subscribe to desired properties updates: ' + err);
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_024: [if unsubscribing fails with an error the `disableTwinDesiredPropertiesUpdates` shall call its callback with the translated version of this error obtained by using the `translateError` method of the `azure-iot-mqtt-base` package.]*/
-        callback(translateError(err));
+        this._ignoreConnectionClosedInErrorCallback(callback)(err);
       } else {
         debug('suback: ' + JSON.stringify(suback));
         /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_023: [The `disableTwinDesiredPropertiesUpdates` shall call its callback with no arguments if the unsubscription is successful.]*/
@@ -270,5 +270,21 @@ export class MqttTwinClient extends EventEmitter {
     } else {
       debugErrors('received a response with a malformed topic property: ' + topic);
     }
+  }
+
+  //
+  // We encountered an issue(#1110) where a closed error was raised which some application handlers would respond to by
+  // calling closed.  This would then deadlock behind the code currently executing in mqttjs's close code.
+  // The best solution that could happen exclusively inside the SDK code would be to drop the close error because
+  // we KNOW that a disconnect would be raised after mqttjs finishes the close 'rundown'.
+  //
+  private _ignoreConnectionClosedInErrorCallback(callback: (err?: Error, ...args: any[]) => void): (err?: Error, ...args: any[]) => void {
+    return (err: Error, ...args: any[]) => {
+      if (err?.name === 'Error' && err?.message === 'Connection closed') {
+        debug('Mqtt subscribe/unsubscribe operation failed due to MQTT.js connection closed error. MqttBase will handle this when MQTT.js emits the close event.');
+        return;
+      }
+      callback(translateError(err), ...args);
+    };
   }
 }
