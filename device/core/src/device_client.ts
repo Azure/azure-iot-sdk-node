@@ -29,7 +29,7 @@ function safeCallback(callback?: (err?: Error, result?: any) => void, error?: Er
  * to create an IoT Hub device client.
  */
 export class Client extends InternalClient {
-  private _c2dFeature: boolean;
+  private _userRegisteredC2dListener: boolean;
   private _deviceDisconnectHandler: (err?: Error, result?: any) => void;
   private _blobUploadClient: BlobUploadClient;
   private _fileUploadApi: FileUploadInterface;
@@ -46,11 +46,12 @@ export class Client extends InternalClient {
   constructor(transport: DeviceTransport, connStr?: string, blobUploadClient?: BlobUploadClient, fileUploadApi?: FileUploadInterface) {
     super(transport, connStr);
     this._blobUploadClient = blobUploadClient;
-    this._c2dFeature = false;
+    this._userRegisteredC2dListener = false;
     this._fileUploadApi = fileUploadApi;
 
-    this.on('removeListener', (eventName) => {
-      if (eventName === 'message' && this.listeners('message').length === 0) {
+    this.on('removeListener', () => {
+      if (this.listenerCount('message') === 0) {
+        this._userRegisteredC2dListener = false;
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `message` event.]*/
         debug('in removeListener, disabling C2D.');
         this._disableC2D((err) => {
@@ -58,7 +59,6 @@ export class Client extends InternalClient {
             debugErrors('in removeListener, error disabling C2D: ' + err);
             this.emit('error', err);
           } else {
-            this._c2dFeature = false;
             debug('removeListener successfully disabled C2D.');
           }
         });
@@ -67,6 +67,15 @@ export class Client extends InternalClient {
 
     this.on('newListener', (eventName) => {
       if (eventName === 'message') {
+        //
+        // We want to always retain that the we want to have this feature enabled because the API (.on) doesn't really
+        // provide for the capability to say it failed.  It can certainly fail because a network operation is required to
+        // enable.
+        // By saving this off, we are strictly honoring that the feature is enabled.  If it doesn't turn on we signal via
+        // the emitted 'error' that something bad happened.
+        // But if we ever again attain a connected state, this feature will be operational.
+        //
+        this._userRegisteredC2dListener = true;
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the `message` event.]*/
         debug('in newListener, enabling C2D.');
         this._enableC2D((err) => {
@@ -74,7 +83,6 @@ export class Client extends InternalClient {
             debugErrors('in newListener, error enabling C2D: ' + err);
             this.emit('error', err);
           } else {
-            this._c2dFeature = true;
             debug('in newListener, successfully enabled C2D');
           }
         });
@@ -96,7 +104,7 @@ export class Client extends InternalClient {
       if (err && this._retryPolicy.shouldRetry(err)) {
         debugErrors('reconnect policy specifies a reconnect on error');
         /*Codes_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
-        if (this._c2dFeature) {
+        if (this._userRegisteredC2dListener) {
           // turn on C2D
           debug('disconnectHandler re-enabling C2D');
           this._enableC2D((err) => {

@@ -58,14 +58,14 @@ export abstract class InternalClient extends EventEmitter {
 
   private _methodCallbackMap: any;
   private _disconnectHandler: (err?: Error, result?: any) => void;
-  private _methodsEnabled: boolean;
+  private _userRegisteredMethodListener: boolean;
 
   constructor(transport: DeviceTransport, connStr?: string) {
     /*Codes_SRS_NODE_INTERNAL_CLIENT_05_001: [The Client constructor shall throw ReferenceError if the transport argument is falsy.]*/
     if (!transport) throw new ReferenceError('transport is \'' + transport + '\'');
 
     super();
-    this._methodsEnabled = false;
+    this._userRegisteredMethodListener = false;
 
     if (connStr) {
       throw new errors.InvalidOperationError('the connectionString parameter of the constructor is not used - users of the SDK should be using the `fromConnectionString` factory method.');
@@ -92,8 +92,7 @@ export abstract class InternalClient extends EventEmitter {
       }
       if (err && this._retryPolicy.shouldRetry(err)) {
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
-        if (this._methodsEnabled) {
-          this._methodsEnabled = false;
+        if (this._userRegisteredMethodListener) {
           debug('re-enabling Methods link');
           this._enableMethods((err) => {
             if (err) {
@@ -105,7 +104,7 @@ export abstract class InternalClient extends EventEmitter {
         }
 
         /*Codes_SRS_NODE_INTERNAL_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
-        if (this._twin && this._twin.desiredPropertiesUpdatesEnabled) {
+        if (this._twin && this._twin.userRegisteredDesiredPropertiesListener) {
           debug('re-enabling Twin');
           this._twin.enableTwinDesiredPropertiesUpdates((err) => {
             if (err) {
@@ -348,6 +347,16 @@ export abstract class InternalClient extends EventEmitter {
   }
 
   protected _onDeviceMethod(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+    //
+    // We want to always retain that the we want to have this feature enabled because the API (.on) doesn't really
+    // provide for the capability to say it failed.  It can certainly fail because a network operation is required to
+    // enable.
+    // By saving this off, we are strictly honoring that the feature is enabled.  If it doesn't turn on we signal via
+    // the emitted 'error' that something bad happened.
+    // But if we ever again attain a connected state, this feature will be operational.
+    //
+    this._userRegisteredMethodListener = true;
+
     // validate input args
     this._validateDeviceMethodInputs(methodName, callback);
 
@@ -426,19 +435,18 @@ export abstract class InternalClient extends EventEmitter {
   }
 
   private _enableMethods(callback: (err?: Error) => void): void {
-    if (!this._methodsEnabled) {
-      const retryOp = new RetryOperation('_enableMethods', this._retryPolicy, this._maxOperationTimeout);
-      retryOp.retry((opCallback) => {
-        this._transport.enableMethods(opCallback);
-      }, (err) => {
-        if (!err) {
-          this._methodsEnabled = true;
-        }
-        callback(err);
-      });
-    } else {
-      callback();
-    }
+    debug('enabling methods');
+    const retryOp = new RetryOperation('_enableMethods', this._retryPolicy, this._maxOperationTimeout);
+    retryOp.retry((opCallback) => {
+      this._transport.enableMethods(opCallback);
+    }, (err) => {
+      if (!err) {
+        debug('enabled methods');
+      } else {
+        debugErrors('Error while enabling methods: ' + err);
+      }
+      callback(err);
+    });
   }
 
   // Currently there is no code making use of this function, because there is no "removeDeviceMethod" corresponding to "onDeviceMethod"

@@ -615,11 +615,8 @@ describe('ModuleClient', function () {
         sinon.spy(fakeTransport, testConfig.enableFunc);
         var client = new ModuleClient(fakeTransport);
 
-        // Calling 'on' twice to make sure it's called only once on the receiver.
-        // It works because the test will fail if the test callback is called multiple times, and it's called for every time the testConfig.eventName event is subscribed on the receiver.
         client.on(testConfig.eventName, function () {});
-        client.on(testConfig.eventName, function () {});
-        assert.isTrue(fakeTransport[testConfig.enableFunc].calledOnce);
+        assert.strictEqual(fakeTransport[testConfig.enableFunc].callCount, 1);
       });
 
       /*Tests_SRS_NODE_MODULE_CLIENT_18_015: [ The client shall stop listening for messages from the service whenever the last listener unsubscribes from the `inputMessage` event. ]*/
