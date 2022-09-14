@@ -6,7 +6,6 @@
   "license": "MIT",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "azure-iot-common": "1.13.0",
     "azure-iot-provisioning-device": "1.9.0",
     "azure-iot-provisioning-device-amqp": "1.9.0",
@@ -19,6 +18,7 @@
     "azure-iothub": "1.15.0",
     "chai": "^4.3.3",
     "debug": "^4.3.1",
+    "es5-ext": "0.10.53",
     "jshint": "^2.13.4",
     "mocha": "^9.2.1",
     "mocha-junit-reporter": "^2.0.2",
@@ -35,7 +35,7 @@
     "service_create_delete": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _service_create_delete.js",
     "provisioning_e2e": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _provisioning_e2e.js",
     "lint": "jshint --show-non-errors .",
-    "alltest": "mocha -- _*.js",
+    "alltest": "cross-env DEBUG=azure* mocha -- _*.js",
     "e2e": "npm -s run lint && npm -s run alltest"
   },
   "engines": {
@@ -48,5 +48,8 @@
   "bugs": {
     "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
   },
-  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme",
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
 }
