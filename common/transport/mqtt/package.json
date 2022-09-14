@@ -8,11 +8,11 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "azure-iot-common": "1.13.0",
     "debug": "^4.3.1",
+    "es5-ext": "0.10.53",
     "machina": "^4.0.2",
-    "mqtt": "^4.2.8",
+    "mqtt": "github:BertKleewein/MQTT.js#typescript",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
