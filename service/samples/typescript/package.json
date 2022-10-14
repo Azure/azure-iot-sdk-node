@@ -6,7 +6,7 @@
   "author": "Microsoft Corp.",
   "license": "MIT",
   "dependencies": {
-    "azure-iothub": "1.15.0"
+    "azure-iothub": "1.15.1"
   },
   "devDependencies": {
     "encoding": "^0.1.13",

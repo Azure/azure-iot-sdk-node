@@ -31,12 +31,12 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iot-common": "1.13.0",
-    "azure-iot-device": "1.18.0",
-    "azure-iot-device-amqp": "1.14.0",
-    "azure-iot-device-http": "1.14.0",
-    "azure-iot-device-mqtt": "1.16.0",
-    "azure-iothub": "1.15.0",
+    "azure-iot-common": "1.13.1",
+    "azure-iot-device": "1.18.1",
+    "azure-iot-device-amqp": "1.14.1",
+    "azure-iot-device-http": "1.14.1",
+    "azure-iot-device-mqtt": "1.16.1",
+    "azure-iothub": "1.15.1",
     "debug": "^4.3.1",
     "uuid": "^8.3.2"
   }

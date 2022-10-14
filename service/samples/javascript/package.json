@@ -13,7 +13,7 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iothub": "1.15.0",
+    "azure-iothub": "1.15.1",
     "azure-storage": "^2.10.4"
   },
   "devDependencies": {
