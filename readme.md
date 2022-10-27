@@ -112,33 +112,6 @@ The Node SDK offers releases for new features, critical bug fixes, and Long Term
 
 New features and critical bug fixes (including security updates) will be released on the main branch. These releases will be tagged using the date formatted `yyyy-mm-dd`. A feature release will bump the `minor` version and reset the `patch` version to 0. A critical bug fix will bump the `patch` version only.
 
-# Long Term Support (LTS)
-
-The project offers a Long Term Support (LTS) version to allow users that do not need the latest features to be shielded from unwanted changes.
-
-LTS branches receive all bug fixes that fall in one of these categories:
-
-- security bugfixes
-- critical bugfixes (crashes, memory leaks, etc.)
-
-No new features or improvements will be picked up in an LTS branch.
-
-LTS branches are named `lts_mm_yyyy`, where *mm* and *yyyy* are the month and year when the branch was created. An example of such a branch is `lts_07_2017`.
-
-### LTS Schedule<sup>1</sup>
-
-Below is a table showing the mapping of the LTS branches to the package versions released
-
-| NPM Package | Github Branch | LTS Status | LTS Start Date | Maintenance End Date | Removed Date |
-| :-----------: | :-----------: | :--------: | :------------: | :------------------: | :----------: |
-| 1.17.x        | [lts_07_2020](https://github.com/Azure/azure-iot-sdk-node/tree/lts_07_2020)   | Active     | 2020-07-28     | 2022-01-31           | 2022-06-30   |
-
-We have extended the life of the current LTS.  A new LTS will be available in January 2022.
-
-<sup>1</sup> All scheduled dates are subject to change by the Azure IoT SDK team.
-
-New LTS branches will generally be released around the midpoint of the current LTS.
-
 # Read More
 
 * [Azure IoT Hub documentation][iot-hub-documentation]
@@ -146,7 +119,6 @@ New LTS branches will generally be released around the midpoint of the current L
 * [Setup IoT Hub][setup-iothub]
 * [Node.js API reference: Service SDK][node-api-service-reference]
 * [Node.js API reference: Device SDK][node-api-device-reference]
-
 
 ---
 
