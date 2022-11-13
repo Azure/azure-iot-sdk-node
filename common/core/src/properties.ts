@@ -39,12 +39,13 @@ export class Properties {
 
   /**
    * Returns the key-value pair corresponding to the given index.
+   *
    * @returns {Object}  Key-value pair corresponding to the given index. The
    *                    returned object has the properties `key` and `value`
    *                    corresponding to the key and value of the property.
    */
   /* Codes_SRS_NODE_IOTHUB_PROPERTIES_07_001: [if the supplied index is greater or equal to zero and the is less than property map length then it shall return the property object.] */
-  getItem(index: number): { key: string, value: string } {
+  getItem(index: number): { key: string; value: string } {
     if (index >= 0 && index < this.propertyList.length)
       return this.propertyList[index];
 
@@ -54,6 +55,7 @@ export class Properties {
 
   /**
    * Returns the value property of the element that has the given key.
+   *
    * @returns {Object}  corresponding value or undefined if the key doesn't exist.
    */
   getValue(key: string): any {

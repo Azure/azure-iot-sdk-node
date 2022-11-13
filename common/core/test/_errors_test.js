@@ -3,10 +3,10 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var errors = require('../dist/errors.js');
+const assert = require('chai').assert;
+const errors = require('../dist/errors.js');
 
-describe('errors', function() {
+describe('errors', function () {
 
   [
     errors.ArgumentError,
@@ -42,23 +42,23 @@ describe('errors', function() {
     errors.OperationCancelledError,
     errors.DeviceRegistrationFailedError,
     errors.SecurityDeviceError
-  ].forEach(function(ErrorCtor) {
+  ].forEach(function (ErrorCtor) {
     /*Tests_SRS_NODE_COMMON_ERRORS_16_001: All custom error types shall inherit from the standard Javascript error object.*/
-    it(ErrorCtor.name + ' inherits from the standard javascript \'Error\' object', function() {
-      var err = new ErrorCtor('test');
+    it(ErrorCtor.name + ' inherits from the standard javascript \'Error\' object', function () {
+      const err = new ErrorCtor('test');
       assert.instanceOf(err, Error);
     });
 
     /*Tests_SRS_NODE_COMMON_ERRORS_16_002: All custom error types shall contain a valid call stack.*/
     it(ErrorCtor.name + ' contains a valid call stack', function () {
-      var err = new ErrorCtor('test');
+      const err = new ErrorCtor('test');
       assert.isOk(err.stack);
     });
 
     /*Tests_SRS_NODE_COMMON_ERRORS_16_003: All custom error types shall accept a message as an argument of the constructor and shall populate their message property with it.*/
-    it(ErrorCtor.name + ' accepts a message as a constructor argument and populates its message property with it', function() {
-      var errorMessage = 'test error message';
-      var err = new ErrorCtor(errorMessage);
+    it(ErrorCtor.name + ' accepts a message as a constructor argument and populates its message property with it', function () {
+      const errorMessage = 'test error message';
+      const err = new ErrorCtor(errorMessage);
       assert.equal(err.message, errorMessage);
     });
   });

@@ -85,7 +85,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
     };
 
     if (linkOptions) {
-      for (let k in linkOptions) {
+      for (const k in linkOptions) {
         this._combinedOptions[k] = linkOptions[k];
       }
     }
@@ -102,7 +102,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
 
     /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_012: [If a `message` event is emitted by the `rhea` link object, the `ReceiverLink` object shall emit a `message` event with the same content.]*/
     const receiverMessageHandler = (context: EventContext): void => {
-      this._undisposedDeliveries.push({msg: context.message as any, delivery: context.delivery});
+      this._undisposedDeliveries.push({ msg: context.message as any, delivery: context.delivery });
       this.emit('message', context.message);
     };
 
@@ -167,7 +167,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           receiverOpenEvent: (context: EventContext) => {
             debug(this.toString() + ': In receiver attaching state - open event for ' + context.receiver.name);
-            let callback = this._attachingCallback;
+            const callback = this._attachingCallback;
             this._attachingCallback = null;
             this._fsm.transition('attached', callback);
           },
@@ -187,8 +187,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // We are about to transition to the detached state, so clean up.
             //
             manageReceiverHandlers('removeListener');
-            let error = this._indicatedError;
-            let callback = this._attachingCallback;
+            const error = this._indicatedError;
+            const callback = this._attachingCallback;
             this._indicatedError = undefined;
             this._attachingCallback = undefined;
             this._receiverCloseOccurred = true;
@@ -204,8 +204,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // We will signal to that callback that an error occurred. We will also invoke the callback supplied
             // for this detach.
             //
-            let error = err || this._indicatedError || new Error('Unexpected link detach while attaching');
-            let attachingCallback = this._attachingCallback;
+            const error = err || this._indicatedError || new Error('Unexpected link detach while attaching');
+            const attachingCallback = this._attachingCallback;
             this._indicatedError = undefined;
             this._attachingCallback = undefined;
             if (attachingCallback) {
@@ -217,8 +217,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_003: [If the `forceDetach` method is invoked on the `ReceiverLink` while still attaching, the ReceiverLink shall detach.  With the error supplied to the forceDetach, the `attach` callback will also be invoked.  If the error is NOT falsy it will also be emitted as the argument to the `error` event.] */
             debug(this.toString() + ': Force detaching while attaching of rhea receiver link ' + this._linkAddress);
             manageReceiverHandlers('removeListener');
-            let error = err || this._indicatedError;
-            let attachingCallback = this._attachingCallback;
+            const error = err || this._indicatedError;
+            const attachingCallback = this._attachingCallback;
             this._indicatedError = undefined;
             this._attachingCallback = undefined;
             attachingCallback(error);
@@ -247,7 +247,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             // already indicated by the receiver_error event. Or it could simply be that for some reason (disconnect tests?)
             // the service side had decided to shut down the link.
             //
-            let error = this._indicatedError; // This might be undefined.
+            const error = this._indicatedError; // This might be undefined.
             this._indicatedError = undefined;
             this._receiverCloseOccurred = true;
             debugErrors(this.toString() + ': In receiver attached state - close event for ' + context.receiver.name + ' already indicated error is: ' + getErrorName(error));
@@ -274,7 +274,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', undefined, err);
           },
           accept: (message, callback) => {
-            let delivery = this._findDeliveryRecord(message);
+            const delivery = this._findDeliveryRecord(message);
             if (delivery) {
               /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_022: [** The `accept` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageCompleted` object if a callback is specified.]*/
               delivery.accept();
@@ -284,7 +284,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             }
           },
           reject: (message, callback) => {
-            let delivery = this._findDeliveryRecord(message);
+            const delivery = this._findDeliveryRecord(message);
             if (delivery) {
               /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_023: [** The `reject` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageRejected` object if a callback is specified.]*/
               delivery.reject();
@@ -294,7 +294,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             }
           },
           abandon: (message, callback) => {
-            let delivery = this._findDeliveryRecord(message);
+            const delivery = this._findDeliveryRecord(message);
             if (delivery) {
               /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_16_024: [** The `abandon` method shall work whether a `callback` is specified or not, and call the callback with a `result.MessageAbandoned` object if a callback is specified.]*/
               delivery.release();
@@ -333,8 +333,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
           },
           receiverCloseEvent: (context: EventContext) => {
             debugErrors(this.toString() + ': In receiver detaching state - close event for ' + context.receiver.name + ' already indicated error is: ' + getErrorName(this._indicatedError));
-            let error = this._indicatedError;
-            let callback = this._detachingCallback;
+            const error = this._indicatedError;
+            const callback = this._detachingCallback;
             this._detachingCallback = undefined;
             this._indicatedError = undefined;
             manageReceiverHandlers('removeListener');
@@ -358,8 +358,8 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
             /*Codes_SRS_NODE_AMQP_RECEIVER_LINK_06_005: [If `forceDetach` invoked while detaching, the detach will be completed with the error supplied to the `forceDetach` or an error indicating that the `detach` was preempted by the `forceDetach`.] */
             debugErrors(this.toString() + ': While detaching - Force detaching for receiver link ' + this._linkAddress);
             this._rheaReceiver.remove();
-            let detachCallback = this._detachingCallback;
-            let error = err || this._indicatedError || new Error('Detach preempted by force');
+            const detachCallback = this._detachingCallback;
+            const error = err || this._indicatedError || new Error('Detach preempted by force');
             this._detachingCallback = undefined;
             this._indicatedError = undefined;
             manageReceiverHandlers('removeListener');
@@ -439,7 +439,7 @@ export class ReceiverLink  extends EventEmitter implements AmqpLink {
   private _findDeliveryRecord(msg: AmqpMessage): Delivery {
     for (let element = 0; element < this._undisposedDeliveries.length; element++) {
       if (this._undisposedDeliveries[element].msg === msg) {
-        let delivery = this._undisposedDeliveries[element].delivery;
+        const delivery = this._undisposedDeliveries[element].delivery;
         this._undisposedDeliveries.splice(element, 1);
         return delivery;
       }

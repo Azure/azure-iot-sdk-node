@@ -76,8 +76,8 @@ openssl req \
     -subj '/CN=Azure IoT Test Only' \
     -keyout ${script_dir}/secrets/certs/azure-iot-test-only.key \
     -out ${script_dir}/secrets/certs/azure-iot-test-only.cert.pem > /dev/null 2>&1
-root_cert=$(printf "%s" $(base64 ${script_dir}/secrets/certs/azure-iot-test-only.cert.pem))
-private_key=$(printf "%s" $(base64 ${script_dir}/secrets/certs/azure-iot-test-only.key))
+root_cert=$(printf "%s" $(base64 -i ${script_dir}/secrets/certs/azure-iot-test-only.cert.pem))
+private_key=$(printf "%s" $(base64 -i ${script_dir}/secrets/certs/azure-iot-test-only.key))
 
 
 # start deployment
@@ -91,7 +91,7 @@ deployment_out=$(az deployment sub create --only-show-errors \
     -p \
         rgName=$rgName \
         alias=$(az account show --query '{user:user.name}' -o tsv) \
-        userObjectId=$(az ad signed-in-user show --query objectId -o tsv) \
+        userObjectId=$(az ad signed-in-user show --query id -o tsv) \
         rootCertValue=$root_cert \
         rootCertPrivateKey=$private_key)
 

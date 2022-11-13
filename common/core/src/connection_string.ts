@@ -13,48 +13,56 @@ import { ArgumentError } from './errors';
 export class ConnectionString {
   /**
    * Hostname of the Azure IoT hub.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   HostName?: string;
   /**
    * Unique device identifier as it exists in the device identity registry. This is only used for device connection strings.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   DeviceId?: string;
   /**
    * Unique module identifier as it exists in the device identity registry. This is only used for device connection strings.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   ModuleId?: string;
   /**
    * Symmetric key used to create shared access signature tokens that are in turn used to authenticate the connection. Associated either with a specific device or a specific service policy.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   SharedAccessKey?: string;
   /**
    * Name of the access policy used to connect to the Azure IoT hub. used only in the case of the service SDK, unused with the Device SDK (which uses `DeviceId` instead).
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   SharedAccessKeyName?: string;
   /**
    * IP address or internet name of the host machine working as a device or protocol gateway.  Used when communicating with Azure Edge devices.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   GatewayHostName?: string;
   /**
    * A shared access signature which encapsulates "device connect" permissions on an IoT hub.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
   SharedAccessSignature?: string;
   /**
    * This property exists only if a device uses x509 certificates for authentication and if it exists, will be set to True.
+   *
    * @memberof {azure-iot-common.ConnectionString}
    */
   // tslint:disable-next-line:variable-name
@@ -62,6 +70,7 @@ export class ConnectionString {
 
   /**
    * Parses a string and returns the corresponding {@link azure-iot-common.ConnectionString} object.
+   *
    * @param {string}   source          string from which the connection string will be extracted
    * @param {string[]} requiredFields  array of strings listing the fields that are expected to be found.
    */

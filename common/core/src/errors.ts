@@ -168,7 +168,7 @@ export class MessageTooLargeError extends Error {
 }
 
 /**
- * Error thrown when an internal server error occured. You may have found a bug?
+ * Error thrown when an internal server error occurred. You may have found a bug?
  *
  * @augments {Error}
  */

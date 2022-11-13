@@ -9,7 +9,7 @@ import * as getos from 'getos';
  * @private
  */
 export function getAgentPlatformString(callback: (platformString?: string) => void): void {
-  let ver = [];
+  const ver = [];
 
   /*Codes_SRS_NODE_COMMON_UTILS_18_001: [`getAgentPlatformString` shall use `process.version` to get the node.js version.]*/
   ver.push('node ' + process.version);

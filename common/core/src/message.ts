@@ -69,6 +69,7 @@ export class Message {
 
   /**
    * Creates a new {@link azure-iot-common.Message} object
+   *
    * @constructor
    * @param data a Node [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer}
    *             object or anything that can be passed to the [Buffer]{@link https://nodejs.org/api/globals.html#globals_class_buffer} constructor
@@ -146,6 +147,6 @@ export class Message {
 }
 
 export namespace Message {
-  export type BufferConvertible = Buffer | String | any[] | ArrayBuffer;
+  export type BufferConvertible = Buffer | string | any[] | ArrayBuffer;
 
 }

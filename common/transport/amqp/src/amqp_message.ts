@@ -40,11 +40,11 @@ export class AmqpMessage {
   content_encoding?: undefined | 'utf-8' | 'utf-16' | 'utf-32';
   body: any;
   application_properties: {
-    [key: string]: any
+    [key: string]: any;
   };
 
   message_annotations: {
-    [key: string]: any
+    [key: string]: any;
   };
 
   /**
@@ -53,11 +53,11 @@ export class AmqpMessage {
    *
    * @param {module:azure-iot-common.Message}   message   The {@linkcode Message} object from which to create an AMQP message.
    */
-  static fromMessage (message: Message): AmqpMessage {
+  static fromMessage(message: Message): AmqpMessage {
     if (!message) throw new ReferenceError('message is \'' + message + '\'');
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_001: [The fromMessage method shall create a new instance of AmqpMessage.]*/
-    let amqpMessage = new AmqpMessage();
+    const amqpMessage = new AmqpMessage();
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_05_003: [If the message argument has a to property, the AmqpMessage object shall have a property named to with the same value.]*/
     if (message.to) {
@@ -120,7 +120,7 @@ export class AmqpMessage {
         const DT_SUBJECT = 'dt-subject';
         for (let index = 0; index < propsCount; index++) {
           const item = props.getItem(index);
-          if (!!item) {
+          if (item) {
             if (item.key === DT_SUBJECT) {
               if (!amqpMessage.message_annotations) {
                 amqpMessage.message_annotations = {
@@ -165,7 +165,7 @@ export class AmqpMessage {
     }
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_009: [The `toMessage` method shall set the `Message.data` of the message to the content of the `AmqpMessage.body.content` property.]*/
-    let msg: Message = ( amqpMessage.body ) ? ( new Message(amqpMessage.body.content) ) : ( new Message(undefined) );
+    const msg: Message = ( amqpMessage.body ) ? ( new Message(amqpMessage.body.content) ) : ( new Message(undefined) );
 
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_005: [The `toMessage` method shall set the `Message.to` property to the `AmqpMessage.to` value if it is present.]*/
     if (amqpMessage.to) {
@@ -213,8 +213,8 @@ export class AmqpMessage {
     /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_007: [The `toMessage` method shall convert the user-defined `AmqpMessage.applicationProperties` to a `Properties` collection stored in `Message.properties`.]*/
     if (amqpMessage.application_properties) {
       const appProps = amqpMessage.application_properties;
-      for (let key in appProps) {
-        if (appProps.hasOwnProperty(key)) {
+      for (const key in appProps) {
+        if (Object.prototype.hasOwnProperty.call(appProps, key)) {
           /*Codes_SRS_NODE_IOTHUB_AMQPMSG_16_008: [The `toMessage` method shall set the `Message.ack` property to the `AmqpMessage.application_properties['iothub-ack']` value if it is present.]*/
           if (key === 'iothub-ack') {
             msg.ack = appProps[key];
