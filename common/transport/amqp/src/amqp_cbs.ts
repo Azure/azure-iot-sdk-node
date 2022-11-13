@@ -69,9 +69,9 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
   private _receiverLink: ReceiverLink;
   private _putToken: PutTokenStatus = new PutTokenStatus();
   private _putTokensNotYetSent: {
-    audience: string,
-    token: string,
-    callback: (err?: Error) => void
+    audience: string;
+    token: string;
+    callback: (err?: Error) => void;
   }[];
 
   constructor(session: Session) {
@@ -227,7 +227,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
           'reply_to': 'cbs'
           ```
           and a body containing `<sasToken>`.]*/
-            let amqpMessage = new AmqpMessage();
+            const amqpMessage = new AmqpMessage();
             amqpMessage.application_properties = {
               operation: 'put-token',
               type: 'servicebus.windows.net:sastoken',
@@ -241,7 +241,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             amqpMessage.message_id = uuid.v4();
             amqpMessage.reply_to = 'cbs';
 
-            let outstandingPutToken: PutTokenOperation = {
+            const outstandingPutToken: PutTokenOperation = {
               putTokenCallback: putTokenCallback,
               expirationTime: Math.round(Date.now() / 1000) + this._putToken.numberOfSecondsToTimeout,
               correlationId: amqpMessage.message_id
@@ -345,7 +345,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
 
   private _removeExpiredPutTokens(): void {
     const currentTime = Math.round(Date.now() / 1000);
-    let expiredPutTokens: PutTokenOperation[] = [];
+    const expiredPutTokens: PutTokenOperation[] = [];
     while (this._putToken.outstandingPutTokens.length > 0) {
       //
       // The timeouts in this array by definition are monotonically increasing.  We will be done looking if we

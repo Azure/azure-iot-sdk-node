@@ -72,6 +72,7 @@ export class ExponentialBackoffWithJitterParameters {
  * Implements an Exponential Backoff with Jitter retry strategy.
  * The function to calculate the next interval is the following (x is the xth retry):
  * F(x) = min(Cmin+ (2^(x-1)-1) * rand(C * (1 – Jd), C*(1-Ju)), Cmax)
+ *
  * @implements {RetryStrategy}
  */
 /*Codes_SRS_NODE_COMMON_RETRY_POLICY_16_005: [The `ExponentialBackoffWithJitter` class shall implement the `RetryPolicy` interface.]*/
@@ -93,6 +94,7 @@ export class ExponentialBackOffWithJitter implements RetryPolicy {
 
   /**
    * Initializes a new instance of the {@link azure-iot-common.ExponentialBackOffWithJitter} class.
+   *
    * @param maxTimeout            maximum allowed timeout in milliseconds.
    * @param immediateFirstRetry   boolean indicating whether the first retry should be immediate (default) or wait the first interval (c value).
    */
@@ -130,10 +132,10 @@ export class ExponentialBackOffWithJitter implements RetryPolicy {
       return 0;
     } else {
       /*Codes_SRS_NODE_COMMON_RETRY_POLICY_16_007: [The `getNextTimeout` method shall implement the following math formula to determine the next timeout value: `F(x) = min(Cmin+ (2^(x-1)-1) * rand(C * (1 – Jd), C*(1-Ju)), Cmax)`]*/
-      let constants = isThrottled ? this.throttledParameters : this.normalParameters;
-      let minRandomFactor = constants.c * (1 - constants.jd);
-      let maxRandomFactor = constants.c * (1 - constants.ju);
-      let randomJitter = Math.random() * (maxRandomFactor - minRandomFactor);
+      const constants = isThrottled ? this.throttledParameters : this.normalParameters;
+      const minRandomFactor = constants.c * (1 - constants.jd);
+      const  maxRandomFactor = constants.c * (1 - constants.ju);
+      const randomJitter = Math.random() * (maxRandomFactor - minRandomFactor);
       return Math.min(constants.cMin + (Math.pow(2, retryCount - 1) - 1) * randomJitter, constants.cMax);
     }
   }

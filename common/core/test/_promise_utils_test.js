@@ -1,16 +1,18 @@
+/* eslint-disable mocha/no-mocha-arrows */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
 
-var assert = require('chai').assert;
-var callbackToPromise = require('../dist/promise_utils').callbackToPromise;
-var errorCallbackToPromise = require('../dist/promise_utils').errorCallbackToPromise;
-var noErrorCallbackToPromise = require('../dist/promise_utils').noErrorCallbackToPromise;
-var doubleValueCallbackToPromise = require('../dist/promise_utils').doubleValueCallbackToPromise;
-var tripleValueCallbackToPromise = require('../dist/promise_utils').tripleValueCallbackToPromise;
-var httpCallbackToPromise = require('../dist/promise_utils').httpCallbackToPromise;
+const assert = require('chai').assert;
+const callbackToPromise = require('../dist/promise_utils').callbackToPromise;
+const errorCallbackToPromise = require('../dist/promise_utils').errorCallbackToPromise;
+const noErrorCallbackToPromise = require('../dist/promise_utils').noErrorCallbackToPromise;
+const doubleValueCallbackToPromise = require('../dist/promise_utils').doubleValueCallbackToPromise;
+const tripleValueCallbackToPromise = require('../dist/promise_utils').tripleValueCallbackToPromise;
+const httpCallbackToPromise = require('../dist/promise_utils').httpCallbackToPromise;
 
+// eslint-disable-file mocha/no-mocha-arrows
 describe('PromiseUtils', () => {
     describe('#callbackToPromise', () => {
         it('executes user callback when passed', function (done) {
@@ -28,13 +30,13 @@ describe('PromiseUtils', () => {
             assert.isUndefined(promise);
         });
 
-        it('throws when user callback is not a Function', function(done) {
+        it('throws when user callback is not a Function', function (done) {
             const functionWithCallback = (callback) => {
                 callback();
             };
             const userCallback = 42;
 
-            assert.throws(function() {
+            assert.throws(function () {
                 callbackToPromise(functionWithCallback, userCallback);
                 done("It should never reach this code")
             }, TypeError);
@@ -42,13 +44,13 @@ describe('PromiseUtils', () => {
             done();
         });
 
-        it('throws when an Error is thrown', function() {
+        it('throws when an Error is thrown', function () {
             const functionWithCallback = (_) => {
                 throw new Error();
             };
 
             callbackToPromise(functionWithCallback)
-                .then(res => assert.fail(res), err => assert.isDefined(err));
+                .then((res) => assert.fail(res), (err) => assert.isDefined(err));
         });
 
         it('returns undefined result for empty callback', function (done) {
@@ -56,10 +58,10 @@ describe('PromiseUtils', () => {
                 callback();
             };
 
-            callbackToPromise(functionWithEmptyPromise).then(result => {
+            callbackToPromise(functionWithEmptyPromise).then((result) => {
                 assert.isUndefined(result);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -69,10 +71,10 @@ describe('PromiseUtils', () => {
                 callback(undefined, undefined);
             };
 
-            callbackToPromise(functionWithEmptyPromise).then(result => {
+            callbackToPromise(functionWithEmptyPromise).then((result) => {
                 assert.isUndefined(result);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -83,10 +85,10 @@ describe('PromiseUtils', () => {
                 callback(undefined, returnValue);
             };
 
-            callbackToPromise(functionWithSimpleResult).then(result => {
+            callbackToPromise(functionWithSimpleResult).then((result) => {
                 assert.equal(result, returnValue);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -100,10 +102,10 @@ describe('PromiseUtils', () => {
                 callback(undefined, returnValue);
             }
 
-            callbackToPromise(functionWithComplexResult).then(result => {
+            callbackToPromise(functionWithComplexResult).then((result) => {
                 assert.deepEqual(result, returnValue);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -117,10 +119,10 @@ describe('PromiseUtils', () => {
                 setTimeout(() => callback(undefined, returnValue), 1000);
             };
 
-            callbackToPromise(functionWithComplexResult).then(result => {
+            callbackToPromise(functionWithComplexResult).then((result) => {
                 assert.deepEqual(result, returnValue);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -133,9 +135,9 @@ describe('PromiseUtils', () => {
                 callback(error);
             };
 
-            callbackToPromise(functionWithEmptyPromise).then(result => {
+            callbackToPromise(functionWithEmptyPromise).then((result) => {
                 done(result);
-            }, err => {
+            }, (err) => {
                 assert.deepEqual(err, error);
                 done();
             });
@@ -149,9 +151,9 @@ describe('PromiseUtils', () => {
                 callback(error, 'this shouldn\'t be returned');
             };
 
-            callbackToPromise(functionWithEmptyPromise).then(result => {
+            callbackToPromise(functionWithEmptyPromise).then((result) => {
                 done(result);
-            }, err => {
+            }, (err) => {
                 assert.deepEqual(err, error);
                 done();
             });
@@ -162,10 +164,10 @@ describe('PromiseUtils', () => {
                 callback();
             };
 
-            callbackToPromise(functionWithErrorOnly).then(result => {
+            callbackToPromise(functionWithErrorOnly).then((result) => {
                 assert.isUndefined(result);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -187,13 +189,13 @@ describe('PromiseUtils', () => {
             assert.isUndefined(promise);
         });
 
-        it('throws when user callback is not a Function', function(done) {
+        it('throws when user callback is not a Function', function (done) {
             const functionWithCallback = (callback) => {
                 callback();
             };
             const userCallback = 42;
 
-            assert.throws(function() {
+            assert.throws(function () {
                 errorCallbackToPromise(functionWithCallback, userCallback);
                 done("It should never reach this code")
             }, TypeError);
@@ -206,10 +208,10 @@ describe('PromiseUtils', () => {
                 callback();
             };
 
-            errorCallbackToPromise(functionWithErrorOnly).then(result => {
+            errorCallbackToPromise(functionWithErrorOnly).then((result) => {
                 assert.isUndefined(result);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -220,9 +222,9 @@ describe('PromiseUtils', () => {
                 callback(result);
             };
 
-            errorCallbackToPromise(functionWithErrorOnly).then(result => {
+            errorCallbackToPromise(functionWithErrorOnly).then((result) => {
                 done(result);
-            }).catch(error => {
+            }).catch((error) => {
                 assert.equal(error, result)
                 done();
             });
@@ -245,13 +247,13 @@ describe('PromiseUtils', () => {
             assert.undefined(promise);
         });
 
-        it('throws when user callback is not a Function', function(done) {
+        it('throws when user callback is not a Function', function (done) {
             const functionWithCallback = (callback) => {
                 callback();
             };
             const userCallback = 42;
 
-            assert.throws(function() {
+            assert.throws(function () {
                 noErrorCallbackToPromise(functionWithCallback, userCallback);
                 done("It should never reach this code")
             }, TypeError);
@@ -265,10 +267,10 @@ describe('PromiseUtils', () => {
                 callback(value);
             };
 
-            noErrorCallbackToPromise(functionWithValueReturnOnly).then(result => {
+            noErrorCallbackToPromise(functionWithValueReturnOnly).then((result) => {
                 assert.equal(result, value);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -291,13 +293,13 @@ describe('PromiseUtils', () => {
             assert.isUndefined(promise);
         });
 
-        it('throws when user callback is not a Function', function(done) {
+        it('throws when user callback is not a Function', function (done) {
             const functionWithCallback = (callback) => {
                 callback();
             };
             const userCallback = 42;
 
-            assert.throws(function() {
+            assert.throws(function () {
                 doubleValueCallbackToPromise(functionWithCallback, undefined, userCallback);
                 done("It should never reach this code")
             }, TypeError);
@@ -311,9 +313,9 @@ describe('PromiseUtils', () => {
                 callback(error, {});
             };
 
-            doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then(_ => {
+            doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then((_) => {
                 done('The promise should be rejected');
-            }, err => {
+            }, (err) => {
                 assert.deepEqual(err, error);
                 done();
             });
@@ -325,9 +327,9 @@ describe('PromiseUtils', () => {
                 callback({}, error);
             };
 
-            doubleValueCallbackToPromise(functionWithErrorAsSecondParameter, undefined).then(_ => {
+            doubleValueCallbackToPromise(functionWithErrorAsSecondParameter, undefined).then((_) => {
                 done('The promise should be rejected');
-            }, err => {
+            }, (err) => {
                 assert.deepEqual(err, error);
                 done();
             });
@@ -341,10 +343,10 @@ describe('PromiseUtils', () => {
 
             const packFunction = (error, value) => { return value; }
 
-            doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then(result => {
+            doubleValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then((result) => {
                 assert.deepEqual(result, returnValue);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -357,17 +359,17 @@ describe('PromiseUtils', () => {
 
             const packFunction = (value1, value2) => { return { return1: value1, return2: value2 }; }
 
-            doubleValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then(result => {
+            doubleValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then((result) => {
                 assert.deepEqual(result, returnValue);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
 
     });
 
-    describe('#tripleValueCallbackToPromise', function() {
+    describe('#tripleValueCallbackToPromise', function () {
         it('executes user callback when passed', function (done) {
             const error = new Error('sample error');
             const functionWithCallback = (callback) => {
@@ -385,13 +387,13 @@ describe('PromiseUtils', () => {
             assert.isUndefined(promise);
         });
 
-        it('throws when user callback is not a Function', function(done) {
+        it('throws when user callback is not a Function', function (done) {
             const functionWithCallback = (callback) => {
                 callback();
             };
             const userCallback = 42;
 
-            assert.throws(function() {
+            assert.throws(function () {
                 tripleValueCallbackToPromise(functionWithCallback, undefined, userCallback);
                 done("It should never reach this code")
             }, TypeError);
@@ -405,9 +407,9 @@ describe('PromiseUtils', () => {
                 callback(error);
             };
 
-            tripleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then(_ => {
+            tripleValueCallbackToPromise(functionWithErrorAsFirstParameter, undefined).then((_) => {
                 done('The promise should be rejected');
-            }, err => {
+            }, (err) => {
                 assert.deepEqual(err, error);
                 done();
             });
@@ -421,11 +423,11 @@ describe('PromiseUtils', () => {
 
             const packFunction = (value1, value2) => { return { val1: value1, val2: value2 }; }
 
-            tripleValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then(result => {
+            tripleValueCallbackToPromise(functionWithErrorAsFirstParameter, packFunction).then((result) => {
                 assert.deepEqual(result.val1, returnValue);
                 assert.isUndefined(result.val2);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
@@ -438,17 +440,17 @@ describe('PromiseUtils', () => {
 
             const packFunction = (value1, value2) => { return { return1: value1, return2: value2 }; }
 
-            tripleValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then(result => {
+            tripleValueCallbackToPromise(functionWithTwoReturnValues, packFunction).then((result) => {
                 assert.deepEqual(result, returnValue);
                 done();
-            }).catch(error => {
+            }).catch((error) => {
                 done(error);
             });
         });
 
     });
 
-    describe('#httpCallbackToPromise', function() {
+    describe('#httpCallbackToPromise', function () {
         it('executes user callback when passed', function (done) {
             const error = new Error('sample error');
             const httpResponse = { body: "result" };
@@ -474,7 +476,7 @@ describe('PromiseUtils', () => {
             };
 
             const promise = httpCallbackToPromise(functionWithCallback);
-            promise.then(res => {
+            promise.then((res) => {
                 assert.equal(res.responseBody, "result");
                 assert.equal(res.httpResponse, httpResponse);
                 done();

@@ -3,9 +3,9 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var errors = require('azure-iot-common').errors;
-var translateError = require('../dist/amqp_common_errors.js').translateError;
+const assert = require('chai').assert;
+const errors = require('azure-iot-common').errors;
+const translateError = require('../dist/amqp_common_errors.js').translateError;
 
 
 /*Tests_SRS_NODE_DEVICE_AMQP_COMMON_ERRORS_16_012: [`translateError` shall return a custom error type according to this table if the AMQP error condition is one of the following:
@@ -29,7 +29,7 @@ var translateError = require('../dist/amqp_common_errors.js').translateError;
 | "com.microsoft:timeout"                    | ServiceUnavailableError              |
 | "amqp:link:detach-forced"                  | ServiceUnavailableError              |
 ]*/
-describe('translateError', function() {
+describe('translateError', function () {
   [
     { errorDescription: 'amqp:internal-error', errorMessage: 'Fake internal error', expectedErrorType: errors.InternalServerError },
     { errorDescription: 'amqp:link:message-size-exceeded', errorMessage: 'Message too large', expectedErrorType: errors.MessageTooLargeError },
@@ -50,20 +50,20 @@ describe('translateError', function() {
     { errorDescription: 'com.microsoft:timeout', errorMessage: 'Timeout', expectedErrorType: errors.ServiceUnavailableError },
     { errorDescription: 'amqp:link:detach-forced', errorMessage: 'Error: ', expectedErrorType: errors.ServiceUnavailableError },
     { errorDescription: 'unknown', errorMessage: 'Unknown error', expectedErrorType: Error }
-  ].forEach(function(testParams) {
-    it('returns an \'' + testParams.expectedErrorType.name + '\' if the amqp error description is \'' + testParams.errorDescription + '\'', function(){
-      var AMQPError = function AMQPError() {
+  ].forEach(function (testParams) {
+    it('returns an \'' + testParams.expectedErrorType.name + '\' if the amqp error description is \'' + testParams.errorDescription + '\'', function (){
+      const AMQPError = function AMQPError() {
         Error.call(this);
       };
 
-      var fake_error = new AMQPError();
+      const fake_error = new AMQPError();
       fake_error.condition = testParams.errorDescription;
 
       /*Tests_SRS_NODE_DEVICE_AMQP_ERRORS_16_010: [ `translateError` shall accept 2 argument:
       *- A custom error message to give context to the user.
       *- the AMQP error object itself]
       */
-      var err = translateError(new Error(testParams.errorMessage), fake_error);
+      const err = translateError(new Error(testParams.errorMessage), fake_error);
       assert.instanceOf(err, testParams.expectedErrorType);
 
       /*Tests_SRS_NODE_DEVICE_AMQP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 2 properties:
@@ -75,20 +75,20 @@ describe('translateError', function() {
     });
 
     [
-      { error: { code: 'ENOENT' }},
-      { error: { code: 'ENOTFOUND' }},
-      { error: { code: '?' }},
+      { error: { code: 'ENOENT' } },
+      { error: { code: 'ENOTFOUND' } },
+      { error: { code: '?' } },
     ].forEach(function (testConfig) {
       it('returns a NotConnectedError if a connection error with code ' + testConfig.error.code + ' is encountered', function () {
-        var err = translateError('', testConfig.error);
+        const err = translateError('', testConfig.error);
         assert.instanceOf(err, errors.NotConnectedError);
       });
     });
 
-    it('returns a generic error object if the error type is unknown', function(){
-      var error = new Error('unknown reason');
-      var message = 'unknown error type';
-      var err = translateError(message, error);
+    it('returns a generic error object if the error type is unknown', function (){
+      const error = new Error('unknown reason');
+      const message = 'unknown error type';
+      const err = translateError(message, error);
 
       /*Tests_SRS_NODE_DEVICE_AMQP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 2 properties:
       *- `amqpError` shall contain the error object returned by the AMQP layer.
@@ -99,10 +99,10 @@ describe('translateError', function() {
     });
 
     it('returns a generic error object appended with a message if the error type is unknown and an embedded message is present', function () {
-      var message = 'generic error message';
-      var specific_message = 'specific error message';
-      let testErr = { error: { message: { message: specific_message }}};
-      var err = translateError(message, testErr.error);
+      const message = 'generic error message';
+      const specific_message = 'specific error message';
+      let testErr = { error: { message: { message: specific_message } } };
+      const err = translateError(message, testErr.error);
       assert.equal(err.message, message + '. ' + specific_message);
     });
   });

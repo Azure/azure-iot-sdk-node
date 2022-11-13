@@ -3,11 +3,11 @@
 
 'use strict';
 
-var assert = require('chai').assert;
+const assert = require('chai').assert;
 
-var endpoint = require('../dist/endpoint.js');
-var deviceId = 'mydevice';
-var moduleId = 'mymodule';
+const endpoint = require('../dist/endpoint.js');
+const deviceId = 'mydevice';
+const moduleId = 'mymodule';
 
 describe('endpoint', function () {
   [{
@@ -84,8 +84,8 @@ describe('endpoint', function () {
     name: 'veryVersionString',
     expected: '?api-version=' + endpoint.apiVersion,
     actual:  endpoint.versionQueryString()
-  }].forEach(function(testConfig) {
-    it( testConfig.name + ' matches ' + testConfig.expected, function() {
+  }].forEach(function (testConfig) {
+    it( testConfig.name + ' matches ' + testConfig.expected, function () {
       assert.strictEqual(testConfig.actual, testConfig.expected);
     });
   });

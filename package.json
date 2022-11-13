@@ -33,6 +33,7 @@
 		}
 	},
 	"dependencies": {
+		"eslint-plugin-security": "^1.5.0",
 		"node-gyp": "^9.0.0",
 		"typescript": "4.4.4"
 	}

@@ -3,24 +3,23 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
+const assert = require('chai').assert;
+const sinon = require('sinon');
 
-var errors = require('../dist/errors.js');
-var RetryPolicy = require('../dist/retry_policy.js').RetryPolicy;
-var ExponentialBackOffWithJitter = require('../dist/retry_policy.js').ExponentialBackOffWithJitter;
-var NoRetry = require('../dist/retry_policy.js').NoRetry;
+const errors = require('../dist/errors.js');
+const ExponentialBackOffWithJitter = require('../dist/retry_policy.js').ExponentialBackOffWithJitter;
+const NoRetry = require('../dist/retry_policy.js').NoRetry;
 
 describe('RetryPolicy', function () {
   describe('ExponentialBackOffWithJitter', function () {
     describe('shouldRetry', function () {
       /*SRS_NODE_COMMON_RETRY_POLICY_16_006: [** The `shouldRetry` method of the new instance shall use the error filter passed to the constructor when the object was instantiated.]*/
       it('uses the ErrorFilter passed in the constructor', function () {
-        var testFilter = {
+        const testFilter = {
           TimeoutError: false,
           UnauthorizedError: true
         };
-        var testPolicy = new ExponentialBackOffWithJitter(testPolicy, testFilter);
+        const testPolicy = new ExponentialBackOffWithJitter(null, testFilter);
         assert.isFalse(testPolicy.shouldRetry(new errors.TimeoutError('fake timeout that shall not be retried because of the filter')));
         assert.isTrue(testPolicy.shouldRetry(new errors.UnauthorizedError('fake UnauthorizedError that shall be retried because of the filter')));
       });
@@ -33,22 +32,22 @@ describe('RetryPolicy', function () {
       - the `currentRetryCount` is `0` (meaning it's the first retry).]*/
       it('returns 0 for the first immediate retry if the first retry is set to be immediate', function () {
         sinon.stub(Math, 'random').returns(0.42);
-        var policy = new ExponentialBackOffWithJitter(true);
+        const policy = new ExponentialBackOffWithJitter(true);
         assert.strictEqual(policy.nextRetryTimeout(0, false), 0);
         Math.random.restore();
       });
 
       it('returns a non-zero value for the first retry if the first retry is not set to be immediate', function () {
         sinon.stub(Math, 'random').returns(0.42);
-        var policy = new ExponentialBackOffWithJitter(false);
+        const policy = new ExponentialBackOffWithJitter(false);
         assert.isAbove(policy.nextRetryTimeout(0, false), 0);
         Math.random.restore();
       });
 
       /*Tests_SRS_NODE_COMMON_RETRY_POLICY_16_007: [The `getNextTimeout` method shall implement the following math formula to determine the next timeout value: `F(x) = min(Cmin+ (2^(x-1)-1) * rand(C * (1 – Jd), C*(1-Ju)), Cmax`]*/
-      it('returns the proper value based on the retry count', function() {
+      it('returns the proper value based on the retry count', function () {
         sinon.stub(Math, 'random').returns(0.42);
-        var policy = new ExponentialBackOffWithJitter();
+        const policy = new ExponentialBackOffWithJitter();
         /*Tests_SRS_NODE_COMMON_RETRY_POLICY_16_009: [The default constants to use with the Math formula for the normal conditions retry are:
         ```
         c = 100
@@ -94,8 +93,8 @@ describe('RetryPolicy', function () {
   describe('NoRetry', function () {
     describe('shouldRetry', function () {
       /*Tests_SRS_NODE_COMMON_RETRY_POLICY_16_03: [The `shouldRetry` method shall always return `false`.]*/
-      it('returns false', function() {
-        var policy = new NoRetry();
+      it('returns false', function () {
+        const policy = new NoRetry();
         assert.strictEqual(false, policy.shouldRetry(new Error()));
       });
     });
@@ -103,8 +102,8 @@ describe('RetryPolicy', function () {
     describe('nextRetryTimeout', function () {
       /*Tests_SRS_NODE_COMMON_RETRY_POLICY_16_004: [The `getNextTimeout` method shall always return `-1`.]*/
       it('always returns -1', function () {
-        var policy = new NoRetry();
-        [0, 1, 42, -1, 9999].forEach(function(retryCount) {
+        const policy = new NoRetry();
+        [0, 1, 42, -1, 9999].forEach(function (retryCount) {
           assert.strictEqual(-1, policy.nextRetryTimeout(retryCount));
         });
       });

@@ -5,6 +5,7 @@
 'use strict';
 
 import * as authorization from './authorization';
+import { Callback } from './promise_utils';
 import { ArgumentError, FormatError } from './errors';
 import { createDictionary } from './dictionary';
 
@@ -98,7 +99,7 @@ export class SharedAccessSignature {
     if (!expiry) throwRef('expiry', expiry);
 
     /*Codes_SRS_NODE_COMMON_SAS_05_010: [The create method shall create a new instance of SharedAccessSignature with properties: sr, sig, se, and optionally skn.]*/
-    let sas = new SharedAccessSignature();
+    const sas = new SharedAccessSignature();
     sas._key = key;
     /*Codes_SRS_NODE_COMMON_SAS_05_011: [The sr property shall have the value of resourceUri.]*/
     sas.sr = resourceUri;
@@ -119,7 +120,7 @@ export class SharedAccessSignature {
 /**
  * @private
  */
-static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: number, signingFunction: Function, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
+static createWithSigningFunction(credentials: authorization.TransportConfig, expiry: number, signingFunction: (stringToSign: any, callback: Callback<any>) => void, callback: (err: Error, sas?: SharedAccessSignature) => void): void {
   function throwRef(name: string, value: any): void {
     throw new ReferenceError('Argument \'' + name + '\' is ' + value);
   }
@@ -129,7 +130,7 @@ static createWithSigningFunction(credentials: authorization.TransportConfig, exp
   if (!expiry) throwRef('expiry', expiry);
   if (!signingFunction) throwRef('signingFunction', signingFunction);
   if (!callback) throwRef('callback', callback);
-  let sas = new SharedAccessSignature();
+  const sas = new SharedAccessSignature();
   /*Codes_SRS_NODE_COMMON_SAS_06_002: [The `createWithSigningFunction` shall create a `SharedAccessSignature` object with an `sr` property formed by url encoding `credentials.host` + `/devices/` + `credentials.deviceId` + `/modules/` + `credentials.moduleId`.] */
   let resource = credentials.host + '/devices/' + credentials.deviceId;
   if (credentials.moduleId) {
@@ -184,7 +185,7 @@ static createWithSigningFunction(credentials: authorization.TransportConfig, exp
     });
 
     /*Codes_SRS_NODE_COMMON_SAS_05_002: [The parse method shall create a new instance of SharedAccessSignature.]*/
-    let sas = new SharedAccessSignature();
+    const sas = new SharedAccessSignature();
 
     /*Codes_SRS_NODE_COMMON_SAS_05_003: [It shall accept a string argument of the form 'name=value[&name=value…]' and for each name extracted it shall create a new property on the SharedAccessSignature object instance.]*/
     /*Codes_SRS_NODE_COMMON_SAS_05_004: [The value of the property shall be the value extracted from the source argument for the corresponding name.]*/
