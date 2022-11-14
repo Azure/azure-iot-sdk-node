@@ -50,7 +50,7 @@ class OnTheWireMessageContainer {
   private _timeoutInSeconds: number;
   private _identifier: number;
 
-  constructor () {
+  constructor() {
     this._timeoutInSeconds = this.defaultTimeoutInSeconds;
     //
     // Initializing the Map in the constructor.
@@ -76,7 +76,7 @@ class OnTheWireMessageContainer {
     //
     // No need to try to do that again.
     //
-    if (!!current) {
+    if (current) {
       this._onTheWire.delete(key);
       if (this._onTheWire.size === 0) {
         //
@@ -389,12 +389,11 @@ export class MqttBase extends EventEmitter {
 
   private _connectClient(callback: (err?: Error, connack?: any) => void): void {
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_002: [The `connect` method shall use the authentication parameters contained in the `config` argument to connect to the server.]*/
-    let options: IClientOptions = {
+    const options: IClientOptions = {
       protocolId: 'MQTT',
       protocolVersion: 4,
       clean: this._config.clean || false,
       clientId: this._config.clientId,
-      rejectUnauthorized: true,
       username: this._config.username,
       reconnectPeriod: 0,  // Client will handle reconnection at the higher level.
       connectTimeout: 60 * 1000,

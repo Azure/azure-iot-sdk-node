@@ -110,7 +110,7 @@ export class RestApiClient {
     - Authorization: <this.sharedAccessSignature>
     - Request-Id: <guid>
     - User-Agent: <version string>]*/
-    let httpHeaders: any = headers || {};
+    const httpHeaders: any = headers || {};
     if (this._config.tokenCredential) {
       this.getToken().then((accessToken) => {
         httpHeaders.Authorization = accessToken;
@@ -158,7 +158,7 @@ export class RestApiClient {
    * @returns {Boolean} True if the token's remaining time is shorter than the
    *                    proactive renewal time, false otherwise.
    */
-   isAccessTokenCloseToExpiry(accessToken: AccessToken): Boolean {
+   isAccessTokenCloseToExpiry(accessToken: AccessToken): boolean {
     const remainingTimeToLive = accessToken.expiresOnTimestamp - Date.now();
     return remainingTimeToLive <= this._MillisecsBeforeProactiveRenewal;
   }
@@ -251,7 +251,7 @@ export class RestApiClient {
 
     /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_008: [The `executeApiCall` method shall build the HTTP request using the arguments passed by the caller.]*/
     let request: ClientRequest;
-    if (!!this._config.x509) {
+    if (this._config.x509) {
       /* Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_18_002: [ If an `x509` cert was passed into the constructor via the `config` object, `executeApiCall` shall use it to establish the TLS connection. ] */
        request = this._http.buildRequest(method, path, httpHeaders, this._config.host, this._config.x509, requestCallback);
     } else {

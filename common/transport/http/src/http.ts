@@ -67,12 +67,12 @@ export class Http {
       host - the fully-qualified DNS hostname of the IoT hub
       options - [optional] the x509 certificate options or HTTP request options
       done - a callback that will be invoked when a completed response is returned from the server]*/
-  buildRequest (method: HttpMethod,
-                path: string,
-                httpHeaders: { [key: string]: string | string[] | number },
-                host: string | { socketPath: string },
-                options: X509 | HttpRequestOptions | HttpCallback,
-                done?: HttpCallback): ClientRequest {
+  buildRequest(method: HttpMethod,
+               path: string,
+               httpHeaders: { [key: string]: string | string[] | number },
+               host: string | { socketPath: string },
+               options: X509 | HttpRequestOptions | HttpCallback,
+               done?: HttpCallback): ClientRequest {
 
     // NOTE: The `options` parameter above, the way its structured prevents
     // this function from being called with *both* X509 options AND
@@ -98,7 +98,7 @@ export class Http {
       options = undefined;
     }
 
-    let httpOptions: RequestOptions = {
+    const httpOptions: RequestOptions = {
       path: path,
       method: method,
       headers: httpHeaders
@@ -149,7 +149,7 @@ export class Http {
       httpOptions.ca = this._options.ca;
     }
 
-    let httpReq = request(httpOptions, (response: IncomingMessage): void => {
+    const httpReq = request(httpOptions, (response: IncomingMessage): void => {
       let responseBody = '';
       response.on('error', (err: Error): void => {
         done(err);
@@ -162,7 +162,7 @@ export class Http {
         err - the standard JavaScript Error object if status code >= 300, otherwise null
         body - the body of the HTTP response as a string
         response - the Node.js http.IncomingMessage object returned by the transport]*/
-        let err = (response.statusCode >= 300) ?
+        const err = (response.statusCode >= 300) ?
           new Error(response.statusMessage) :
           null;
         done(err, responseBody, response);
@@ -184,12 +184,12 @@ export class Http {
    *
    * @returns {module:azure-iot-common.Message} A Message object.
    */
-  toMessage (response: IncomingMessage, body: Message.BufferConvertible): Message {
+  toMessage(response: IncomingMessage, body: Message.BufferConvertible): Message {
     let msg: Message;
     /*Codes_SRS_NODE_HTTP_05_006: [If the status code of the HTTP response < 300, toMessage shall create a new azure-iot-common.Message object with data equal to the body of the HTTP response.]*/
     if (response.statusCode < 300) {
       msg = new Message(body);
-      for (let item in response.headers) {
+      for (const item in response.headers) {
         if (item.search('iothub-') !== -1) {
           if (item.toLowerCase() === 'iothub-messageid') {
             /*Codes_SRS_NODE_HTTP_05_007: [If the HTTP response has an 'iothub-messageid' header, it shall be saved as the messageId property on the created Message.]*/
@@ -250,7 +250,7 @@ export class Http {
    * @params {String}     body  The body of the HTTP error response
    * @returns {Object}    An object with 2 properties: code and message.
    */
-  static parseErrorBody (body: string): { code: string, message: string } {
+  static parseErrorBody(body: string): { code: string; message: string } {
     let result = null;
 
     try {

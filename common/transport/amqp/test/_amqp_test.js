@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable no-invalid-this */
-// We disable the invalid this because it's use below in permissable because it is occuring in the sandbox
+// We disable the invalid this because it's use below in permissable because it is occurring in the sandbox
 // created by the sinon-test package.
 
 const assert = require('chai').assert;

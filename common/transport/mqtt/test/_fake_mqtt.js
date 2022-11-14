@@ -1,34 +1,35 @@
+/* eslint-disable no-invalid-this */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
+const EventEmitter = require('events').EventEmitter;
+const util = require('util');
 
-var sinon = require('sinon');
+const sinon = require('sinon');
 
-var FakeMqtt = function() {
+const FakeMqtt = function () {
   EventEmitter.call(this);
 
   this.publishShouldSucceed = function (shouldSucceed) {
     this._publishSucceeds = shouldSucceed;
   };
 
-  this.publish = sinon.stub().callsFake(function(topic, message, options, callback) {
+  this.publish = sinon.stub().callsFake(function (topic, message, options, callback) {
     this.publishoptions = options;
     this.topicString = topic;
     if (this._publishSucceeds) {
-      callback(null, {puback: 'success'});
+      callback(null, { puback: 'success' });
     } else {
       callback(new Error('Invalid topic'));
     }
   });
 
-  this.connect = sinon.stub().callsFake(function() {
+  this.connect = sinon.stub().callsFake(function () {
     return this;
   });
 
-  this.subscribe = sinon.stub().callsFake(function(topicName, param, done) {
+  this.subscribe = sinon.stub().callsFake(function (topicName, param, done) {
     if (this.subscribeShouldFail) {
       done (new Error('Not authorized'));
     } else {
@@ -36,11 +37,11 @@ var FakeMqtt = function() {
     }
   });
 
-  this.unsubscribe = sinon.stub().callsFake(function(topicName, done) {
+  this.unsubscribe = sinon.stub().callsFake(function (topicName, done) {
     done();
   });
 
-  this.fakeMessageFromService = function(topic, message) {
+  this.fakeMessageFromService = function (topic, message) {
     this.emit('message', topic, message);
   };
 
@@ -49,7 +50,7 @@ var FakeMqtt = function() {
   });
 };
 
-var PubFakeMqtt = function() {
+const PubFakeMqtt = function () {
   EventEmitter.call(this);
   this.callbackArray = []
   this.publish = sinon.stub().callsFake((topic, message, options, callback) => {
@@ -64,7 +65,7 @@ var PubFakeMqtt = function() {
     }
   });
 
-  this.connect = sinon.stub().callsFake(function() {
+  this.connect = sinon.stub().callsFake(function () {
     return this;
   });
 
@@ -73,14 +74,14 @@ var PubFakeMqtt = function() {
   });
 };
 
-var PubACKTwiceFakeMqtt = function() {
+const PubACKTwiceFakeMqtt = function () {
   EventEmitter.call(this);
   this.publish = sinon.stub().callsFake((topic, message, options, callback) => {
     callback();
     callback();
   });
 
-  this.connect = sinon.stub().callsFake(function() {
+  this.connect = sinon.stub().callsFake(function () {
     return this;
   });
 
@@ -89,14 +90,14 @@ var PubACKTwiceFakeMqtt = function() {
   });
 };
 
-var ErrorFakeMqtt = function() {
+const ErrorFakeMqtt = function () {
   EventEmitter.call(this);
   this.callbackArray = [];
   this.publish = sinon.stub().callsFake((topic, message, options, callback) => {
     this.callbackArray.push(callback);
   });
 
-  this.connect = sinon.stub().callsFake(function() {
+  this.connect = sinon.stub().callsFake(function () {
     return this;
   });
 
