@@ -9,7 +9,8 @@ const EventEmitter = require('events').EventEmitter;
 const ExternalEventTracker = require('../dist/external_event_tracker.js').ExternalEventTracker;
 
 describe('ExternalEventTracker', function () {
-  var emitter, externalEventTracker;
+  let emitter;
+  let externalEventTracker;
 
   beforeEach(function () {
     emitter = new EventEmitter();
@@ -20,16 +21,16 @@ describe('ExternalEventTracker', function () {
 
   describe('#addTrackedListener', function () {
     it('adds listener for a previously untracked event', function () {
-      const listener = function() {};
+      const listener = function () {};
       externalEventTracker.addTrackedListener('test', listener);
       assert.isTrue(emitter.addListener.calledOnceWith('test', listener));
       assert.strictEqual(externalEventTracker._listenerContainer.get('test').length, 1);
       assert.strictEqual(externalEventTracker._listenerContainer.get('test')[0], listener);
     });
-  
+
     it('adds listener for already tracked event', function () {
-      const listener1 = function() {};
-      const listener2 = function() {};
+      const listener1 = function () {};
+      const listener2 = function () {};
       externalEventTracker.addTrackedListener('test', listener1);
       externalEventTracker.addTrackedListener('test', listener2);
       assert.strictEqual(emitter.addListener.callCount, 2);
@@ -43,39 +44,39 @@ describe('ExternalEventTracker', function () {
 
   describe('#removeTrackedListener', function () {
     it('removes last listener for tracked event', function () {
-      const listener = function() {};
+      const listener = function () {};
       externalEventTracker.addTrackedListener('test', listener);
       externalEventTracker.removeTrackedListener('test', listener);
 
       assert.isTrue(emitter.removeListener.calledOnceWith('test', listener));
       assert.isFalse(externalEventTracker._listenerContainer.has('test'));
     });
-  
+
     it('removes listener from tracked event with other listener remaining', function () {
-      const listener1 = function() {};
-      const listener2 = function() {};
+      const listener1 = function () {};
+      const listener2 = function () {};
       externalEventTracker.addTrackedListener('test', listener1);
       externalEventTracker.addTrackedListener('test', listener2);
       externalEventTracker.removeTrackedListener('test', listener1);
-      
+
       assert.isTrue(emitter.removeListener.calledOnceWith('test', listener1));
       assert.strictEqual(externalEventTracker._listenerContainer.get('test').length, 1);
       assert.strictEqual(externalEventTracker._listenerContainer.get('test')[0], listener2);
     });
-  
+
     it('does nothing if attempting to remove listener on an untracked event', function () {
-      const listener = function() {};
+      const listener = function () {};
       externalEventTracker.removeTrackedListener('test', listener);
 
       assert.isTrue(emitter.removeListener.notCalled);
     });
-  
+
     it('does nothing if there is no listener match on a tracked event', function () {
-      const listener1 = function() {};
-      const listener2 = function() {};
+      const listener1 = function () {};
+      const listener2 = function () {};
       externalEventTracker.addTrackedListener('test', listener1);
       externalEventTracker.removeTrackedListener('test', listener2);
-      
+
       assert.isTrue(emitter.removeListener.notCalled);
     });
   });
@@ -83,9 +84,9 @@ describe('ExternalEventTracker', function () {
   describe('#removeAllTrackedListeners', function () {
     it('removes all listeners for a tracked event', function () {
       const [event1, event2] = ['test1', 'test2'];
-      const event1listener1 = function() {};
-      const event1listener2 = function() {};
-      const event2listener = function() {};
+      const event1listener1 = function () {};
+      const event1listener2 = function () {};
+      const event2listener = function () {};
       externalEventTracker.addTrackedListener(event1, event1listener1);
       externalEventTracker.addTrackedListener(event1, event1listener2);
       externalEventTracker.addTrackedListener(event2, event2listener);
@@ -101,10 +102,10 @@ describe('ExternalEventTracker', function () {
 
     it('removes all listeners for every tracked event if no event specified', function () {
       const [event1, event2] = ['test1', 'test2'];
-      const event1listener1 = function() {};
-      const event1listener2 = function() {};
-      const event2listener1 = function() {};
-      const event2listener2 = function() {};
+      const event1listener1 = function () {};
+      const event1listener2 = function () {};
+      const event2listener1 = function () {};
+      const event2listener2 = function () {};
       externalEventTracker.addTrackedListener(event1, event1listener1);
       externalEventTracker.addTrackedListener(event1, event1listener2);
       externalEventTracker.addTrackedListener(event2, event2listener1);
@@ -122,8 +123,8 @@ describe('ExternalEventTracker', function () {
   });
 
   it('does nothing if there are no listeners on the event specified', function () {
-    const listener1 = function() {}
-    const listener2 = function() {}
+    const listener1 = function () {}
+    const listener2 = function () {}
     externalEventTracker.addTrackedListener('test', listener1);
     externalEventTracker.addTrackedListener('test', listener2);
     externalEventTracker.removeAllTrackedListeners('doesnotexist');

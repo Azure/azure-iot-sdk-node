@@ -3,19 +3,19 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var errors = require('azure-iot-common').errors;
-var translateError = require('../dist/mqtt_translate_error.js').translateError;
+const assert = require('chai').assert;
+const errors = require('azure-iot-common').errors;
+const translateError = require('../dist/mqtt_translate_error.js').translateError;
 
 describe('MqttTranslateError', function () {
 
-  it ('creates a properly constructed error', function() {
+  it('creates a properly constructed error', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_ERRORS_18_001: [** Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 2 properties:
       - `message` shall contain a human-readable error message
       - `transportError` shall contain the MQTT error object **]** */
 
-      var transportError = new Error('Dana');
-      var agnosticError = translateError(transportError);
+      const transportError = new Error('Dana');
+      const agnosticError = translateError(transportError);
 
       assert(agnosticError.message.constructor.name === 'String');
       assert(agnosticError.transportError ===transportError);
@@ -48,7 +48,7 @@ describe('MqttTranslateError', function () {
     assert(translateError(new Error('Identifier rejected')) instanceof errors.UnauthorizedError);
   });
 
-  it('converts server unavilable error', function () {
+  it('converts server unavailable error', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_ERRORS_18_007: [** `translateError` shall return a `ServiceUnavailableError` if the MQTT error message contains the string 'Server unavailable' **]**  */
     assert(translateError(new Error('Server unavailable')) instanceof errors.ServiceUnavailableError);
   });
@@ -68,7 +68,7 @@ describe('MqttTranslateError', function () {
     assert(translateError(new Error('unrecognized packet type')) instanceof errors.InternalServerError);
   });
 
-  it('returns generic error when strings dont match', function () {
+  it('returns generic error when strings don\'t match', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_ERRORS_18_011: [** `translateError` shall return an `Error` if none of the other string rules match **]** */
     assert(translateError(new Error('Zuul')) instanceof Error);
   });
@@ -79,14 +79,14 @@ describe('MqttTranslateError', function () {
 
   /*Tests_SRS_NODE_DEVICE_MQTT_ERRORS_16_001: [`translateError` shall return a `NotConnectedError` if the error object has a truthy `code` property (node socket errors)]*/
   it('converts socket errors to NotConnectedError', function () {
-    var fakeSocketError = new Error('getaddrinfo: not found');
+    const fakeSocketError = new Error('getaddrinfo: not found');
     fakeSocketError.code = 'ENOTFOUND';
     assert(translateError(fakeSocketError) instanceof errors.NotConnectedError);
   });
 
   /*Tests_SRS_NODE_DEVICE_MQTT_ERRORS_16_002: [`translateError` shall return a `NotConnectedError` if the error message contains 'premature close' (from `end-of-stream`)]*/
   it('converts \'premature close\' errors into NotConnectedError', function () {
-    var fakeError = new Error('premature close');
+    const fakeError = new Error('premature close');
     assert(translateError(fakeError) instanceof errors.NotConnectedError);
   });
 });

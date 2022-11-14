@@ -12,9 +12,11 @@ export class ExternalEventTracker {
 
   addTrackedListener(eventName: string, listener: (...args: any[]) => void): void {
     this._emitter.addListener(eventName, listener);
-    this._listenerContainer.has(eventName)
-      ? this._listenerContainer.get(eventName).push(listener)
-      : this._listenerContainer.set(eventName, [listener]);
+    if (this._listenerContainer.has(eventName)) {
+      this._listenerContainer.get(eventName).push(listener);
+    } else {
+      this._listenerContainer.set(eventName, [listener]);
+    }
   }
 
   removeTrackedListener(eventName: string, listener: (...args: any[]) => void): void {
@@ -22,9 +24,11 @@ export class ExternalEventTracker {
     const index = listeners?.indexOf(listener);
     if (listeners === undefined || index === -1) return;
 
-    listeners.length === 1
-      ? this._listenerContainer.delete(eventName)
-      : listeners.splice(index, 1);
+    if (listeners.length === 1) {
+      this._listenerContainer.delete(eventName);
+    } else {
+      listeners.splice(index, 1);
+    }
 
     this._emitter.removeListener(eventName, listener);
   }
