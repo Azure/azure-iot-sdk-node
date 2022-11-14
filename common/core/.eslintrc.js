@@ -91,7 +91,7 @@ module.exports = {
       "error",
       "smart"
     ],
-    "id-blacklist": [
+    "id-denylist": [
       "error",
       "any",
       "Number",
