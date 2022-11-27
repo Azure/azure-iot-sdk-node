@@ -16,7 +16,7 @@
     "azure-iot-security-symmetric-key": "1.8.1",
     "azure-iot-security-tpm": "1.9.1",
     "azure-iot-security-x509": "1.8.1",
-    "azure-iothub": "1.15.1",
+    "azure-iothub": "^1.16.1",
     "chai": "^4.3.3",
     "debug": "^4.3.1",
     "jshint": "^2.13.4",
