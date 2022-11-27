@@ -6,7 +6,6 @@
 var azureStorage = require('azure-storage');
 var Registry = require('azure-iothub').Registry;
 var errors = require('azure-iot-common').errors;
-
 var assert = require('chai').assert;
 var uuid = require('uuid');
 var debug = require('debug')('e2etests:registry');
@@ -153,7 +152,7 @@ describe('Registry', function () {
         done(delErr);
       } else {
         registry.get(deviceIdOnly.deviceId, function (getErr) {
-          assert.instanceOf(getErr, errors.DeviceNotFoundError);
+          assert.equal(getErr.name, errors.DeviceNotFoundError.name);
           done();
         });
       }
@@ -212,7 +211,7 @@ describe('Registry', function () {
   it('Fails to delete a device if it doesn\'t exist', function(done) {
     var registry = Registry.fromConnectionString(hubConnectionString);
     registry.delete('doesntexist' + uuid.v4(), function(delErr){
-      assert.instanceOf(delErr, errors.DeviceNotFoundError);
+      assert.equal(delErr.name, errors.DeviceNotFoundError.name);
       done();
     });
   });
@@ -225,7 +224,7 @@ describe('Registry', function () {
           done(delErr);
         } else {
           registry.get(deviceId, function (getErr) {
-            assert.instanceOf(getErr, errors.DeviceNotFoundError);
+            assert.equal(getErr.name, errors.DeviceNotFoundError.name);
             done();
           });
         }
@@ -730,7 +729,7 @@ describe('Registry', function () {
 
     function checkRemoveAndContinue(next) {
       return function processRemove(err) {
-        assert.instanceOf(err, errors.DeviceNotFoundError);
+        assert.equal(err.name, errors.DeviceNotFoundError.name);
         if (next) next();
       };
     }

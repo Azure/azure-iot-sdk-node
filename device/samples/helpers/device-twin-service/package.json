@@ -12,7 +12,7 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iothub": "^1.14.6"
+    "azure-iothub": "^1.16.1"
   },
   "devDependencies": {
     "encoding": "^0.1.13"
