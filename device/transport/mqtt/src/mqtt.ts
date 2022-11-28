@@ -227,7 +227,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               } else {
                 this._configureEndpoints(credentials);
                 this._ensureAgentString(() => {
-                  let baseConfig = this._getBaseTransportConfig(credentials);
+                  const baseConfig = this._getBaseTransportConfig(credentials);
                   this._mqtt.connect(baseConfig, (err, result) => {
                     debug('connect');
                     if (err) {
@@ -319,7 +319,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
             this._mqtt.publish(topicName, JSON.stringify(response.payload), { qos: 0, retain: false }, (err) => {
               // Codes_SRS_NODE_DEVICE_MQTT_13_006: [ If the MQTT publish fails then an error shall be returned via the done callback's first parameter. ]
               // Codes_SRS_NODE_DEVICE_MQTT_13_007: [ If the MQTT publish is successful then the done callback shall be invoked passing null for the first parameter. ]
-              callback(!!err ? translateError(err) : null);
+              callback(err ? translateError(err) : null);
             });
           },
           /* Codes_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
@@ -513,7 +513,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
    * @param {String}        sharedAccessSignature  The new SAS token.
    * @param {Function}      done      The callback to be invoked when `updateSharedAccessSignature` completes.
    */
-  updateSharedAccessSignature (sharedAccessSignature: string, done: (err?: Error, result?: any) => void): void {
+  updateSharedAccessSignature(sharedAccessSignature: string, done: (err?: Error, result?: any) => void): void {
     debug('updateSharedAccessSignature');
     /*Codes_SRS_NODE_DEVICE_MQTT_16_007: [The `updateSharedAccessSignature` method shall save the new shared access signature given as a parameter to its configuration.]*/
     (this._authenticationProvider as SharedAccessSignatureAuthenticationProvider).updateSharedAccessSignature(sharedAccessSignature);
@@ -737,14 +737,14 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     }
 
     /*Codes_SRS_NODE_DEVICE_MQTT_41_015: [If a modelId is provided, the device should use the PnP API String] */
-    let apiVersionString = endpoint.versionQueryString();
+    const apiVersionString = endpoint.versionQueryString();
 
     /*Codes_SRS_NODE_DEVICE_MQTT_16_016: [If the connection string does not specify a `gatewayHostName` value, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<host>`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_054: [If a `gatewayHostName` is specified in the connection string, the Mqtt constructor shall initialize the `uri` property of the `config` object to `mqtts://<gatewayhostname>`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_055: [The Mqtt constructor shall initialize the `username` property of the `config` object to '<host>/<clientId>/api-version=<version>&DeviceClientType=<agentString>'. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_41_002: [The MQTT constructor shall append the productInfo to the `username` property of the `config` object.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_41_014: [For a Plug and Play Device the modelId should be included as `&modelId=<DEVICE’s MODEL ID>` after the api-version]*/
-    let baseConfig: MqttBaseTransportConfig = {
+    const baseConfig: MqttBaseTransportConfig = {
       uri: 'mqtts://' + (credentials.gatewayHostName || credentials.host),
       username: credentials.host + '/' + clientId +
         '/' + apiVersionString  + this._mid +
@@ -853,7 +853,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       return targetTopic !== null;
     });
     // we have now run through all regexes in the this._topics table but we're still not sure we found something
-    if (!!targetTopic) {
+    if (targetTopic) {
       // if the targetTopic is truthy then it means one of the regex matched, therefore we can call its corresponding handler.
       targetTopic.handler(topic, payload);
     }
@@ -861,7 +861,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
   private _onC2DMessage(topic: string, payload: any): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [When a message event is emitted, the parameter shall be of type Message]*/
-    let msg = new Message(payload);
+    const msg = new Message(payload);
 
     const topicParts = topic.split('/');
     // Message properties are always the 5th segment of the topic
@@ -920,14 +920,14 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
 
   private _onInputMessage(topic: string, payload: any): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_18_056: [ When an `inputMessage` event is emitted, the first parameter shall be the inputName and the second parameter shall be of type `Message`. ]*/
-    let msg = new Message(payload);
+    const msg = new Message(payload);
 
     /*Codes_SRS_NODE_DEVICE_MQTT_18_058: [ When an `inputMessage` event is received, Mqtt shall extract the inputName from the topic according to the following convention: 'devices/<deviceId>/modules/<moduleId>/inputs/<inputName>' ]*/
     const topicParts = topic.split('/');
     if (topicParts[6]) {
       this._extractPropertiesFromTopicPart(topicParts[6], msg);
     }
-    let inputName: string = topicParts[5];
+    const inputName: string = topicParts[5];
 
     /*Codes_SRS_NODE_DEVICE_MQTT_18_057: [ An `inputMessage` event shall be emitted for each message received. ]*/
     this.emit('inputMessage', inputName, msg);
@@ -953,7 +953,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
       }
     ]*/
     const methodMessage = _parseMessage(topic, payload);
-    if (!!methodMessage) {
+    if (methodMessage) {
       // Codes_SRS_NODE_DEVICE_MQTT_RECEIVER_13_003: [ If there is a listener for the method event, a method_<METHOD NAME> event shall be emitted for each message received. ]
       // we emit a message for the event 'method_{method name}'
       this.emit('method_' + methodMessage.methods.methodName, methodMessage);
@@ -968,7 +968,7 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_MQTT_18_037: [ If a `moduleId` was specified in the transport connection, the `sendOutputEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/`. ]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_034: [ If the connection string specifies a `moduleId` value, the `sendEvent` method shall use a topic formatted using the following convention: `devices/<deviceId>/<moduleId>/messages/events/` ]*/
     let topic = this._topicTelemetryPublish;
-    let systemProperties: { [key: string]: string } = extraSystemProperties || {};
+    const systemProperties: { [key: string]: string } = extraSystemProperties || {};
 
     /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_011: [The `sendEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_18_040: [ The `sendOutputEvent` method shall serialize the `messageId` property of the message as a key-value pair on the topic with the key `$.mid`. ]*/
@@ -1050,7 +1050,7 @@ interface TopicDescription {
   subscribeInProgress: boolean;
   subscribed: boolean;
   topicMatchRegex: RegExp;
-  handler: Function;
+  handler: (topic: string, payload: any) => void;
 }
 
 /**
@@ -1095,14 +1095,14 @@ function _parseMessage(topic: string, body: any): MethodMessage {
   }
 
   if (path.length > 0 && path[0] === '$iothub') {
-    let message = new MethodMessageImpl();
+    const message = new MethodMessageImpl();
     if (path.length > 1 && path[1].length > 0) {
       // create an object for the module; for example, $iothub/twin/...
       // would result in there being a message.twin object
-      let mod = message[path[1]] = new MethodDescription();
+      const mod = message[path[1]] = new MethodDescription();
 
       // populates the request ID if there is one
-      if (!!(query.$rid)) {
+      if (query.$rid) {
         message.requestId = query.$rid;
       }
 

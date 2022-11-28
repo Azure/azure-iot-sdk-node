@@ -41,7 +41,7 @@
 
 'use strict';
 
-var common = require('azure-iot-common');
+const common = require('azure-iot-common');
 
 module.exports = {
   Client: require('./dist/device_client.js').Client,

@@ -26,7 +26,7 @@ export class MqttWs extends Mqtt {
   }
 
   protected _getBaseTransportConfig(credentials: TransportConfig): MqttBaseTransportConfig {
-    let baseConfig: MqttBaseTransportConfig = super._getBaseTransportConfig(credentials);
+    const baseConfig: MqttBaseTransportConfig = super._getBaseTransportConfig(credentials);
     baseConfig.uri  = 'wss://' + (credentials.gatewayHostName || credentials.host) + ':443/$iothub/websocket';
     return baseConfig;
   }

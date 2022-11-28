@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target":"es2018",
+    "module": "commonjs",
+    "sourceMap": true,
+    "declaration": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "removeComments": false
+  }
+}

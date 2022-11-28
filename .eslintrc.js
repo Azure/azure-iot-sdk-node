@@ -16,8 +16,7 @@ module.exports = {
     "jsdoc"
   ],
   "parserOptions": {
-    "ecmaVersion": 8,
-    tsconfigRootDir: __dirname
+    "ecmaVersion": 8
   },
   "overrides": [
     {

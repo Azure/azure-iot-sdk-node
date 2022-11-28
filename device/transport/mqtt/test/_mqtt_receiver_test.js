@@ -3,17 +3,17 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var Mqtt = require('../dist/mqtt.js').Mqtt;
-var Message = require('azure-iot-common').Message;
+const assert = require('chai').assert;
+const sinon = require('sinon');
+const EventEmitter = require('events').EventEmitter;
+const Mqtt = require('../dist/mqtt.js').Mqtt;
+const Message = require('azure-iot-common').Message;
 
 describe('Mqtt as MqttReceiver', function () {
-  var fakeConfig;
+  let fakeConfig;
 
-  var fakeMqttBase, fakeAuthenticationProvider;
+  let fakeMqttBase;
+  let fakeAuthenticationProvider;
 
   beforeEach(function () {
     fakeAuthenticationProvider = {
@@ -43,11 +43,11 @@ describe('Mqtt as MqttReceiver', function () {
   });
 
   describe('#events', function () {
-    describe('#message', function() {
+    describe('#message', function () {
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_004: [If there is a listener for the message event, a message event shall be emitted for each message received.]*/
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_005: [When a message event is emitted, the parameter shall be of type Message]*/
       it('emits a message event with a Message object when there is a listener', function (done) {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.instanceOf(msg, Message);
@@ -59,7 +59,7 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_007: [When a message is received, the receiver shall populate the generated `Message` object `properties` property with the user properties serialized in the topic.]*/
       it('populates user-defined message properties from the topic', function (done) {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -78,7 +78,7 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_008: [When a message is received, the receiver shall populate the generated `Message` object `messageId` with the value of the property `$.mid` serialized in the topic, if present.]*/
       it('populates Message.messageId from the topic', function (done) {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -92,7 +92,7 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_009: [When a message is received, the receiver shall populate the generated `Message` object `to` with the value of the property `$.to` serialized in the topic, if present.]*/
       it('populates Message.to from the topic', function (done) {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -106,7 +106,7 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_010: [When a message is received, the receiver shall populate the generated `Message` object `expiryTimeUtc` with the value of the property `$.exp` serialized in the topic, if present.]*/
       it('populates Message.expiryTimeUtc from the topic', function (done) {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -120,8 +120,8 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_011: [When a message is received, the receiver shall populate the generated `Message` object `correlationId` with the value of the property `$.cid` serialized in the topic, if present.]*/
       it('populates Message.correlationId from the topic', function (done) {
-        var fakeCid = 'fakeCorrelationId';
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const fakeCid = 'fakeCorrelationId';
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -135,8 +135,8 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_012: [When a message is received, the receiver shall populate the generated `Message` object `userId` with the value of the property `$.uid` serialized in the topic, if present.]*/
       it('populates Message.userId from the topic', function (done) {
-        var fakeUid = 'fakeUserId';
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const fakeUid = 'fakeUserId';
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -150,8 +150,8 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_013: [When a message is received, the receiver shall populate the generated `Message` object `contentType` with the value of the property `$.ct` serialized in the topic, if present.]*/
       it('populates Message.contentType from the topic', function (done) {
-        var contentType = 'application/json';
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const contentType = 'application/json';
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -165,8 +165,8 @@ describe('Mqtt as MqttReceiver', function () {
 
       /*Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_16_014: [When a message is received, the receiver shall populate the generated `Message` object `contentEncoding` with the value of the property `$.ce` serialized in the topic, if present.]*/
       it('populates Message.contentEncoding from the topic', function (done) {
-        var contentEncoding = 'utf-8';
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const contentEncoding = 'utf-8';
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -178,11 +178,8 @@ describe('Mqtt as MqttReceiver', function () {
         });
       });
 
-
-
-
-      it('creates a message even if the properties topic segment is empty', function(done) {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      it('creates a message even if the properties topic segment is empty', function (done) {
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('message', function (msg) {
             assert.equal(msg.constructor.name, 'Message');
@@ -194,11 +191,11 @@ describe('Mqtt as MqttReceiver', function () {
       });
     });
 
-    describe('#method', function() {
+    describe('#method', function () {
       /* Tests_SRS_NODE_DEVICE_MQTT_RECEIVER_13_002: [ When a listener is added for the method event, the topic should be subscribed to. ]*/
       // note: that test really does not test this requirement. Not since we introduced the enable/disable methods
       it('does not subscribe twice to the same topic for multiple event registrations', function () {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         receiver.connect(function () {
           receiver.on('method_UpdateFirmware', function () { });
           receiver.on('method_Reboot', function () { });
@@ -230,10 +227,10 @@ describe('Mqtt as MqttReceiver', function () {
             verb: string;
         }
       ]*/
-      it('emits a method event when a method message is received', function() {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-        var callback = sinon.spy();
-        var msg;
+      it('emits a method event when a method message is received', function () {
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const callback = sinon.spy();
+        let msg;
         receiver.connect(function () {
           receiver.on('method_Reboot', callback);
 
@@ -274,10 +271,10 @@ describe('Mqtt as MqttReceiver', function () {
             verb: string;
         }
       ]*/
-      it('emits a method event when a method message is received with properties', function() {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-        var callback = sinon.spy();
-        var msg;
+      it('emits a method event when a method message is received with properties', function () {
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const callback = sinon.spy();
+        let msg;
         receiver.connect(function () {
           receiver.on('method_Reboot', callback);
 
@@ -324,10 +321,11 @@ describe('Mqtt as MqttReceiver', function () {
             verb: string;
         }
       ]*/
-      it('emits a method event when a method message is received with payload and properties', function() {
-        var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-        var callback = sinon.spy();
-        var msg, payload;
+      it('emits a method event when a method message is received with payload and properties', function () {
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        const callback = sinon.spy();
+        let msg;
+        let payload;
         receiver.connect(function () {
           receiver.on('method_Reboot', callback);
 
@@ -366,20 +364,19 @@ describe('Mqtt as MqttReceiver', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_18_057: [ An `inputMessage` event shall be emitted for each message received. ]*/
     /*Tests_SRS_NODE_DEVICE_MQTT_18_058: [ When an `inputMessage` event is received, Mqtt shall extract the inputName from the topic according to the following convention: 'devices/<deviceId>/modules/<moduleId>/inputs/<inputName>' ]*/
     /*Tests_SRS_NODE_DEVICE_MQTT_18_056: [ When an `inputMessage` event is emitted, the first parameter shall be the inputName and the second parameter shall be of type `Message`. ]*/
-    describe('#inputMessage', function() {
-        it('emits an inputMessage event with a Message object when there is a listener', function (done) {
-          fakeConfig.moduleId = 'moduleId';
-          var receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-          receiver.connect(function () {
-            receiver.on('inputMessage', function (inputName, msg) {
-              assert.strictEqual(inputName, 'fakeInputName')
-              assert.instanceOf(msg, Message);
-              done();
-            });
-            fakeMqttBase.emit('message', 'devices/foo/modules/moduleId/inputs/fakeInputName/');
+    describe('#inputMessage', function () {
+      it('emits an inputMessage event with a Message object when there is a listener', function (done) {
+        fakeConfig.moduleId = 'moduleId';
+        const receiver = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+        receiver.connect(function () {
+          receiver.on('inputMessage', function (inputName, msg) {
+            assert.strictEqual(inputName, 'fakeInputName')
+            assert.instanceOf(msg, Message);
+            done();
           });
+          fakeMqttBase.emit('message', 'devices/foo/modules/moduleId/inputs/fakeInputName/');
         });
-
+      });
     });
   });
 });

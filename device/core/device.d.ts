@@ -3,8 +3,8 @@
 
 export { Client } from './dist/device_client';
 export { ModuleClient } from './dist/module_client';
-export import ConnectionString = require('./dist/connection_string');
-export import SharedAccessSignature = require('./dist/shared_access_signature');
+export * as ConnectionString from './dist/connection_string';
+export * as SharedAccessSignature from './dist/shared_access_signature';
 export { Message } from 'azure-iot-common';
 export { DeviceMethodRequest, DeviceMethodResponse } from './dist/device_method';
 export { X509AuthenticationProvider } from './dist/x509_authentication_provider';
@@ -14,4 +14,4 @@ export { EdgedAuthConfig, IotEdgeAuthenticationProvider } from './dist/iotedge_a
 export { Twin, TwinProperties } from './dist/twin';
 export { DeviceClientOptions, HttpReceiverOptions, AmqpTransportOptions, HttpTransportOptions, MqttTransportOptions } from './dist/interfaces';
 export { getUserAgentString } from './dist/utils';
-export { MethodMessage, DeviceTransport } from './dist/internal_client'
+export { MethodMessage, DeviceTransport } from './dist/internal_client';

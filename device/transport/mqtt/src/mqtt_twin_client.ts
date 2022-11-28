@@ -34,7 +34,7 @@ interface TopicSubscription {
  *
  * @param {Object} config   configuration object
  * @fires MqttTwinReceiver#subscribed   an MQTT topic has been successfully subscribed to
- * @fires MqttTwinReceiver#error    an error has occured while subscribing to an MQTT topic
+ * @fires MqttTwinReceiver#error    an error has occurred while subscribing to an MQTT topic
  * @fires MqttTwinReceiver#response   a response message has been received from the service
  * @fires MqttTwinReceiver#post a post message has been received from the service
  * @throws {ReferenceError} If client parameter is falsy.
@@ -186,7 +186,7 @@ export class MqttTwinClient extends EventEmitter {
         this._ignoreConnectionClosedInErrorCallback(callback)(err);
       } else {
         debug('suback: ' + JSON.stringify(suback));
-        /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_023: [The `disableTwinDesiredPropertiesUpdates` shall call its callback with no arguments if the unsubscription is successful.]*/
+        /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_023: [The `disableTwinDesiredPropertiesUpdates` shall call its callback with no arguments if the unsubscribe is successful.]*/
         callback();
       }
     });
@@ -196,7 +196,7 @@ export class MqttTwinClient extends EventEmitter {
     /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
     const requestId = uuid.v4();
-    let propString = '?$rid=' + requestId;
+    const propString = '?$rid=' + requestId;
 
     const topic = '$iothub/twin/' + method + resource + propString;
 

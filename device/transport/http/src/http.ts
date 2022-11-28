@@ -11,7 +11,7 @@ const debugErrors = dbg('azure-iot-device-http:Http:Errors');
 import { EventEmitter } from 'events';
 import { Http as Base } from 'azure-iot-http-base';
 import { endpoint, errors, results, Message, AuthenticationProvider, AuthenticationType, TransportConfig, encodeUriComponentStrict } from 'azure-iot-common';
-import { translateError } from './http_errors.js';
+import { translateError } from './http_errors';
 import { IncomingMessage } from 'http';
 import { DeviceTransport, MethodMessage, DeviceMethodResponse, TwinProperties, SharedAccessKeyAuthenticationProvider } from 'azure-iot-device';
 import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider } from 'azure-iot-device';
@@ -38,7 +38,7 @@ function handleResponse(done: (err?: Error, result?: results.MessageEnqueued) =>
   };
 }
 
-let defaultOptions: HttpReceiverOptions = {
+const defaultOptions: HttpReceiverOptions = {
   // 'interval' is a number, expressed in seconds. Default will poll for messages once per second.
   interval: 1,
   // 'at' is a Date object. Message(s) will be received at this time.
@@ -165,7 +165,7 @@ export class Http extends EventEmitter implements DeviceTransport {
         } else {
           const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
           /*Codes_SRS_NODE_DEVICE_HTTP_41_002: [ `productInfo` should be set in the HTTP User-Agent Header if set using `setOptions` ]*/
-          let httpHeaders = {
+          const httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
           };
@@ -222,7 +222,7 @@ export class Http extends EventEmitter implements DeviceTransport {
             httpHeaders['iothub-interface-id'] = message.interfaceId;
           }
 
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transport.]*/
           const request = this._http.buildRequest('POST', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, handleResponse(done));
 
           request.write(message.getBytes());
@@ -267,16 +267,16 @@ export class Http extends EventEmitter implements DeviceTransport {
 
               if (index > 0) body += ',';
 
-              body += '{\"body\":\"' + buffMsg.toString('base64') + '\"';
+              body += '{"body": "' + buffMsg.toString('base64') + '"';
               // Get the properties
               let propertyIdx = 0;
-              let property = ',\"properties\":{';
+              let property = ', "properties":{';
               for (propertyIdx = 0; propertyIdx < message.properties.count(); propertyIdx++) {
                 if (propertyIdx > 0)
                   property += ',';
                 const propItem = message.properties.getItem(propertyIdx);
                 /*Codes_SRS_NODE_DEVICE_HTTP_13_002: [ sendEventBatch shall prefix the key name for all message properties with the string iothub-app. ]*/
-                property += '\"' + ((propItem.key !== MESSAGE_PROP_DT_SUBJECT) ? (MESSAGE_PROP_HEADER_PREFIX) : '') + propItem.key + '\":\"' + propItem.value + '\"';
+                property += '"' + ((propItem.key !== MESSAGE_PROP_DT_SUBJECT) ? (MESSAGE_PROP_HEADER_PREFIX) : '') + propItem.key + '":"' + propItem.value + '"';
               }
               if (propertyIdx > 0) {
                 property += '}';
@@ -300,7 +300,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           {"body":"<Base64 Message1>"}...
           ```]*/
           const path = endpoint.deviceEventPath(encodeUriComponentStrict(config.deviceId));
-          let httpHeaders = {
+          const httpHeaders = {
             'iothub-to': path,
             'Content-Type': 'application/vnd.microsoft.iothub.json',
             'User-Agent': this._userAgentString
@@ -308,7 +308,7 @@ export class Http extends EventEmitter implements DeviceTransport {
 
           this._insertAuthHeaderIfNecessary(httpHeaders, config);
 
-          /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
+          /*Codes_SRS_NODE_DEVICE_HTTP_16_013: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transport.]*/
           const request = this._http.buildRequest('POST', path + endpoint.versionQueryString(), httpHeaders, config.host, config.x509, handleResponse(done));
           const body = constructBatchBody(messages);
           request.write(body);
@@ -327,7 +327,7 @@ export class Http extends EventEmitter implements DeviceTransport {
    */
   setOptions(options: DeviceClientOptions, done: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_HTTP_16_011: [The HTTP transport should use the x509 settings passed in the `options` object to connect to the service if present.]*/
-    if (options.hasOwnProperty('cert')) {
+    if (Object.prototype.hasOwnProperty.call(options, 'cert')) {
       (this._authenticationProvider as X509AuthenticationProvider).setX509Options({
         cert: options.cert,
         key: options.key,
@@ -365,15 +365,15 @@ export class Http extends EventEmitter implements DeviceTransport {
 
     // setOptions used to exist both on Http and HttpReceiver with different options class. In order not to break backward compatibility we have
     // to check what properties this options object has to figure out what to do with it.
-    if (options.hasOwnProperty('http') && options.http.hasOwnProperty('receivePolicy')) {
+    if (Object.prototype.hasOwnProperty.call(options, 'http') && Object.prototype.hasOwnProperty.call(options.http, 'receivePolicy')) {
       /*Codes_SRS_NODE_DEVICE_HTTP_16_004: [The `setOptions` method shall call the `setOptions` method of the HTTP Receiver with the content of the `http.receivePolicy` property of the `options` parameter.]*/
       this._setReceiverOptions(options.http.receivePolicy);
       if (done) done();
-    } else if (options.hasOwnProperty('interval')
-              || options.hasOwnProperty('at')
-              || options.hasOwnProperty('cron')
-              || options.hasOwnProperty('manualPolling')
-              || options.hasOwnProperty('drain')) {
+    } else if (Object.prototype.hasOwnProperty.call(options, 'interval')
+              || Object.prototype.hasOwnProperty.call(options, 'at')
+              || Object.prototype.hasOwnProperty.call(options, 'cron')
+              || Object.prototype.hasOwnProperty.call(options, 'manualPolling')
+              || Object.prototype.hasOwnProperty.call(options, 'drain')) {
       this._setReceiverOptions(options as any);
       if (done) done();
     }
@@ -402,7 +402,7 @@ export class Http extends EventEmitter implements DeviceTransport {
           this.emit('error', err);
         } else {
           const path = endpoint.deviceMessagePath(encodeUriComponentStrict(config.deviceId));
-          let httpHeaders = {
+          const httpHeaders = {
             'iothub-to': path,
             'User-Agent': this._userAgentString
           };
@@ -655,7 +655,7 @@ export class Http extends EventEmitter implements DeviceTransport {
       ```
       Authorization: <config.sharedAccessSignature>
       ```]*/
-    /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_030: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transpoort.]*/
+    /*Codes_SRS_NODE_DEVICE_HTTP_RECEIVER_16_030: [If using x509 authentication the `Authorization` header shall not be set and the x509 parameters shall instead be passed to the underlying transport.]*/
     headers.Authorization = credentials.sharedAccessSignature.toString();
     }
   }
@@ -687,7 +687,7 @@ export class Http extends EventEmitter implements DeviceTransport {
         let method;
         let resultConstructor = null;
         let path = endpoint.deviceFeedbackPath(encodeUriComponentStrict(config.deviceId), message.lockToken);
-        let httpHeaders = {
+        const httpHeaders = {
           'If-Match': message.lockToken,
           'User-Agent': this._userAgentString
         };

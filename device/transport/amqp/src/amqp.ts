@@ -20,7 +20,7 @@ import { X509AuthenticationProvider, SharedAccessSignatureAuthenticationProvider
 const handleResult = function (errorMessage: string, done: (err?: Error, result?: any) => void): (err?: Error, result?: any) => void {
   return function (err?: Error, result?: any): void {
     if (err) {
-      let translatedErr = translateError(errorMessage, err);
+      const translatedErr = translateError(errorMessage, err);
       debugErrors('Completing with untranslated error: ' + getErrorName(err));
       done(translatedErr);
     } else {
@@ -29,7 +29,7 @@ const handleResult = function (errorMessage: string, done: (err?: Error, result?
   };
 };
 
-const getTranslatedError = function(err?: Error, message?: string): Error {
+const getTranslatedError = function (err?: Error, message?: string): Error {
   if (err instanceof errors.UnauthorizedError || err instanceof errors.NotConnectedError || err instanceof errors.DeviceNotFoundError) {
     return err;
   }
@@ -110,7 +110,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     this._deviceMethodClient = new AmqpDeviceMethodClient(this._authenticationProvider, this._amqp);
     /*Codes_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
     this._deviceMethodClient.on('error', (err) => {
-      let methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
+      const methodsError = new errors.DeviceMethodsDetachedError('Device Methods AMQP links failed');
       methodsError.innerError = err;
       this.emit('error', methodsError);
     });
@@ -118,7 +118,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     this._twinClient = new AmqpTwinClient(this._authenticationProvider, this._amqp);
     /*Codes_SRS_NODE_DEVICE_AMQP_16_048: [Any `error` event received on any of the links used for twin shall trigger the emission of an `error` event by the transport, with an argument that is a `TwinDetachedError` object with the `innerError` property set to that error.]*/
     this._twinClient.on('error', (err) => {
-      let twinError = new errors.TwinDetachedError('Twin AMQP links failed');
+      const twinError = new errors.TwinDetachedError('Twin AMQP links failed');
       twinError.innerError = err;
       this.emit('error', twinError);
     });
@@ -128,7 +128,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
     /*Codes_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
     this._c2dErrorListener = (err) => {
       debugErrors('Error on the C2D link: ' + getErrorName(err));
-      let c2dError = new errors.CloudToDeviceDetachedError('Cloud-to-device AMQP link failed');
+      const c2dError = new errors.CloudToDeviceDetachedError('Cloud-to-device AMQP link failed');
       c2dError.innerError = err;
       this.emit('error', c2dError);
     };
@@ -140,7 +140,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
       }
       if (this._messageEventName === 'inputMessage') {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter.]*/
-        debug('inputMesssage received on C2D link, emitting \'inputMessage\'');
+        debug('inputMessage received on C2D link, emitting \'inputMessage\'');
         this.emit('inputMessage', inputName, AmqpMessage.toMessage(msg));
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter.]*/
@@ -542,7 +542,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
               (callback) => {
                 this._amqpLinkEmitter.removeAllListeners('senderLinkAttached');
                 if (this._d2cLink) {
-                  let tmpD2CLink = this._d2cLink;
+                  const tmpD2CLink = this._d2cLink;
                   this._d2cLink = undefined;
 
                   if (err) {
@@ -647,7 +647,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /* Codes_SRS_NODE_DEVICE_AMQP_16_003: [The sendEvent method shall call the done() callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.] */
   /* Codes_SRS_NODE_DEVICE_AMQP_16_004: [If sendEvent encounters an error before it can send the request, it shall invoke the done callback function and pass the standard JavaScript Error object with a text description of the error (err.message). ] */
   sendEvent(message: Message, done: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    let amqpMessage = AmqpMessage.fromMessage(message);
+    const amqpMessage = AmqpMessage.fromMessage(message);
     this._fsm.handle('sendEvent', amqpMessage, done);
   }
 
@@ -743,7 +743,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /*Codes_SRS_NODE_DEVICE_AMQP_06_001: [The `setOptions` method shall throw a ReferenceError if the `options` parameter has not been supplied.]*/
     if (!options) throw new ReferenceError('The options parameter can not be \'' + options + '\'');
 
-    if (options.hasOwnProperty('cert')) {
+    if (Object.prototype.hasOwnProperty.call(options, 'cert')) {
       if (this._authenticationProvider.type === AuthenticationType.X509) {
         (this._authenticationProvider as X509AuthenticationProvider).setX509Options(options);
       } else {
@@ -894,7 +894,7 @@ export class Amqp extends EventEmitter implements DeviceTransport {
   /*Codes_SRS_NODE_DEVICE_AMQP_18_008: [The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
   /*Codes_SRS_NODE_DEVICE_AMQP_18_009: [If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
   sendOutputEvent(outputName: string, message: Message, callback: (err?: Error, result?: results.MessageEnqueued) => void): void {
-    let amqpMessage = AmqpMessage.fromMessage(message);
+    const amqpMessage = AmqpMessage.fromMessage(message);
     if (!amqpMessage.application_properties) {
       amqpMessage.application_properties = {};
     }

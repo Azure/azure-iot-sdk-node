@@ -3,19 +3,24 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var EventEmitter = require('events').EventEmitter;
-var sinon = require('sinon');
-var rhea = require('rhea');
+const assert = require('chai').assert;
+const EventEmitter = require('events').EventEmitter;
+const sinon = require('sinon');
+const rhea = require('rhea');
 
 
-var AmqpTwinClient = require('../dist/amqp_twin_client.js').AmqpTwinClient;
-var errors = require('azure-iot-common').errors;
-var endpoint = require('azure-iot-common').endpoint;
+const AmqpTwinClient = require('../dist/amqp_twin_client.js').AmqpTwinClient;
+const errors = require('azure-iot-common').errors;
+const endpoint = require('azure-iot-common').endpoint;
 
 describe('AmqpTwinClient', function () {
 
-  var fakeConfig, fakeAuthenticationProvider, fakeAmqpClient, fakeSenderLink, fakeReceiverLink, twinClient;
+  let fakeConfig;
+  let fakeAuthenticationProvider;
+  let fakeAmqpClient;
+  let fakeSenderLink;
+  let fakeReceiverLink;
+  let twinClient;
 
   beforeEach(function () {
     fakeAuthenticationProvider = {
@@ -46,8 +51,8 @@ describe('AmqpTwinClient', function () {
 
   describe('#constructor', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_005: [The `AmqpTwinClient` shall inherit from the `EventEmitter` class.] */
-    it('inherits from EventEmitter', function() {
-      var client = new AmqpTwinClient({}, {});
+    it('inherits from EventEmitter', function () {
+      const client = new AmqpTwinClient({}, {});
       assert.instanceOf(client, EventEmitter);
     });
   });
@@ -59,7 +64,7 @@ describe('AmqpTwinClient', function () {
     });
 
     it('calls its callback with an error if getDeviceCredentials fails', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, fakeError);
       methodUnderTest(function (err) {
         assert.isTrue(fakeAuthenticationProvider.getDeviceCredentials.calledOnce);
@@ -74,13 +79,13 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_017: [THe `updateTwinReportedProperties` method shall attach the receiver link if it's not already attached.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_023: [The `enableTwinDesiredPropertiesUpdates` method shall attach the sender link if it's not already attached.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_025: [THe `enableTwinDesiredPropertiesUpdates` method shall attach the receiver link if it's not already attached.]*/
-    it('calls attachSender and attachReceiver if the links are not attached', function() {
+    it('calls attachSender and attachReceiver if the links are not attached', function () {
       methodUnderTest();
       assert.isTrue(fakeAmqpClient.attachSenderLink.calledOnce);
       assert.isTrue(fakeAmqpClient.attachReceiverLink.calledOnce);
     });
 
-    it('calls attachSender and attachReceiver only once', function() {
+    it('calls attachSender and attachReceiver only once', function () {
       methodUnderTest();
       methodUnderTest();
       assert.isTrue(fakeAmqpClient.attachSenderLink.calledOnce);
@@ -89,7 +94,7 @@ describe('AmqpTwinClient', function () {
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_007: [The endpoint argument for attachReceiverLink shall be `/devices/<deviceId>/twin`.] */
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_06_009: [The endpoint argument for attachSenderLink shall be `/devices/<deviceId>/twin`.] */
-    it('attaches sender and receiver links to the `/devices/<deviceId>/twin` endpoint.', function() {
+    it('attaches sender and receiver links to the `/devices/<deviceId>/twin` endpoint.', function () {
       methodUnderTest();
       assert.strictEqual(fakeAmqpClient.attachSenderLink.firstCall.args[0],'/devices/' + fakeConfig.deviceId + '/twin');
       assert.strictEqual(fakeAmqpClient.attachReceiverLink.firstCall.args[0],'/devices/' + fakeConfig.deviceId + '/twin');
@@ -97,7 +102,7 @@ describe('AmqpTwinClient', function () {
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_18_001: [If a `moduleId` value was set in the device's connection string, the endpoint argument for `attachReceiverLink` shall be `/devices/<deviceId>/modules/<moduleId>/twin`]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_18_002: [If a `moduleId` value was set in the device's connection string, the endpoint argument for `attachSenderLink` shall be `/device/<deviceId>/modules/<moduleId>/twin`.]*/
-    it('attaches sender and receiver links to the `/devices/<deviceId>/modules/<moduleId>/twin` endpoint when there\'s a moduleId', function() {
+    it('attaches sender and receiver links to the `/devices/<deviceId>/modules/<moduleId>/twin` endpoint when there\'s a moduleId', function () {
       fakeConfig.moduleId = "fakeModuleId";
       fakeAuthenticationProvider = {
         getDeviceCredentials: sinon.stub().callsArgWith(0, null, fakeConfig)
@@ -126,10 +131,10 @@ describe('AmqpTwinClient', function () {
                 sndSettleMode: 1,
                 rcvSettleMode: 0
               } ] */
-    it('configures link options for the sender and receiver links', function() {
+    it('configures link options for the sender and receiver links', function () {
       methodUnderTest();
-      var senderLinkOptions = fakeAmqpClient.attachSenderLink.firstCall.args[1];
-      var receiverLinkOptions = fakeAmqpClient.attachReceiverLink.firstCall.args[1];
+      const senderLinkOptions = fakeAmqpClient.attachSenderLink.firstCall.args[1];
+      const receiverLinkOptions = fakeAmqpClient.attachReceiverLink.firstCall.args[1];
       assert.equal(senderLinkOptions.snd_settle_mode, 1, ' sender send settle mode not set appropriately' );
       assert.equal(senderLinkOptions.rcv_settle_mode, 0, ' sender rcv settle mode not set appropriately' );
       assert.equal(receiverLinkOptions.snd_settle_mode, 1, ' receiver send settle mode not set appropriately' );
@@ -147,7 +152,7 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_016: [If attaching the sender link fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_024: [If attaching the sender link fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
     it('calls its callback with an error if it fails to attach the sender link', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeAmqpClient.attachSenderLink = sinon.stub().callsArgWith(2, fakeError);
       methodUnderTest(function (err) {
         assert.instanceOf(err, Error);
@@ -160,7 +165,7 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_018: [If attaching the receiver link fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_026: [If attaching the receiver link fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
     it('calls its callback with an error if it fails to attach the receiver link', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeAmqpClient.attachReceiverLink = sinon.stub().callsArgWith(2, fakeError);
       methodUnderTest(function (err) {
         assert.instanceOf(err, Error);
@@ -173,7 +178,7 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_020: [If the `SenderLink.send` call fails, the `updateTwinReportedProperties` method shall call its callback with the error that caused the failure.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_028: [If the `SenderLink.send` call fails, the `enableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
     it('calls its callback with an error if it fails to send the message', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
       methodUnderTest(function (err) {
         assert.strictEqual(err, fakeError);
@@ -199,7 +204,7 @@ describe('AmqpTwinClient', function () {
     - `body` set to ` `.]*/
     it('sends a message with the correct annotations, properties and body', function () {
       twinClient.getTwin(function () {});
-      var amqpMessage = fakeSenderLink.send.firstCall.args[0];
+      const amqpMessage = fakeSenderLink.send.firstCall.args[0];
       assert.strictEqual(amqpMessage.message_annotations.operation, 'GET');
       assert.isUndefined(amqpMessage.message_annotations.resource);
       assert.isString(amqpMessage.correlation_id);
@@ -209,7 +214,7 @@ describe('AmqpTwinClient', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_013: [The `getTwin` method shall monitor `Message` objects on the `ReceiverLink.on('message')` handler until a message with the same `correlationId` as the one that was sent is received.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
     it('parses the response from the body of the corresponding response message', function (testCallback) {
-      var fakeTwin = { fake : 'twin' };
+      const fakeTwin = { fake : 'twin' };
       twinClient.getTwin(function (err, twin) {
         assert.deepEqual(twin, fakeTwin);
         testCallback();
@@ -260,9 +265,9 @@ describe('AmqpTwinClient', function () {
     - `correlationId` property set to a uuid
     - `body` set to the stringified patch object.]*/
     it('sends a message with the correct annotations, properties and body', function () {
-      var fakePatch = { fake: 'patch' };
+      const fakePatch = { fake: 'patch' };
       twinClient.updateTwinReportedProperties(fakePatch, function () {});
-      var amqpMessage = fakeSenderLink.send.firstCall.args[0];
+      const amqpMessage = fakeSenderLink.send.firstCall.args[0];
       assert.strictEqual(amqpMessage.message_annotations.operation, 'PATCH');
       assert.strictEqual(amqpMessage.message_annotations.resource, '/properties/reported');
       assert.isString(amqpMessage.correlation_id);
@@ -306,7 +311,7 @@ describe('AmqpTwinClient', function () {
     - `body` set to `undefined`.]*/
     it('sends a message with the correct annotations, properties and body', function () {
       twinClient.enableTwinDesiredPropertiesUpdates(function () {});
-      var amqpMessage = fakeSenderLink.send.firstCall.args[0];
+      const amqpMessage = fakeSenderLink.send.firstCall.args[0];
       assert.strictEqual(amqpMessage.message_annotations.operation, 'PUT');
       assert.strictEqual(amqpMessage.message_annotations.resource, '/notifications/twin/properties/desired');
       assert.isString(amqpMessage.correlation_id);
@@ -366,7 +371,7 @@ describe('AmqpTwinClient', function () {
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_033: [If the `SenderLink.send` call fails, the `disableTwinDesiredPropertiesUpdates` method shall call its callback with the error that caused the failure.]*/
     it('calls its callback with an error if it fails to send the message', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeSenderLink.send = sinon.stub().callsArgWith(1, fakeError);
       twinClient.enableTwinDesiredPropertiesUpdates(function () {
         twinClient.disableTwinDesiredPropertiesUpdates(function (err) {
@@ -490,7 +495,7 @@ describe('AmqpTwinClient', function () {
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
     it('calls its callback with an error if detaching the sender link fails', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeAmqpClient.detachSenderLink = sinon.stub().callsArgWith(1, fakeError);
       twinClient.enableTwinDesiredPropertiesUpdates(function () {
         assert.isTrue(fakeAmqpClient.attachSenderLink.calledOnce);
@@ -513,7 +518,7 @@ describe('AmqpTwinClient', function () {
 
     /*Tests_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
     it('calls its callback with an error if detaching the receiver link fails', function (testCallback) {
-      var fakeError = new Error('fake');
+      const fakeError = new Error('fake');
       fakeAmqpClient.detachReceiverLink = sinon.stub().callsArgWith(1, fakeError);
       twinClient.enableTwinDesiredPropertiesUpdates(function () {
         assert.isTrue(fakeAmqpClient.attachSenderLink.calledOnce);
@@ -538,7 +543,7 @@ describe('AmqpTwinClient', function () {
   describe('#events', function () {
     describe('twinDesiredPropertiesUpdate', function () {
       it('emits a twinDesiredPropertiesUpdate event if a desired properties patch is received', function (testCallback) {
-        var desiredPropDelta = {
+        const desiredPropDelta = {
           fake: 'patch'
         };
         twinClient.on('twinDesiredPropertiesUpdate', function (delta) {
@@ -583,7 +588,7 @@ describe('AmqpTwinClient', function () {
 
     describe('error', function () {
       it('detaches the links and emits an error if an error is received on the sender link', function (testCallback) {
-        var fakeError = new Error('fake');
+        const fakeError = new Error('fake');
         twinClient.on('error', function (err) {
           assert.strictEqual(err, fakeError);
           assert.isTrue(fakeAmqpClient.detachSenderLink.calledOnce);
@@ -603,7 +608,7 @@ describe('AmqpTwinClient', function () {
       });
 
       it('detaches the links and emits an error if an error is received on the receiver link', function (testCallback) {
-        var fakeError = new Error('fake');
+        const fakeError = new Error('fake');
         twinClient.on('error', function (err) {
           assert.strictEqual(err, fakeError);
           assert.isTrue(fakeAmqpClient.detachSenderLink.calledOnce);

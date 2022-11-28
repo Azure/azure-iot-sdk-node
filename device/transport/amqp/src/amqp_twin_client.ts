@@ -73,7 +73,7 @@ export class AmqpTwinClient extends EventEmitter {
       const correlationId: string = message.correlation_id;
       if (correlationId) {
         this._onResponseMessage(message);
-      } else if (message.hasOwnProperty('body')) {
+      } else if (Object.prototype.hasOwnProperty.call(message, 'body')) {
         this._onDesiredPropertyDelta(message);
       } else {
         //
@@ -240,7 +240,7 @@ export class AmqpTwinClient extends EventEmitter {
                   debugErrors('we received an error for the detach of the downstream link during the disconnect. Error=' + detachReceiverError);
                 }
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_006: [The `detach` method shall call its `callback` with an `Error` if detaching either of the links fail.]*/
-                let possibleError = err || detachSenderError || detachReceiverError;
+                const possibleError = err || detachSenderError || detachReceiverError;
                 this._fsm.transition('detached', possibleError, detachCallback);
               });
             });
@@ -316,14 +316,14 @@ export class AmqpTwinClient extends EventEmitter {
       const pendingRequestCallback = this._pendingTwinRequests[message.correlation_id];
       delete this._pendingTwinRequests[message.correlation_id];
       if (!message.message_annotations) {
-        let result = (message.body && message.body.content.length > 0) ? JSON.parse(message.body.content) : undefined;
+        const result = (message.body && message.body.content.length > 0) ? JSON.parse(message.body.content) : undefined;
         pendingRequestCallback(null, result);
       } else if (message.message_annotations.status >= 200 && message.message_annotations.status <= 300) {
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_014: [The `getTwin` method shall parse the body of the received message and call its callback with a `null` error object and the parsed object as a result.]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_022: [The `updateTwinReportedProperties` method shall call its callback with no argument when a response is received]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_030: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_035: [The `disableTwinDesiredPropertiesUpdates` method shall call its callback with no argument when a response is received]*/
-        let result = (message.body && message.body.content.length > 0) ? JSON.parse(message.body.content) : undefined;
+        const result = (message.body && message.body.content.length > 0) ? JSON.parse(message.body.content) : undefined;
         pendingRequestCallback(null, result);
       } else {
         /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_038: [The `getTwin` method shall call its callback with a translated error according to the table described in **SRS_NODE_DEVICE_AMQP_TWIN_16_037** if the `status` message annotation is `> 300`.]*/
@@ -343,7 +343,7 @@ export class AmqpTwinClient extends EventEmitter {
   }
 
   private _sendTwinRequest(method: TwinMethod, resource: string, body: string, callback: (err?: Error) => void): void {
-    let amqpMessage = new AmqpMessage();
+    const amqpMessage = new AmqpMessage();
 
     amqpMessage.message_annotations = {
       operation: method
@@ -353,7 +353,7 @@ export class AmqpTwinClient extends EventEmitter {
       amqpMessage.message_annotations.resource = resource;
     }
 
-    let correlationId = uuid.v4();
+    const correlationId = uuid.v4();
     //
     // Just a reminder here.  The correlation id will not be serialized into a amqp uuid encoding (0x98).
     // The service doesn't require it and leaving it as a string will be just fine.
