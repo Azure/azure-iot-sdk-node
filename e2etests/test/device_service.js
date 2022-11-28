@@ -3,27 +3,27 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var debug = require('debug')('e2etests:c2dd2c');
-var uuid = require('uuid');
+let assert = require('chai').assert;
+let debug = require('debug')('e2etests:c2dd2c');
+let uuid = require('uuid');
 
-var serviceSdk = require('azure-iothub');
-var Message = require('azure-iot-common').Message;
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
-var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-var EventHubClient = require('@azure/event-hubs').EventHubClient;
-var EventPosition = require('@azure/event-hubs').EventPosition;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
-var RendezVous = require('./rendezvous_helper').Rendezvous;
+let serviceSdk = require('azure-iothub');
+let Message = require('azure-iot-common').Message;
+let createDeviceClient = require('./testUtils.js').createDeviceClient;
+let closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
+let EventHubClient = require('@azure/event-hubs').EventHubClient;
+let EventPosition = require('@azure/event-hubs').EventPosition;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
+let RendezVous = require('./rendezvous_helper').Rendezvous;
 
-var deviceAmqp = require('azure-iot-device-amqp');
-var deviceMqtt = require('azure-iot-device-mqtt');
-var deviceHttp = require('azure-iot-device-http');
+let deviceAmqp = require('azure-iot-device-amqp');
+let deviceMqtt = require('azure-iot-device-mqtt');
+let deviceHttp = require('azure-iot-device-http');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var maximumMessageSize = ((64*1024)-512);
+let maximumMessageSize = ((64*1024)-512);
 
 [
   DeviceIdentityHelper.createDeviceWithSas,
@@ -44,10 +44,12 @@ var maximumMessageSize = ((64*1024)-512);
 
 function device_service_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using device/service clients c2d with ' + createDeviceMethod.name + ' authentication', function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
 
-    var serviceClient, deviceClient;
-    var provisionedDevice;
+    let serviceClient;
+    let deviceClient;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -73,31 +75,33 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     NOTE: By default, IoT Hubs support a maximum C2D message size of 64KB, which will cause this test to fail.
     */
     it('Service sends a C2D message of maximum size and it is received by the device', function (done) {
-      var receivingSideDone = false;
-      var sendingSideDone = false;
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(180000);
+      let receivingSideDone = false;
+      let sendingSideDone = false;
       function tryFinish(done) {
         if (receivingSideDone && sendingSideDone) {
           done();
         }
       }
-      this.timeout(180000);
       //
       // The size of non payload is calculated based on the value of the messageId value size,
       // the expiryTimeUtc value size and then on the application property value size plus one
       // for the application property name.
       //
-      var uuidData = uuid.v4();
-      var sizeOfNonPayload = (2*(uuidData.length)) + 8 + 1;
-      var bufferSize = maximumMessageSize - sizeOfNonPayload;
-      var buffer = Buffer.alloc(bufferSize);
-      var message = new Message(buffer);
+      let uuidData = uuid.v4();
+      let sizeOfNonPayload = (2*(uuidData.length)) + 8 + 1;
+      let bufferSize = maximumMessageSize - sizeOfNonPayload;
+      let buffer = Buffer.alloc(bufferSize);
+      let message = new Message(buffer);
       message.messageId = uuidData;
       message.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
       message.properties.add('a', uuidData);
       buffer.fill(uuidData);
 
-      var foundTheMessage = false;
-      var foundTheProperty = false;
+      let foundTheMessage = false;
+      let foundTheProperty = false;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (openErr) {
         debug('device has opened.');
         if (openErr) {
@@ -110,7 +114,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
             //
             if (msg.data.toString() === message.data.toString()) {
               foundTheMessage = true;
-              for (var i = 0; i < msg.properties.count(); i++) {
+              for (let i = 0; i < msg.properties.count(); i++) {
                 if (msg.properties.getItem(i).key.indexOf('a') >= 0) {
                   assert.equal(msg.properties.getItem(i).value, uuidData);
                   foundTheProperty = true;
@@ -136,6 +140,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
             });
           });
           debug('about to open the service client');
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           serviceClient.open(function (serviceErr) {
             debug('At service client open callback - error is:' + serviceErr);
             if (serviceErr) {
@@ -159,9 +164,12 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
   });
 
   describe('Over ' + deviceTransport.name + ' using device/eventhub clients - d2c with ' + createDeviceMethod.name + ' authentication', function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
 
-    var deviceClient, ehClient, provisionedDevice;
+    let deviceClient;
+    let ehClient;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -183,19 +191,20 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
 
     it('Device sends a message of maximum size and it is received by the service', function (done) {
+      // eslint-disable-next-line no-invalid-this
       this.timeout(120000);
-      var rdv = new RendezVous(done);
+      let rdv = new RendezVous(done);
       //
       // The size of non payload is calculated based on the value of the messageId value size
       // and then on the application property value size plus one for the application property name.
       //
-      var startAfterTime = Date.now() - 5000;
-      var uuidData = uuid.v4();
-      var sizeOfNonPayload = (2*uuidData.length) + 1;
-      var bufferSize = maximumMessageSize - sizeOfNonPayload;
-      var buffer = Buffer.alloc(bufferSize);
-      var message = new Message(buffer);
-      debug(' message max send: size of non playload ' + sizeOfNonPayload);
+      let startAfterTime = Date.now() - 5000;
+      let uuidData = uuid.v4();
+      let sizeOfNonPayload = (2*uuidData.length) + 1;
+      let bufferSize = maximumMessageSize - sizeOfNonPayload;
+      let buffer = Buffer.alloc(bufferSize);
+      let message = new Message(buffer);
+      debug(' message max send: size of non payload ' + sizeOfNonPayload);
       debug(' message max send: buffersize ' + bufferSize);
       debug(' message max send: maximum message size ' + maximumMessageSize);
       message.messageId = uuidData;
@@ -203,7 +212,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
       message.properties.add('dt-subject', uuidData);
       buffer.fill(uuidData);
 
-      var onEventHubMessage = function (eventData) {
+      let onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           if ((eventData.body.length === bufferSize) && (eventData.body.indexOf(uuidData) === 0)) {
             assert.strictEqual(eventData.annotations['dt-subject'], uuidData);
@@ -217,7 +226,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
         }
       };
 
-      var onEventHubError = function (err) {
+      let onEventHubError = function (err) {
         debug('Error from Event Hub Client Receiver: ' + err.toString());
         done(err);
       };
@@ -238,6 +247,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
           }, 3000);
         });
       }).then(function () {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (openErr) {
           rdv.imIn('deviceClient');
           if (openErr) {

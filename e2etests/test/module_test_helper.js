@@ -3,21 +3,21 @@
 
 'use strict';
 
-var uuid = require('uuid');
-var debug = require('debug')('e2etests:module-test-helper');
-var async = require('async');
+let uuid = require('uuid');
+let debug = require('debug')('e2etests:module-test-helper');
+let async = require('async');
 
-var Registry = require('azure-iothub').Registry;
-var ConnectionString = require('azure-iot-common').ConnectionString;
-var ModuleClient = require('azure-iot-device').ModuleClient;
-var ServiceClient = require('azure-iothub').Client;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
+let Registry = require('azure-iothub').Registry;
+let ConnectionString = require('azure-iot-common').ConnectionString;
+let ModuleClient = require('azure-iot-device').ModuleClient;
+let ServiceClient = require('azure-iothub').Client;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-var registry = Registry.fromConnectionString(hubConnectionString);
-var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let registry = Registry.fromConnectionString(hubConnectionString);
+let serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
 
-module.exports.createModule = function(testModule, Transport, done)  {
+module.exports.createModule = function (testModule, Transport, done)  {
   async.series([
     function createDeviceIfNecessary(done) {
       if (testModule.testDevice) {
@@ -43,18 +43,18 @@ module.exports.createModule = function(testModule, Transport, done)  {
     function createModule(done) {
       testModule.moduleId = 'node_e2e_' + uuid.v4();
       debug('creating module with id ' + testModule.moduleId);
-      registry.addModule({deviceId: testModule.deviceId, moduleId: testModule.moduleId}, function(err) {
+      registry.addModule({ deviceId: testModule.deviceId, moduleId: testModule.moduleId }, function (err) {
         debug('addModule returned ' + (err ? err : 'success'));
         if (err) {
           done(err);
         } else {
           debug('getting module with deviceId = ' + testModule.deviceId + ' and moduleId ' + testModule.moduleId);
-          registry.getModule(testModule.deviceId, testModule.moduleId, function(err, foundModule) {
+          registry.getModule(testModule.deviceId, testModule.moduleId, function (err, foundModule) {
             debug('getModule returned ' + (err ? err : 'success'));
             if (err) {
               done(err);
             } else {
-              var hubName = ConnectionString.parse(hubConnectionString).HostName;
+              let hubName = ConnectionString.parse(hubConnectionString).HostName;
               testModule.moduleConnectionString = 'HostName=' + hubName + ';DeviceId=' + foundModule.deviceId + ';ModuleId='+foundModule.moduleId+';SharedAccessKey=' + foundModule.authentication.symmetricKey.primaryKey;
               done();
             }
@@ -65,7 +65,8 @@ module.exports.createModule = function(testModule, Transport, done)  {
     function connectDeviceClient(done) {
       testModule.deviceClient = ModuleClient.fromConnectionString(testModule.moduleConnectionString, Transport);
       debug('opening device client');
-      testModule.deviceClient.open(function(err) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      testModule.deviceClient.open(function (err) {
         debug('deviceClient.open returned ' + (err ? err : 'success'));
         done(err);
       });
@@ -73,11 +74,11 @@ module.exports.createModule = function(testModule, Transport, done)  {
   ], done);
 };
 
-module.exports.getTwinObjects = function(testModule, done) {
+module.exports.getTwinObjects = function (testModule, done) {
   async.series([
     function createServiceTwin(done) {
       debug('getting service twin');
-        registry.getModuleTwin(testModule.deviceId, testModule.moduleId, function(err, twin) {
+        registry.getModuleTwin(testModule.deviceId, testModule.moduleId, function (err, twin) {
           debug('getModuleTwin returned ' + (err ? err : 'success'));
           if (err) {
             done(err);
@@ -89,7 +90,7 @@ module.exports.getTwinObjects = function(testModule, done) {
       },
       function createDeviceTwin(done) {
         debug('getting device twin');
-        testModule.deviceClient.getTwin(function(err, twin) {
+        testModule.deviceClient.getTwin(function (err, twin) {
           debug('getTwin returned ' + (err ? err : 'success'));
           if (err) {
             done(err);
@@ -102,12 +103,12 @@ module.exports.getTwinObjects = function(testModule, done) {
   ], done);
 };
 
-module.exports.cleanUpAfterTest = function(testModule, done) {
+module.exports.cleanUpAfterTest = function (testModule, done) {
   async.series([
     function closeDeviceClient(done) {
       if (testModule.deviceClient) {
         debug('closing device client');
-        testModule.deviceClient.close(function(err) {
+        testModule.deviceClient.close(function (err) {
           debug('deviceClient.close returned ' + (err ? err : 'success'));
           done(err);
         });
@@ -118,7 +119,7 @@ module.exports.cleanUpAfterTest = function(testModule, done) {
     function removeDeviceFromRegistry(done) {
       if (testModule.testDevice && testModule.testDevice.deviceId) {
         debug('deleting device with deviceId ' + testModule.testDevice.deviceId);
-        DeviceIdentityHelper.deleteDevice(testModule.testDevice.deviceId, function(err) {
+        DeviceIdentityHelper.deleteDevice(testModule.testDevice.deviceId, function (err) {
           debug('deleteDevice returned ' + (err ? err : 'success'));
           testModule.testDevice.deviceId = null;
           done(err);

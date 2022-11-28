@@ -3,20 +3,20 @@
 
 'use strict';
 
-var serviceSdk = require('azure-iothub');
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
-var Rendezvous = require('./rendezvous_helper.js').Rendezvous;
+let serviceSdk = require('azure-iothub');
+let createDeviceClient = require('./testUtils.js').createDeviceClient;
+let closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
+let Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 
-var assert = require('chai').assert;
-var debug = require('debug')('e2etests');
-var uuid = require('uuid');
+let assert = require('chai').assert;
+let debug = require('debug')('e2etests');
+let uuid = require('uuid');
 
-var deviceHttp = require('azure-iot-device-http');
-var deviceAmqp = require('azure-iot-device-amqp');
+let deviceHttp = require('azure-iot-device-http');
+let deviceAmqp = require('azure-iot-device-amqp');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 [
   DeviceIdentityHelper.createDeviceWithSas,
@@ -34,11 +34,13 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 device_acknowledgment_tests(deviceAmqp.Amqp, DeviceIdentityHelper.createDeviceWithX509CASignedCert);
 
-function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
+function device_acknowledgment_tests(deviceTransport, createDeviceMethod) {
   describe('Over ' + deviceTransport.name + ' using ' + createDeviceMethod.name, function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(70000);
-    var serviceClient, deviceClient;
-    var provisionedDevice;
+    let serviceClient;
+    let deviceClient;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
@@ -61,13 +63,15 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
 
     it('Service sends 1 C2D message and it is re-sent until completed', function (done) {
+      // eslint-disable-next-line no-invalid-this
       this.timeout(70000);
-      var guid = uuid.v4();
-      var deviceClientParticipant = 'deviceClient';
-      var serviceClientParticipant = 'serviceClient';
-      var testRendezvous = new Rendezvous(done);
+      let guid = uuid.v4();
+      let deviceClientParticipant = 'deviceClient';
+      let serviceClientParticipant = 'serviceClient';
+      let testRendezvous = new Rendezvous(done);
 
-      var abandonedOnce = false;
+      let abandonedOnce = false;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (openErr) {
         if (openErr) {
           done(openErr);
@@ -81,10 +85,10 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 abandonedOnce = true;
                 deviceClient.abandon(msg, function (err, result) {
                   if(err) {
-                    debug('+++error abandonning the message: ' + err.toString());
+                    debug('+++error abandoning the message: ' + err.toString());
                     done(err);
                   } else {
-                    debug('+++Message abandonned');
+                    debug('+++Message abandoned');
                     assert.equal(result.constructor.name, 'MessageAbandoned');
                   }
                 });
@@ -97,7 +101,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                   } else if (res) {
                     debug('+++message completing. closing device client');
                     assert.equal(res.constructor.name, 'MessageCompleted');
-                    deviceClient.close(function(closeError) {
+                    deviceClient.close(function (closeError) {
                       if (closeError) {
                         debug('+++failed to close device client: ' + closeError.toString());
                         done(closeError);
@@ -121,11 +125,11 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
               debug('+++not the message I\'m looking for, abandon it for the other test (' + msg.data + ')');
               deviceClient.abandon(msg, function (err, result) {
                 if (err) {
-                  debug('+++unexpected message abandonned with an error');
+                  debug('+++unexpected message abandoned with an error');
                   done(err);
                 } else {
                   if (result) {
-                    debug('+++unexpected message abandonned successfully');
+                    debug('+++unexpected message abandoned successfully');
                     assert.equal(result.constructor.name, 'MessageAbandoned');
                   }
                 }
@@ -133,6 +137,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
             }
           });
           debug('+++opening service client');
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           serviceClient.open(function (serviceErr) {
             if (serviceErr) {
               debug('+++error opening service client: ' + serviceErr.toString());
@@ -160,13 +165,15 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
     });
 
     it('Service sends 1 C2D message and it is re-sent until rejected', function (done) {
+      // eslint-disable-next-line no-invalid-this
       this.timeout(70000);
-      var guid = uuid.v4();
-      var deviceClientParticipant = 'deviceClient';
-      var serviceClientParticipant = 'serviceClient';
-      var testRendezvous = new Rendezvous(done);
+      let guid = uuid.v4();
+      let deviceClientParticipant = 'deviceClient';
+      let serviceClientParticipant = 'serviceClient';
+      let testRendezvous = new Rendezvous(done);
 
-      var abandonedOnce = false;
+      let abandonedOnce = false;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (openErr) {
         if (openErr) {
           done(openErr);
@@ -187,7 +194,7 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
                 deviceClient.reject(msg, function (err, res) {
                   assert.isNull(err);
                   assert.equal(res.constructor.name, 'MessageRejected');
-                  deviceClient.close(function(closeError) {
+                  deviceClient.close(function (closeError) {
                     if (closeError) {
                       debug('+++error closing the device client');
                       done(closeError);
@@ -207,13 +214,14 @@ function device_acknowledgment_tests (deviceTransport, createDeviceMethod) {
               //
               debug('---not the message I\'m looking for, abandon it for the other test (' + msg.data + ')');
               deviceClient.abandon(msg, function (err, result) {
-                debug('message abandonned');
+                debug('message abandoned');
                 assert.isNull(err);
                 assert.equal(result.constructor.name, 'MessageAbandoned');
               });
             }
           });
           debug('+++opening service client');
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           serviceClient.open(function (serviceErr) {
             if (serviceErr) {
               debug('+++error opening service client: ' + serviceErr.toString());

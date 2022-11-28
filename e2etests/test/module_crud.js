@@ -3,21 +3,21 @@
 
 'use strict';
 
-var Registry = require('azure-iothub').Registry;
-var uuid = require('uuid');
-var DeviceIdentityHelper = require('./device_identity_helper.js');
-var async = require('async');
-var assert = require('chai').assert;
-var debug = require('debug')('e2etests:module_crud');
+let Registry = require('azure-iothub').Registry;
+let uuid = require('uuid');
+let DeviceIdentityHelper = require('./device_identity_helper.js');
+let async = require('async');
+let assert = require('chai').assert;
+let debug = require('debug')('e2etests:module_crud');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-var registry = Registry.fromConnectionString(hubConnectionString);
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let registry = Registry.fromConnectionString(hubConnectionString);
 
-describe('modules', function() {
-  var module;
-  var deviceId = null;
-
+describe('modules', function () {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(46000);
+  let module;
+  let deviceId = null;
 
   before(function (done) {
     debug('Creating SAS device to use with test');
@@ -33,10 +33,10 @@ describe('modules', function() {
 
   after(function (done) {
     if (deviceId) {
-      var id = deviceId;
+      let id = deviceId;
       deviceId = null;
       debug('deleting device with deviceId ' + id);
-      DeviceIdentityHelper.deleteDevice(id, function(err) {
+      DeviceIdentityHelper.deleteDevice(id, function (err) {
         debug('deleteDevice returned ' + (err ? err : 'success'));
         done(err);
       });
@@ -45,7 +45,7 @@ describe('modules', function() {
     }
   });
 
-  beforeEach(function() {
+  beforeEach(function () {
     module = {
       deviceId: deviceId,
       moduleId: 'node_e2e_' + uuid.v4()
@@ -53,18 +53,18 @@ describe('modules', function() {
     debug('moduleId for this test will be ' + module.moduleId);
   });
 
-  it ('can add a module and find it by id', function(done) {
+  it ('can add a module and find it by id', function (done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.addModule(module, function(err) {
+        registry.addModule(module, function (err) {
           debug('addModule returned ' + (err ? err : 'success'));
           callback(err);
         });
       },
       function findModule(callback) {
         debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+        registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
           debug('getModule returned ' + (err ? err : 'success'));
           if (err) {
             callback(err);
@@ -78,26 +78,26 @@ describe('modules', function() {
     ], done);
   });
 
-  it ('can add a module and find it in list of all modules on device', function(done) {
+  it ('can add a module and find it in list of all modules on device', function (done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.addModule(module, function(err) {
+        registry.addModule(module, function (err) {
           debug('addModule returned ' + (err ? err : 'success'));
           callback(err);
         });
       },
       function findModule(callback) {
         debug('getting all modules on device ' + module.deviceId);
-        registry.getModulesOnDevice(module.deviceId, function(err, foundModules) {
+        registry.getModulesOnDevice(module.deviceId, function (err, foundModules) {
           debug('getModulesOnDevice returned ' + (err ? err : 'success'));
           if (err) {
             callback(err);
           } else {
             debug(foundModules.length.toString() + ' modules on device');
-            var found = false;
+            let found = false;
             debug('looking for moduleId ' + module.moduleId);
-            foundModules.forEach(function(foundModule) {
+            foundModules.forEach(function (foundModule) {
               debug('found moduleId ' + foundModule.moduleId);
               if (foundModule.deviceId === module.deviceId && foundModule.moduleId === module.moduleId) {
                 debug('that\'s it!');
@@ -113,21 +113,21 @@ describe('modules', function() {
   });
 
   [true, false].forEach(function (forceUpdate) {
-    it ('can add and update a module' + (forceUpdate ? ' with forceUpdate = true' : ''), function(done) {
-      var expectedSecondary;
-      var expectedPrimary;
+    it ('can add and update a module' + (forceUpdate ? ' with forceUpdate = true' : ''), function (done) {
+      let expectedSecondary;
+      let expectedPrimary;
 
       async.series([
         function addModule(callback) {
           debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-          registry.addModule(module, function(err) {
+          registry.addModule(module, function (err) {
             debug('addModule returned ' + (err ? err : 'success'));
             callback(err);
           });
         },
         function updateModule(callback) {
           debug('Preparing to update. getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-          registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+          registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
             debug('getModule returned ' + (err ? err : 'success'));
             if (err) {
               callback(err);
@@ -142,10 +142,10 @@ describe('modules', function() {
                 debug('forcing update');
                 delete foundModule.etag;
               } else {
-                debug('not forching update.  etag=' + foundModule.etag);
+                debug('not forcing update.  etag=' + foundModule.etag);
               }
               debug('calling updateModule');
-              registry.updateModule(foundModule, forceUpdate, function(err) {
+              registry.updateModule(foundModule, forceUpdate, function (err) {
                 debug('updateModule returned ' + (err ? err : 'success'));
                 callback(err);
               });
@@ -155,7 +155,7 @@ describe('modules', function() {
         function verifyUpdate(callback) {
           debug('verify the update');
           debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-          registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+          registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
             debug('getModule returned ' + (err ? err : 'success'));
             if (err) {
               callback(err);
@@ -171,25 +171,25 @@ describe('modules', function() {
     });
   });
 
-  it ('can remove a module using deviceId, moduleId pair', function(done) {
+  it ('can remove a module using deviceId, moduleId pair', function (done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.addModule(module, function(err) {
+        registry.addModule(module, function (err) {
           debug('addModule returned ' + (err ? err : 'success'));
           callback(err);
         });
       },
       function removeModule(callback) {
         debug('removing module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.removeModule(module.deviceId, module.moduleId, function(err) {
+        registry.removeModule(module.deviceId, module.moduleId, function (err) {
           debug('remove module returned ' + (err ? err : 'success'));
           callback(err);
         });
       },
       function verifyRemoval(callback) {
         debug('Verifying removal.  Getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.getModule(module.deviceId, module.moduleId, function(err) {
+        registry.getModule(module.deviceId, module.moduleId, function (err) {
           debug('(expecting failure) getModule returned ' + (err ? err : 'success'));
           assert(err, 'The module should not be found after removal');
           callback();
@@ -198,22 +198,22 @@ describe('modules', function() {
     ], done);
   });
 
-  it ('can remove a module using a module object', function(done) {
+  it ('can remove a module using a module object', function (done) {
     async.series([
       function addModule(callback) {
         debug('adding module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.addModule(module, function(err) {
+        registry.addModule(module, function (err) {
           debug('addModule returned ' + (err ? err : 'success'));
           callback(err);
         });
       },
       function removeModule(callback) {
         debug('getting module');
-        registry.getModule(module.deviceId, module.moduleId, function(err, foundModule) {
+        registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
           debug('getModule returned ' + (err ? err : 'success'));
           debug('removing module using object returned from getModule');
           debug('removing module. etag = ' + foundModule.etag);
-          registry.removeModule(foundModule, function(err) {
+          registry.removeModule(foundModule, function (err) {
             debug('remove module returned ' + (err ? err : 'success'));
             callback(err);
           });
@@ -221,7 +221,7 @@ describe('modules', function() {
       },
       function verifyRemoval(callback) {
         debug('Verifying removal.  Getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
-        registry.getModule(module.deviceId, module.moduleId, function(err) {
+        registry.getModule(module.deviceId, module.moduleId, function (err) {
           debug('(expecting failure) getModule returned ' + (err ? err : 'success'));
           assert(err, 'The module should not be found after removal');
           callback();

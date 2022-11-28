@@ -3,23 +3,23 @@
 
 'use strict';
 
-var ConnectionString = require('azure-iothub').ConnectionString;
-var deviceSas = require('azure-iot-device').SharedAccessSignature;
-var anHourFromNow = require('azure-iot-common').anHourFromNow;
+let ConnectionString = require('azure-iothub').ConnectionString;
+let deviceSas = require('azure-iot-device').SharedAccessSignature;
+let anHourFromNow = require('azure-iot-common').anHourFromNow;
 
-var uuid = require('uuid');
-var debug = require('debug')('e2etests:DeviceIdentityHelper');
+let uuid = require('uuid');
+let debug = require('debug')('e2etests:DeviceIdentityHelper');
 
-var pem = require('pem');
-var Registry = require('azure-iothub').Registry;
+let pem = require('pem');
+let Registry = require('azure-iothub').Registry;
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var registry = Registry.fromConnectionString(hubConnectionString);
-var CARootCert = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
-var CARootCertKey = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
+let registry = Registry.fromConnectionString(hubConnectionString);
+let CARootCert = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
+let CARootCertKey = Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
 
-var host = ConnectionString.parse(hubConnectionString).HostName;
+let host = ConnectionString.parse(hubConnectionString).HostName;
 
 function setupDevice(deviceDescription, provisionDescription, done) {
   registry.create(deviceDescription, function (err) {
@@ -34,7 +34,7 @@ function setupDevice(deviceDescription, provisionDescription, done) {
 }
 
 function createCertDevice(deviceId, done) {
-  var certOptions = {
+  let certOptions = {
     selfSigned: true,
     days: 1
   };
@@ -47,7 +47,7 @@ function createCertDevice(deviceId, done) {
         if (err) {
           done(err);
         } else {
-          var thumbPrint = fingerPrintResult.fingerprint.replace(/:/g, '');
+          let thumbPrint = fingerPrintResult.fingerprint.replace(/:/g, '');
           setupDevice(
             {
               deviceId: deviceId,
@@ -116,7 +116,7 @@ function createCACertDevice(deviceId, done) {
 }
 
 function createKeyDevice(deviceId, done) {
-  var pkey = Buffer.from(uuid.v4()).toString('base64');
+  let pkey = Buffer.from(uuid.v4()).toString('base64');
   setupDevice(
     {
       deviceId: deviceId,
@@ -140,7 +140,7 @@ function createKeyDevice(deviceId, done) {
 }
 
 function createSASDevice(deviceId, done) {
-  var pkey = Buffer.from(uuid.v4()).toString('base64');
+  let pkey = Buffer.from(uuid.v4()).toString('base64');
   setupDevice(
     {
       deviceId: deviceId,

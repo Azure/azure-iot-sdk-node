@@ -3,24 +3,24 @@
 
 'use strict';
 
-var serviceSdk = require('azure-iothub');
-var serviceSas = require('azure-iothub').SharedAccessSignature;
-var Message = require('azure-iot-common').Message;
-var anHourFromNow = require('azure-iot-common').anHourFromNow;
-var Registry = require('azure-iothub').Registry;
-var NoRetry = require('azure-iot-common').NoRetry;
-var deviceSdk = require('azure-iot-device');
-var httpModule = require('azure-iot-device-http');
-var amqpModule = require('azure-iot-device-amqp');
-var mqttModule = require('azure-iot-device-mqtt');
+let serviceSdk = require('azure-iothub');
+let serviceSas = require('azure-iothub').SharedAccessSignature;
+let Message = require('azure-iot-common').Message;
+let anHourFromNow = require('azure-iot-common').anHourFromNow;
+let Registry = require('azure-iothub').Registry;
+let NoRetry = require('azure-iot-common').NoRetry;
+let deviceSdk = require('azure-iot-device');
+let httpModule = require('azure-iot-device-http');
+let amqpModule = require('azure-iot-device-amqp');
+let mqttModule = require('azure-iot-device-mqtt');
 
 
-var uuid = require('uuid');
+let uuid = require('uuid');
 
-var hubConnectionString = process.env.IOTHUB_CONN_STRING_INVALID_CERT;
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONN_STRING_INVALID_CERT;
+let hubConnectionString = process.env.IOTHUB_CONN_STRING_INVALID_CERT;
+let deviceConnectionString = process.env.IOTHUB_DEVICE_CONN_STRING_INVALID_CERT;
 
-var correctDisconnectMessage = function(err, done) {
+let correctDisconnectMessage = function (err, done) {
   if (err) {
     if (err.amqpError && (err.amqpError.name === 'NotConnectedError')) {
       done();
@@ -38,33 +38,36 @@ var correctDisconnectMessage = function(err, done) {
 
 
 describe('Service Client', function () {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   [
     require('azure-iothub').Amqp,
     require('azure-iothub').AmqpWs
   ].forEach(function (Transport) {
-    it('Service client will fail with SAS token over ' + Transport.name + ' using a shared access signature', function(done) {
-      var connStr = serviceSdk.ConnectionString.parse(hubConnectionString);
-      var sas = serviceSas.create(connStr.HostName, connStr.SharedAccessKeyName, connStr.SharedAccessKey, anHourFromNow()).toString();
-      var serviceClient = serviceSdk.Client.fromSharedAccessSignature(sas, Transport);
-      serviceClient.open(function(err) {
+    it('Service client will fail with SAS token over ' + Transport.name + ' using a shared access signature', function (done) {
+      let connStr = serviceSdk.ConnectionString.parse(hubConnectionString);
+      let sas = serviceSas.create(connStr.HostName, connStr.SharedAccessKeyName, connStr.SharedAccessKey, anHourFromNow()).toString();
+      let serviceClient = serviceSdk.Client.fromSharedAccessSignature(sas, Transport);
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      serviceClient.open(function (err) {
         if (err) {
           correctDisconnectMessage(err, done);
         } else {
-          serviceClient.close(function() {
+          serviceClient.close(function () {
             done(new Error('service client did NOT detect bad cert.'));
           });
         }
       });
     });
 
-    it('Service client will fail with connection string over ' + Transport.name + ' using a connection string', function(done) {
-      var serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString, Transport);
-      serviceClient.open(function(err) {
+    it('Service client will fail with connection string over ' + Transport.name + ' using a connection string', function (done) {
+      let serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString, Transport);
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      serviceClient.open(function (err) {
         if (err) {
           correctDisconnectMessage(err, done);
         } else {
-          serviceClient.close(function() {
+          serviceClient.close(function () {
             done(new Error('service client did NOT detect bad cert.'));
           });
         }
@@ -74,22 +77,23 @@ describe('Service Client', function () {
 });
 
 describe('Registry', function () {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
-  var deviceIdOnly = {
+  let deviceIdOnly = {
     deviceId: uuid.v4()
   };
   it('Fails to create a device', function (done){
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    registry.create(deviceIdOnly, function(err) {
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    registry.create(deviceIdOnly, function (err) {
       correctDisconnectMessage(err, done);
     });
   });
 });
 
 
-describe('Device Client', function() {
-  var uuidData = uuid.v4();
-  var originalMessage = new Message(uuidData);
+describe('Device Client', function () {
+  let uuidData = uuid.v4();
+  let originalMessage = new Message(uuidData);
   [
     httpModule.Http,
     amqpModule.Amqp,
@@ -98,10 +102,10 @@ describe('Device Client', function() {
     mqttModule.MqttWs
   ].forEach(function (deviceTransport) {
     describe('Over ' + deviceTransport.name, function () {
-      it('Fails to open a device', function(done) {
-        var deviceClient = deviceSdk.Client.fromConnectionString(deviceConnectionString, deviceTransport);
+      it('Fails to open a device', function (done) {
+        let deviceClient = deviceSdk.Client.fromConnectionString(deviceConnectionString, deviceTransport);
         deviceClient.setRetryPolicy(new NoRetry());
-        deviceClient.sendEvent(originalMessage, function(err) {
+        deviceClient.sendEvent(originalMessage, function (err) {
           correctDisconnectMessage(err, done);
         });
       });

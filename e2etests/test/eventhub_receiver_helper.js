@@ -3,27 +3,27 @@
 
 'use strict';
 
-var EventHubClient = require('@azure/event-hubs').EventHubClient;
-var EventPosition = require('@azure/event-hubs').EventPosition;
-var util = require('util');
-var EventEmitter = require('events');
-var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
+let EventHubClient = require('@azure/event-hubs').EventHubClient;
+let EventPosition = require('@azure/event-hubs').EventPosition;
+let util = require('util');
+let EventEmitter = require('events');
+let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var EventHubReceiverHelper = function() {
+let EventHubReceiverHelper = function () {
   EventEmitter.call(this);
 };
 util.inherits(EventHubReceiverHelper, EventEmitter);
 
-EventHubReceiverHelper.prototype.openClient = function(done) {
-  var self = this;
+EventHubReceiverHelper.prototype.openClient = function (done) {
+  let self = this;
   // account for potential delays and clock skews
-  var startTime = Date.now() - 5000;
-  var onEventHubMessage = function (eventData) {
+  let startTime = Date.now() - 5000;
+  let onEventHubMessage = function (eventData) {
     self.emit('message', eventData);
   };
-  var onEventHubError = function (err) {
+  let onEventHubError = function (err) {
     self.emit('error', err);
   };
 
@@ -43,7 +43,7 @@ EventHubReceiverHelper.prototype.openClient = function(done) {
   });
 };
 
-EventHubReceiverHelper.prototype.closeClient = function(done) {
+EventHubReceiverHelper.prototype.closeClient = function (done) {
   closeDeviceEventHubClients(null, this.ehClient, done);
 };
 
