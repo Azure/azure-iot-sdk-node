@@ -3,37 +3,31 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var EventEmitter = require('events').EventEmitter;
-var AmqpReceiver = require('../dist/amqp.js').Amqp;
-var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
-var Message = require('azure-iot-common').Message;
-var errors = require('azure-iot-common').errors;
+const assert = require('chai').assert;
+const sinon = require('sinon');
+const EventEmitter = require('events').EventEmitter;
+const AmqpReceiver = require('../dist/amqp.js').Amqp;
+const AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
+const Message = require('azure-iot-common').Message;
+const errors = require('azure-iot-common').errors;
 
-var FakeAmqp = require('./_fake_amqp.js').FakeAmqp;
+const FakeAmqp = require('./_fake_amqp.js').FakeAmqp;
 
 describe('AmqpReceiver', function () {
-  var fakeConfig = {
+  const fakeConfig = {
     deviceId: 'fakeDeviceId',
     sharedAccessSignature: 'SharedAccessSignature sr=bad&sig=XLU2ibNOYBbld3FpFIOHbPZv3Thp4wfK%2BcqZpJz66hE%3D&skn=keyName&se=1474440492'
   };
 
-  var fakeMethodClient;
-  var fakeAuthenticationProvider;
-  var fakeAmqpBaseClient = {
+  let fakeAuthenticationProvider;
+  const fakeAmqpBaseClient = {
     connect: sinon.stub().callsArg(1),
     setDisconnectHandler: sinon.stub(),
     initializeCBS: sinon.stub().callsArg(0),
     putToken: sinon.stub().callsArg(2)
   };
 
-  beforeEach(function() {
-    fakeMethodClient = {
-      on: sinon.spy(),
-      onDeviceMethod: sinon.spy(),
-      attach: sinon.stub().callsArg(0)
-    };
+  beforeEach(function () {
 
     fakeAuthenticationProvider = {
       getDeviceCredentials: function (callback) {
@@ -43,26 +37,25 @@ describe('AmqpReceiver', function () {
     };
   });
 
-  afterEach(function() {
-    fakeMethodClient = null;
+  afterEach(function () {
+    fakeAuthenticationProvider = null;
   });
 
-  describe('#constructor', function() {
+  describe('#constructor', function () {
     /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_001: [The `Amqp` constructor shall implement the `Receiver` interface.]*/
     /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_002: [The `Amqp` object shall inherit from the `EventEmitter` node object.]*/
-    it('Initializes a new instance of an AmqpReceiver object', function() {
-      assert.doesNotThrow(function() {
-        var recv = new AmqpReceiver(fakeAuthenticationProvider);
+    it('Initializes a new instance of an AmqpReceiver object', function () {
+      assert.doesNotThrow(function () {
+        const recv = new AmqpReceiver(fakeAuthenticationProvider);
         assert.instanceOf(recv, AmqpReceiver);
         assert.instanceOf(recv, EventEmitter);
       });
     });
 
-    it('forwards the errorReceived event if an error is received from a device method link', function(testCallback) {
-      var fakeMethodClient = new EventEmitter();
-      var recv = new AmqpReceiver(fakeAuthenticationProvider, fakeAmqpBaseClient);
-      var fakeError = new Error('fake error');
-      var fakeCallback = function(err) {
+    it('forwards the errorReceived event if an error is received from a device method link', function (testCallback) {
+      const recv = new AmqpReceiver(fakeAuthenticationProvider, fakeAmqpBaseClient);
+      const fakeError = new Error('fake error');
+      const fakeCallback = function (err) {
         assert.strictEqual(err.innerError, fakeError);
         assert.instanceOf(err, errors.DeviceMethodsDetachedError);
         testCallback();
@@ -75,13 +68,13 @@ describe('AmqpReceiver', function () {
   });
 
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_003: [The `Amqp` object shall listen to the `message` and error events of the underlying `ReceiverLink` object when it has listeners on its `message` event.]*/
-  describe('#on(\'message\', callback)', function() {
+  describe('#on(\'message\', callback)', function () {
     it('forwards \'message\' events to all listeners once set up', function (testCallback) {
-      var recv1messageReceived = false;
-      var recv2messageReceived = false;
-      var testMessage = new AmqpMessage();
-      var recv = new AmqpReceiver(fakeAuthenticationProvider);
-      var fakeReceiverLink = new EventEmitter();
+      let recv1messageReceived = false;
+      let recv2messageReceived = false;
+      const testMessage = new AmqpMessage();
+      const recv = new AmqpReceiver(fakeAuthenticationProvider);
+      const fakeReceiverLink = new EventEmitter();
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
       recv.on('message', function (msg) {
@@ -107,12 +100,12 @@ describe('AmqpReceiver', function () {
     });
 
     it('emits an errorReceived event if an error is received on the C2D link', function (testCallback) {
-      var testError = new Error('test');
-      var recv = new AmqpReceiver(fakeAuthenticationProvider);
-      var fakeReceiverLink = new EventEmitter();
+      const testError = new Error('test');
+      const recv = new AmqpReceiver(fakeAuthenticationProvider);
+      const fakeReceiverLink = new EventEmitter();
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
-      recv.on('message', function (msg) {});
+      recv.on('message', function (_msg) {});
       recv.on('error', function (err) {
         assert.strictEqual(err.innerError, testError);
         assert.instanceOf(err, errors.CloudToDeviceDetachedError);
@@ -127,8 +120,8 @@ describe('AmqpReceiver', function () {
 
   describe('#on(<others>, callback)', function () {
     it('does not forward event listeners other than message and errorReceived of the message event to the underlying AMQP receiver', function () {
-      var recv = new AmqpReceiver(fakeAuthenticationProvider);
-      var fakeReceiverLink = new EventEmitter();
+      const recv = new AmqpReceiver(fakeAuthenticationProvider);
+      const fakeReceiverLink = new EventEmitter();
       sinon.spy(fakeReceiverLink, 'on');
       recv._amqp = new FakeAmqp();
       sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
@@ -143,14 +136,14 @@ describe('AmqpReceiver', function () {
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_006: [The `abandon` method shall forward the `message` argument to the underlying message receiver.]*/
   ['complete', 'abandon', 'reject'].forEach(function (methodName) {
     describe('#' + methodName, function () {
-      it('calls the underlying message receiver settlement method with the message argument', function(testCallback) {
-        var recv = new AmqpReceiver(fakeAuthenticationProvider);
-        var fakeReceiverLink = new EventEmitter();
+      it('calls the underlying message receiver settlement method with the message argument', function (testCallback) {
+        const recv = new AmqpReceiver(fakeAuthenticationProvider);
+        const fakeReceiverLink = new EventEmitter();
         fakeReceiverLink[methodName] = sinon.stub().callsArg(1);
         sinon.stub(fakeReceiverLink, 'removeListener');
         recv._amqp = new FakeAmqp();
         sinon.stub(recv._amqp, 'attachReceiverLink').callsArgWith(2, null, fakeReceiverLink);
-        var fakeMessage = new Message('foo');
+        const fakeMessage = new Message('foo');
         fakeMessage.transportObj = {};
         recv.on('message', function () {});
         recv.enableC2D(function () {
@@ -164,12 +157,12 @@ describe('AmqpReceiver', function () {
   });
 
   /*Tests_SRS_NODE_DEVICE_AMQP_RECEIVER_16_007: [The `onDeviceMethod` method shall forward the `methodName` and `methodCallback` arguments to the underlying `AmqpDeviceMethodClient` object.]*/
-  describe('#onDeviceMethod', function() {
-    it('forwards the message and callback arguments to the underlying message receiver', function(testCallback) {
-      var recv = new AmqpReceiver(fakeAuthenticationProvider);
+  describe('#onDeviceMethod', function () {
+    it('forwards the message and callback arguments to the underlying message receiver', function (testCallback) {
+      const recv = new AmqpReceiver(fakeAuthenticationProvider);
       recv._amqp = new FakeAmqp();
-      var fakeCallback = function() {};
-      var fakeMethodName = 'fakeMethodName';
+      const fakeCallback = function () {};
+      const fakeMethodName = 'fakeMethodName';
       recv.connect(function () {
         sinon.spy(recv._deviceMethodClient, 'onDeviceMethod');
         recv.onDeviceMethod(fakeMethodName, fakeCallback);
@@ -179,11 +172,10 @@ describe('AmqpReceiver', function () {
     });
 
     it('emits an error event with the error if the links fail to connect initially', function (testCallback) {
-      var fakeMethodClient = new EventEmitter();
-      var fakeError = new Error('fake error');
-      var recv = new AmqpReceiver(fakeAuthenticationProvider, fakeAmqpBaseClient);
+      const fakeError = new Error('fake error');
+      const recv = new AmqpReceiver(fakeAuthenticationProvider, fakeAmqpBaseClient);
 
-      var errorCallback = function (err) {
+      const errorCallback = function (err) {
         assert.strictEqual(err.innerError, fakeError);
         assert.instanceOf(err, errors.DeviceMethodsDetachedError);
         recv.removeListener('error', errorCallback);

@@ -3,15 +3,15 @@
 
 'use strict';
 
-var Amqp = require('../dist/amqp.js').Amqp;
-var AmqpWs = require('../dist/amqp_ws.js').AmqpWs;
-var EventEmitter = require('events').EventEmitter;
-var assert = require('chai').assert;
+const Amqp = require('../dist/amqp.js').Amqp;
+const AmqpWs = require('../dist/amqp_ws.js').AmqpWs;
+const EventEmitter = require('events').EventEmitter;
+const assert = require('chai').assert;
 
 describe('AmqpWs', function () {
   describe('#constructor', function () {
     it ('extends AMQP', function () {
-      var amqpWs = new AmqpWs(new EventEmitter());
+      const amqpWs = new AmqpWs(new EventEmitter());
       assert.instanceOf(amqpWs, AmqpWs);
       assert.instanceOf(amqpWs, Amqp);
     });
@@ -19,8 +19,8 @@ describe('AmqpWs', function () {
 
   describe('_getConnectionUri', function () {
     it('generates a websocket URI for the hub', function () {
-      var amqpWs = new AmqpWs(new EventEmitter());
-      var testConfig = {
+      const amqpWs = new AmqpWs(new EventEmitter());
+      const testConfig = {
         host: 'host.name',
       };
 

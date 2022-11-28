@@ -322,7 +322,7 @@ describe('Mqtt', function () {
         transport.connect(function () {
           testConfig.sendFunc(transport, new Message('message'), function (err, resp) {
             assert.equal(resp.constructor.name, 'MessageEnqueued');
-            assert(resp.hasOwnProperty('transportObj'));
+            assert(Object.prototype.hasOwnProperty.call(resp, 'transportObj'));
             assert.equal(resp.transportObj, 'fakeResultObject');
             done();
           });
@@ -601,7 +601,7 @@ describe('Mqtt', function () {
         connectCallback = callback;
       });
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      mqtt.setOptions(fakeProductInfoOptions, function (err) {
+      mqtt.setOptions(fakeProductInfoOptions, function (_err) {
         assert.strictEqual(mqtt._productInfo, fakeProductInfoOptions.productInfo);
         getUserAgentString(fakeProductInfoString, function (userAgentString) {
           const expectedUsername = 'host.name/deviceId/' + endpoint.versionQueryString() + '&DeviceClientType=' + encodeURIComponent(userAgentString);
@@ -623,10 +623,10 @@ describe('Mqtt', function () {
         connectCallback = callback;
       });
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
-      getUserAgentString(fakeProductInfoString, function (userAgentString) {
+      getUserAgentString(fakeProductInfoString, function (_userAgentString) {
         mqtt.connect(function () {
           assert.throw(function () {
-            mqtt.setOptions(fakeProductInfoOptions, function (err) {});
+            mqtt.setOptions(fakeProductInfoOptions, function (_err) {});
           });
           testCallback();
         });
@@ -660,7 +660,7 @@ describe('Mqtt', function () {
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_06_001: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
-    it('throws when token renewal options passed and uses cert based authentication', () => {
+    it('throws when token renewal options passed and uses cert based authentication', function () {
       const fakeX509AuthenticationProvider = {
         type: AuthenticationType.X509,
       };
@@ -675,7 +675,7 @@ describe('Mqtt', function () {
       });
     });
 
-    it('throws when token renewal options passed and uses non-renewal authentication ', () => {
+    it('throws when token renewal options passed and uses non-renewal authentication ', function () {
       assert.throws(() => {
         const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
         mqtt.setOptions({
@@ -688,7 +688,7 @@ describe('Mqtt', function () {
     });
 
     /* Tests_SRS_NODE_DEVICE_MQTT_06_002: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
-    it('invokes the setTokenRenewalValues of the provider ', (done) => {
+    it('invokes the setTokenRenewalValues of the provider ', function (done) {
       fakeAuthenticationProvider.setTokenRenewalValues = sinon.stub();
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       const tokenOptions = {
@@ -1069,7 +1069,7 @@ describe('Mqtt', function () {
         closedError.message = 'Connection closed';
         fakeMqttBase.subscribe = sinon.stub().callsArgWith(2, closedError);
         transport.connect(function () {
-          transport[testConfig.methodName](function (err) {
+          transport[testConfig.methodName](function (_err) {
             assert.fail('Should not have invoked the callback if the mqtt transport was closed');
           });
           testCallback();
@@ -1083,7 +1083,7 @@ describe('Mqtt', function () {
           assert.isUndefined(err);
           assert.equal(fakeMqttBase.subscribe.firstCall.args[0], testConfig.topicName);
           assert.strictEqual(fakeMqttBase.subscribe.firstCall.args[1].qos, testConfig.qos);
-          transport[testConfig.methodName](function (err) {
+          transport[testConfig.methodName](function (_err) {
             /* Tests_SRS_NODE_DEVICE_MQTT_41_008: [`enableC2D` shall not subscribe multiple times if already subscribed.]*/
             /* Tests_SRS_NODE_DEVICE_MQTT_41_009: [`enableMethods` shall not subscribe multiple times if already subscribed.]*/
             /* Tests_SRS_NODE_DEVICE_MQTT_41_010: [`enableInputMessages` shall not subscribe multiple times if already subscribed.]*/
@@ -1148,7 +1148,7 @@ describe('Mqtt', function () {
         fakeMqttBase.unsubscribe = sinon.stub().callsArgWith(1, closedError);
         transport.connect(function () {
           transport[testConfig.enableFeatureMethod](function () {
-            transport[testConfig.disableFeatureMethod](function (err) {
+            transport[testConfig.disableFeatureMethod](function (_err) {
               assert.fail('Should NOT have invoked callback');
             });
           });
@@ -1184,7 +1184,7 @@ describe('Mqtt', function () {
             transport[testConfig.disableFeatureMethod](function (err) {
               assert.isTrue(fakeMqttBase.unsubscribe.called);
               assert.isUndefined(err);
-              transport[testConfig.disableFeatureMethod](function (err) {
+              transport[testConfig.disableFeatureMethod](function (_err) {
                 /* Tests_SRS_NODE_DEVICE_MQTT_41_011: [`disableC2D` shall unsubscribe from the topic for C2D messages only if it is currently subscribed.]*/
                 /* Tests_SRS_NODE_DEVICE_MQTT_41_012: [`disableMethods` shall unsubscribe from the topic for direct methods only if it is currently subscribed.]*/
                 /* Tests_SRS_NODE_DEVICE_MQTT_41_013: [`disableInputMessages` shall unsubscribe from the topic for inputMessages only if it is currently subscribed.]*/
@@ -1292,7 +1292,7 @@ describe('Mqtt', function () {
       fakeMqttBase.subscribe = sinon.stub().callsArgWith(2, closedError);
       const transport = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
       transport.connect(function () {
-        transport.enableTwinDesiredPropertiesUpdates(function (err) {
+        transport.enableTwinDesiredPropertiesUpdates(function (_err) {
           assert.fail('Should NOT have invoked the callback');
         })
       });
@@ -1308,7 +1308,7 @@ describe('Mqtt', function () {
       transport.connect(function () {
         transport.enableTwinDesiredPropertiesUpdates(function (err) {
           assert.isUndefined(err, 'Subscribe yielded error');
-          transport.disableTwinDesiredPropertiesUpdates(function (err) {
+          transport.disableTwinDesiredPropertiesUpdates(function (_err) {
             assert.fail('Should NOT have invoked the callback');
           });
         });

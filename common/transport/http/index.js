@@ -5,6 +5,7 @@
 
 /**
  * The `azure-iot-http-base` module contains HTTP support code common to the Azure IoT Hub Device and Service SDKs.
+ *
  * @private
  * @module azure-iot-http-base
  */

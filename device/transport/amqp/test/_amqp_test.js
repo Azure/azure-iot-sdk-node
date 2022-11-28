@@ -3,36 +3,36 @@
 
 'use strict';
 
-var EventEmitter = require('events').EventEmitter;
-var uuid = require('uuid');
-var assert = require('chai').assert;
-var sinon = require('sinon');
+const EventEmitter = require('events').EventEmitter;
+const uuid = require('uuid');
+const assert = require('chai').assert;
+const sinon = require('sinon');
 
-var AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
-var Message = require('azure-iot-common').Message;
-var Amqp = require('../dist/amqp.js').Amqp;
-var errors = require('azure-iot-common').errors;
-var results = require('azure-iot-common').results;
-var AuthenticationType = require('azure-iot-common').AuthenticationType;
+const AmqpMessage = require('azure-iot-amqp-base').AmqpMessage;
+const Message = require('azure-iot-common').Message;
+const Amqp = require('../dist/amqp.js').Amqp;
+const errors = require('azure-iot-common').errors;
+const results = require('azure-iot-common').results;
+const AuthenticationType = require('azure-iot-common').AuthenticationType;
 
 
 describe('Amqp', function () {
-  var transport = null;
-  var receiver = null;
-  var sender = null;
-  var fakeBaseClient = null;
-  var disconnectHandler = null;
-  var fakeTokenAuthenticationProvider = null;
-  var fakeX509AuthenticationProvider = null;
-  var fakeX509ModuleAuthenticationProvider = null;
+  let transport = null;
+  let receiver = null;
+  let sender = null;
+  let fakeBaseClient = null;
+  let disconnectHandler = null;
+  let fakeTokenAuthenticationProvider = null;
+  let fakeX509AuthenticationProvider = null;
+  let fakeX509ModuleAuthenticationProvider = null;
 
-  var testMessage = new Message();
+  const testMessage = new Message();
   testMessage.transportObj = {};
-  var configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
-  var configWithModule = { host: 'hub.host.name', deviceId: 'deviceId', moduleId: 'moduleId', x509: 'some SSL options' }
-  var simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
-  var configWithSAS = { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
-  var configWithGatewayHostName = { gatewayHostName: 'gateway.host', deviceId: 'deviceId', sharedAccessSignature: simpleSas};
+  const configWithSSLOptions = { host: 'hub.host.name', deviceId: 'deviceId', x509: 'some SSL options' };
+  const configWithModule = { host: 'hub.host.name', deviceId: 'deviceId', moduleId: 'moduleId', x509: 'some SSL options' }
+  const simpleSas = 'SharedAccessSignature sr=foo&sig=123&se=123';
+  const configWithSAS = { host: 'hub.host.name', deviceId: 'deviceId', sharedAccessSignature: simpleSas };
+  const configWithGatewayHostName = { gatewayHostName: 'gateway.host', deviceId: 'deviceId', sharedAccessSignature: simpleSas };
 
   beforeEach(function () {
     sender = new EventEmitter();
@@ -107,14 +107,14 @@ describe('Amqp', function () {
 
     it('does not subscribe to the newTokenAvailable event if the authenticationProvider is x509', function () {
       fakeX509AuthenticationProvider.on = sinon.stub();
-      var amqp = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+      const amqp = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
       void(amqp);
       assert.isTrue(fakeX509AuthenticationProvider.on.notCalled);
     });
 
     /*Tests_SRS_NODE_DEVICE_AMQP_16_057: [If a `newTokenAvailable` event is emitted by the `authenticationProvider` object passed as an argument to the constructor, a `putToken` operation shall be initiated with the new shared access signature if the amqp connection is already connected.]*/
     it('initiates a putToken when a newTokenAvailable event is received', function (testCallback) {
-      var newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
+      const newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
       transport.connect(function () {
         assert.isTrue(fakeBaseClient.putToken.calledOnce);
         fakeTokenAuthenticationProvider.emit('newTokenAvailable', { sharedAccessSignature: newSas });
@@ -126,8 +126,8 @@ describe('Amqp', function () {
 
     /*Tests_SRS_NODE_DEVICE_AMQP_16_058: [If the `putToken` operation initiated upon receiving a `newTokenAvailable` event fails, a `disconnect` event shall be emitted with the error from the failed `putToken` operation.]*/
     it('emits a disconnect event if the putToken operation initiated from a newTokenAvailable event fails', function (testCallback) {
-      var newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
-      var fakeError = new Error('fake');
+      const newSas = 'SharedAccessSignature sr=new&sig=456&se=456';
+      const fakeError = new Error('fake');
       transport.on('disconnect', function (err) {
         assert.isTrue(fakeBaseClient.putToken.calledOnce);
         assert.strictEqual(err.amqpError, fakeError);
@@ -161,7 +161,7 @@ describe('Amqp', function () {
       });
 
       it('calls the callback with a NotConnectedError if the device is disconnected', function (testCallback) {
-        var fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
+        const fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
         transport.sendMethodResponse(fakeMethodResponse, function (err) {
           assert.instanceOf(err, errors.NotConnectedError);
           testCallback();
@@ -169,7 +169,7 @@ describe('Amqp', function () {
       });
 
       it('calls the callback with a NotConnectedError if the device is connecting', function (testCallback) {
-        var fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
+        const fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
         fakeBaseClient.connect = sinon.stub();
         transport.connect();
         transport.sendMethodResponse(fakeMethodResponse, function (err) {
@@ -180,8 +180,8 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_020: [The `sendMethodResponse` response shall call the `AmqpDeviceMethodClient.sendMethodResponse` method with the arguments that were given to it.]*/
       it('calls the `sendMethodResponse` method on the AmqpDeviceMethodClient object', function (testCallback) {
-        var fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
-        var fakeCallback = function () {};
+        const fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
+        const fakeCallback = function () {};
         sinon.spy(transport._deviceMethodClient, 'sendMethodResponse');
 
         transport.connect(function () {
@@ -192,8 +192,8 @@ describe('Amqp', function () {
       });
 
       it('fails if called disconnecting', function (testCallback) {
-        var fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
-        var disconnectCallback;
+        const fakeMethodResponse = { status: 200, payload: null, requestId: uuid.v4() };
+        let disconnectCallback;
         fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
           disconnectCallback = done;
         });
@@ -212,7 +212,7 @@ describe('Amqp', function () {
 
     describe('#onDeviceMethod', function () {
       it('registers the callback and connects the transport if already connected and authenticated', function (testCallback) {
-        var fakeMethodRequest = {
+        const fakeMethodRequest = {
           requestId: 'foo',
           payload: { key: 'value' },
           methodName: 'fakeMethod'
@@ -228,7 +228,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_024: [An `errorReceived` event shall be emitted by the `Amqp` object if an error is received on any of the `AmqpDeviceMethodClient` links.]*/
       it('emits an error event when the receiver emits an errorReceived event', function (testCallback) {
-        var fakeError = new Error('fake error');
+        const fakeError = new Error('fake error');
         transport.on('error', function (err) {
           assert.strictEqual(err.innerError, fakeError);
           assert.instanceOf(err, errors.DeviceMethodsDetachedError);
@@ -302,7 +302,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_040: [The `enableMethods` method shall call its `callback` with an `Error` if the transport fails to connect, authenticate or attach method links.]*/
       it('calls its callback with an Error if attaching the method links fails', function (testCallback) {
-        var fakeError = new Error('fake failed to attach');
+        const fakeError = new Error('fake failed to attach');
         transport._deviceMethodClient.attach = sinon.stub().callsArgWith(0, fakeError);
         transport.connect(function () {
           assert(fakeBaseClient.attachReceiverLink.notCalled);
@@ -316,7 +316,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_041: [Any `error` event received on any of the links used for device methods shall trigger the emission of an `error` event by the transport, with an argument that is a `MethodsDetachedError` object with the `innerError` property set to that error.]*/
       it('emits a DeviceMethodsDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
-        var fakeError = new Error('fake twin receiver link error');
+        const fakeError = new Error('fake twin receiver link error');
         transport.on('error', function (err) {
           assert.instanceOf(err, errors.DeviceMethodsDetachedError);
           assert.strictEqual(err.innerError, fakeError);
@@ -389,8 +389,8 @@ describe('Amqp', function () {
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_055: [The `connect` method shall call its callback with an error if the callback passed to the `getDeviceCredentials` method is called with an error.]*/
-      it('calls getCredentials on the AuthenticationProvider', function (testCallback) {
-        var fakeError = new Error('fake');
+      it('calls getCredentials on the AuthenticationProvider 2', function (testCallback) {
+        const fakeError = new Error('fake');
         fakeTokenAuthenticationProvider.getDeviceCredentials = sinon.stub().callsArgWith(0, fakeError);
         transport.connect(function (err) {
           assert.isTrue(fakeTokenAuthenticationProvider.getDeviceCredentials.calledOnce);
@@ -423,7 +423,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_41_002: [ The connect method shall set the productInfo on the options object when calling the underlying connection object's connect method if it was supplied. ]*/
       it('sets productInfo if provided', function (testCallback) {
-        var options = { productInfo: 'test: THIS IS A TEST'};
+        const options = { productInfo: 'test: THIS IS A TEST' };
         transport.setOptions(options);
         transport.connect(function (err) {
           assert.isNotOk(err);
@@ -446,7 +446,7 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_008: [The `done` callback method passed in argument shall be called if the connection is established]*/
       it('calls done if connection established using SSL', function () {
         fakeBaseClient.connect = sinon.stub().callsArgWith(1,null);
-        transport.connect(function(err) {
+        transport.connect(function (err) {
           assert.isNotOk(err);
         });
       });
@@ -454,7 +454,7 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_009: [The `done` callback method passed in argument shall be called with an error object if the connection fails]*/
       it('calls done with an error if connection failed', function () {
         fakeBaseClient.connect = sinon.stub().callsArgWith(1,new errors.UnauthorizedError('cryptic'));
-        transport.connect(function(err) {
+        transport.connect(function (err) {
           assert.isOk(err);
         });
       });
@@ -462,9 +462,9 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_06_005: [If x509 authentication is NOT being utilized then `initializeCBS` shall be invoked.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_06_008: [If `initializeCBS` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009.]*/
       it('invokes initializeCBS if NOT using x509 - initialize fails and disconnects', function () {
-        var testError = new errors.NotConnectedError('fake error');
+        const testError = new errors.NotConnectedError('fake error');
         fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, testError);
-        transport.connect(function(err) {
+        transport.connect(function (err) {
           assert.instanceOf(err, Error);
         });
       });
@@ -472,9 +472,9 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_06_006: [If `initializeCBS` is successful, `putToken` shall be invoked If `initializeCBS` is successful, `putToken` shall be invoked with the first parameter audience, created from the sr of the sas signature, the next parameter of the actual sas, and a callback.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_06_009: [If `putToken` is not successful then the client will remain disconnected and the callback will be called with an error per SRS_NODE_DEVICE_AMQP_16_009.]*/
       it('invokes putToken - putToken fails and disconnects', function () {
-        var testError = new errors.NotConnectedError('fake error');
+        const testError = new errors.NotConnectedError('fake error');
         fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
-        transport.connect(function(err) {
+        transport.connect(function (err) {
           assert.instanceOf(err, Error);
         });
       });
@@ -501,8 +501,8 @@ describe('Amqp', function () {
       });
 
       it('defers the call if already connecting', function (testCallback) {
-        var connectErr = new Error('cannot connect');
-        var connectCallback;
+        const connectErr = new Error('cannot connect');
+        let connectCallback;
         fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
           connectCallback = done;
         });
@@ -523,7 +523,7 @@ describe('Amqp', function () {
       });
 
       it('defers the call if already connected and authenticating', function (testCallback) {
-        var authCallback;
+        let authCallback;
         fakeBaseClient.initializeCBS = sinon.stub().callsFake(function (done) {
           authCallback = done;
         });
@@ -543,7 +543,7 @@ describe('Amqp', function () {
       });
 
       it('defers the call if disconnecting', function (testCallback) {
-        var disconnectCallback;
+        let disconnectCallback;
         fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
           disconnectCallback = done;
         });
@@ -586,8 +586,8 @@ describe('Amqp', function () {
 
       describe('if called while connecting:', function () {
         it('is deferred until connecting fails', function (testCallback) {
-          var connectErr = new Error('cannot connect');
-          var connectCallback;
+          const connectErr = new Error('cannot connect');
+          let connectCallback;
           fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
             // will block in "connecting" state since the callback isn't called.
             // calling connectCallback will unblock it.
@@ -610,7 +610,7 @@ describe('Amqp', function () {
         });
 
         it('is deferred until connecting succeeds', function (testCallback) {
-          var connectCallback;
+          let connectCallback;
           fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
             connectCallback = done;
           });
@@ -665,7 +665,7 @@ describe('Amqp', function () {
 
         /*Tests_SRS_NODE_DEVICE_AMQP_16_011: [The `done` callback method passed in argument shall be called with an error object if disconnecting fails.]*/
         it('forwards the detach error of the D2C link', function (testCallback) {
-          var fakeError = new Error('fake detach failure');
+          const fakeError = new Error('fake detach failure');
           sender.detach = sinon.stub().callsArgWith(0, fakeError);
           transport.connect(function () {
             transport.sendEvent(new Message('foo'), function () {
@@ -691,8 +691,8 @@ describe('Amqp', function () {
         });
 
         it('calls the disconnect callback with an error if the Twin client encounters an error while detaching', function (testCallback) {
-          var fakeError = new Error('fake');
-          sinon.stub(transport._twinClient, 'detach').callsFake(function(callback) { callback(fakeError); });
+          const fakeError = new Error('fake');
+          sinon.stub(transport._twinClient, 'detach').callsFake(function (callback) { callback(fakeError); });
           transport.connect(function () {
             transport.disconnect(function (err) {
               assert.isTrue(transport._twinClient.detach.calledOnce);
@@ -716,7 +716,7 @@ describe('Amqp', function () {
 
         /*Tests_SRS_NODE_DEVICE_AMQP_16_011: [The `done` callback method passed in argument shall be called with an error object if disconnecting fails.]*/
         it('calls the callback with an error if disconnecting the transport generates an error', function (testCallback) {
-          var fakeError = new Error('fake');
+          const fakeError = new Error('fake');
           fakeBaseClient.disconnect = sinon.stub().callsArgWith(0, fakeError);
           transport.connect(function () {
             transport.disconnect(function (err) {
@@ -729,7 +729,7 @@ describe('Amqp', function () {
 
       describe('if called while disconnecting already:', function () {
         it('defers until the previous call to disconnect is done', function (testCallback) {
-          var disconnectCallback;
+          let disconnectCallback;
           fakeBaseClient.disconnect = sinon.stub().callsFake(function (callback) {
             disconnectCallback = callback;
           });
@@ -775,8 +775,8 @@ describe('Amqp', function () {
       });
 
       it('calls the callback with an error if the putToken operation fails while connected', function (testCallback) {
-        var testError = new Error('fake error');
-        var firstPutTokenSucceeded = false;
+        const testError = new Error('fake error');
+        let firstPutTokenSucceeded = false;
         fakeBaseClient.putToken = sinon.stub().callsFake(function (token, audience, callback) {
           if (!firstPutTokenSucceeded) {
             firstPutTokenSucceeded = true;
@@ -796,7 +796,7 @@ describe('Amqp', function () {
       });
 
       it('updates the shared access signature but results in a single putToken if called while connecting but not authenticated yet', function (testCallback) {
-        var connectCallback;
+        let connectCallback;
         fakeBaseClient.connect = sinon.stub().callsFake(function (config, callback) {
           connectCallback = callback;
         });
@@ -817,7 +817,7 @@ describe('Amqp', function () {
       });
 
       it('updates the shared access signature but results in a second putToken if called while authenticating', function (testCallback) {
-        var authCallback;
+        let authCallback;
         fakeBaseClient.putToken = sinon.stub().callsFake(function (token, audience, callback) {
           authCallback = callback;
         });
@@ -840,7 +840,7 @@ describe('Amqp', function () {
       });
 
       it('updates the shared access signature but does not try to connect if called while disconnecting', function (testCallback) {
-        var disconnectCallback;
+        let disconnectCallback;
         fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
           disconnectCallback = done;
         });
@@ -883,14 +883,14 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_002: [If `done` has been specified the `setOptions` method shall call the `done` callback with no arguments when successful.]*/
       it('calls the done callback with no arguments', function (done) {
-        var x509transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
-        x509transport.setOptions({cert: 'cert', key: 'key' }, done);
+        const x509transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+        x509transport.setOptions({ cert: 'cert', key: 'key' }, done);
       });
 
       /*Tests_SRS_NODE_DEVICE_AMQP_06_003: [`setOptions` should not throw if `done` has not been specified.]*/
       it('does not throw if `done` is not specified', function () {
         assert.doesNotThrow(function () {
-        var x509transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
+        const x509transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
         x509transport.setOptions({});
         });
       });
@@ -903,7 +903,7 @@ describe('Amqp', function () {
       });
 
       /* Tests_SRS_NODE_DEVICE_AMQP_06_012: [The `setOptions` method shall throw an `InvalidOperationError` if the method is called with token renewal options while using using cert or non renewal authentication.] */
-      it('throws when token renewal options passed and uses cert based authentication', () => {
+      it('throws when token renewal options passed and uses cert based authentication', function () {
         transport = new Amqp(fakeX509AuthenticationProvider, fakeBaseClient);
         assert.throws(() => {
           transport.setOptions({
@@ -915,7 +915,7 @@ describe('Amqp', function () {
         });
       });
 
-      it('throws when token renewal options passed and uses non-renewal authentication ', () => {
+      it('throws when token renewal options passed and uses non-renewal authentication ', function () {
         assert.throws(() => {
           transport.setOptions({
             tokenRenewal: {
@@ -927,7 +927,7 @@ describe('Amqp', function () {
       });
 
       /* Tests_SRS_NODE_DEVICE_AMQP_06_013: [The authentication providers `setTokenRenewalValues` method shall be invoked with the values provided in the tokenRenewal option.] */
-      it('invokes the setTokenRenewalValues of the provider ', (done) => {
+      it('invokes the setTokenRenewalValues of the provider ', function (done) {
         fakeTokenAuthenticationProvider.setTokenRenewalValues = sinon.stub();
         const tokenOptions = {
           tokenRenewal: {
@@ -968,7 +968,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
       it('emits a disconnect event if called while connecting', function (testCallback) {
-        var fakeError = new Error('disconnected');
+        const fakeError = new Error('disconnected');
         fakeBaseClient.connect = sinon.stub();
 
         transport.on('disconnect', function (err) {
@@ -984,7 +984,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_081: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connecting or authenticating, the connection shall be stopped and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
       it('emits an error event if called while authenticating', function (testCallback) {
-        var fakeError = new Error('disconnected');
+        const fakeError = new Error('disconnected');
         fakeBaseClient.putToken = sinon.stub();
 
         transport.on('disconnect', function (err) {
@@ -1000,7 +1000,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_16_082: [if the handler specified in the `setDisconnectHandler` call is called while the `Amqp` object is connected, the connection shall be disconnected and an `disconnect` event shall be emitted with the error translated to a transport-agnostic error.]*/
       it('emits an error event if called while connected and authenticated', function (testCallback) {
-        var fakeError = new Error('disconnected');
+        const fakeError = new Error('disconnected');
         transport.on('disconnect', function (err) {
           assert.strictEqual(err.amqpError, fakeError);
           assert(fakeBaseClient.connect.calledOnce);
@@ -1019,14 +1019,14 @@ describe('Amqp', function () {
 
   [{
     functionUnderTest: 'sendEvent',
-    invokeFunction: function(msg, callback) { transport.sendEvent(msg, callback); },
+    invokeFunction: function (msg, callback) { transport.sendEvent(msg, callback); },
     expectedOutputName: null
   },
   {
     functionUnderTest: 'sendOutputEvent',
-    invokeFunction: function(msg, callback) { transport.sendOutputEvent('_fake_output', msg, callback); },
+    invokeFunction: function (msg, callback) { transport.sendOutputEvent('_fake_output', msg, callback); },
     expectedOutputName: '_fake_output'
-  }].forEach(function(testConfig) {
+  }].forEach(function (testConfig) {
     describe('#' + testConfig.functionUnderTest, function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_16_024: [The `sendEvent` method shall connect and authenticate the transport if necessary.]*/
       /*Tests_SRS_NODE_DEVICE_AMQP_18_005: [The `sendOutputEvent` method shall connect and authenticate the transport if necessary.]*/
@@ -1039,7 +1039,7 @@ describe('Amqp', function () {
 
       /*Tests_SRS_NODE_DEVICE_AMQP_18_009: [If `sendOutputEvent` encounters an error before it can send the request, it shall invoke the `done` callback function and pass the standard JavaScript Error object with a text description of the error (err.message).]*/
       it('forwards the error if connecting fails while trying to send a message', function (testCallback) {
-        var fakeError = new Error('failed to connect');
+        const fakeError = new Error('failed to connect');
         fakeBaseClient.connect = sinon.stub().callsArgWith(1, fakeError);
 
         testConfig.invokeFunction(new Message('test'), function (err) {
@@ -1050,10 +1050,10 @@ describe('Amqp', function () {
       });
 
       it('forwards the error if attaching the D2C link fails while trying to send a message', function (testCallback) {
-        var fakeError = new Error('attaching D2C link failed');
+        const fakeError = new Error('attaching D2C link failed');
         fakeBaseClient.attachSenderLink = sinon.stub().callsArgWithAsync(2, fakeError);
 
-        var firstCallbackFired = false;
+        let firstCallbackFired = false;
         function sendCallback(err) {
           assert.strictEqual(err.amqpError, fakeError);
           if (firstCallbackFired) {
@@ -1067,7 +1067,7 @@ describe('Amqp', function () {
       });
 
       it('sends the message even if called while the transport is connecting', function (testCallback) {
-        var connectCallback;
+        let connectCallback;
         fakeBaseClient.connect = sinon.stub().callsFake(function (config, done) {
           // this will block in the 'connecting' state since the callback is not called.
           // calling connectCallback will unblock.
@@ -1085,7 +1085,7 @@ describe('Amqp', function () {
       });
 
       it('sends the message even if called while the transport is authenticating', function (testCallback) {
-        var authCallback;
+        let authCallback;
         fakeBaseClient.putToken = sinon.stub().callsFake(function (audience, token, done) {
           // this will block in the 'authenticating' state since the callback is not called.
           // calling authCallback will unblock.
@@ -1118,13 +1118,13 @@ describe('Amqp', function () {
 
       it('does not create multiple sender links', function (testCallback) {
         fakeBaseClient.attachSenderLink = sinon.stub().callsArgWithAsync(2, null, sender);
-        var count = 0;
+        let count = 0;
         function sendCallback() {
           assert(fakeBaseClient.attachSenderLink.calledOnce);
           if (++count === 3) {
             testCallback();
           }
-        };
+        }
 
         testConfig.invokeFunction(new Message('test1'), sendCallback);
         testConfig.invokeFunction(new Message('test1'), sendCallback);
@@ -1134,8 +1134,9 @@ describe('Amqp', function () {
       // This is being skipped because the error is not forwarded.
       // Since we can reattach the link every time we send and surface the error at that time, I'm not sure it's useful to surface this to the client. it's just a transport-level thing at that point.
       // If something is really bad and unrecoverable the failure will happen on the next sendEvent.
+      // eslint-disable-next-line mocha/no-skipped-tests
       it.skip('forwards errors from the D2C link', function (testCallback) {
-        var fakeError = new Error('fake');
+        const fakeError = new Error('fake');
         transport.on('errorReceived', function (err) {
           assert.strictEqual(err, fakeError);
           testCallback();
@@ -1147,7 +1148,7 @@ describe('Amqp', function () {
       });
 
       it('tries to reconnect to send the message if the transport is disconnecting', function (testCallback) {
-        var disconnectCallback;
+        let disconnectCallback;
         fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
           disconnectCallback = done;
         });
@@ -1165,7 +1166,7 @@ describe('Amqp', function () {
       });
 
       it('calls the callback with an error if attaching the link fails', function (testCallback) {
-        var fakeError = new Error('fake');
+        const fakeError = new Error('fake');
         fakeBaseClient.attachSenderLink = sinon.stub().callsArgWith(2, fakeError);
         testConfig.invokeFunction(new Message('test'), function (err) {
           assert.strictEqual(err.amqpError, fakeError);
@@ -1174,7 +1175,7 @@ describe('Amqp', function () {
       });
 
       it('calls the callback with an error if sending the message fails', function (testCallback) {
-        var fakeError = new Error('fake');
+        const fakeError = new Error('fake');
         sender.send = sinon.stub().callsArgWith(1, fakeError);
         testConfig.invokeFunction(new Message('test'), function (err) {
           assert.strictEqual(err.amqpError, fakeError);
@@ -1200,7 +1201,7 @@ describe('Amqp', function () {
       /*Tests_SRS_NODE_DEVICE_AMQP_18_008: [The `sendOutputEvent` method shall call the `done` callback with a null error object and a MessageEnqueued result object when the message has been successfully sent.]*/
       it('constructs a request correctly and succeeds correctly', function (testCallback) {
         testConfig.invokeFunction(new Message('test'), function (err, result) {
-          var sentMsg = sender.send.firstCall.args[0];
+          const sentMsg = sender.send.firstCall.args[0];
           assert.instanceOf(sentMsg, AmqpMessage);
           assert.instanceOf(result, results.MessageEnqueued);
           assert.strictEqual(sentMsg.body.content.toString(), 'test');
@@ -1288,7 +1289,7 @@ describe('Amqp', function () {
     },{
       enableFunc: 'enableInputMessages',
       disableFunc: 'disableInputMessages'
-    }].forEach(function(testConfig) {
+    }].forEach(function (testConfig) {
       describe(testConfig.enableFunc, function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_031: [The `enableC2D` method shall connect and authenticate the transport if it is disconnected.]*/
         it('connects the transport if it is disconnected', function (testCallback) {
@@ -1326,7 +1327,7 @@ describe('Amqp', function () {
 
         it('does not attempt to create multiple receiver links', function (testCallback) {
           fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWithAsync(2, null, receiver);
-          var firstCallbackFired = false;
+          let firstCallbackFired = false;
           function enableCallback() {
             assert(fakeBaseClient.attachReceiverLink.calledOnce);
             if (firstCallbackFired) {
@@ -1334,7 +1335,7 @@ describe('Amqp', function () {
             }
             firstCallbackFired = true;
           }
-          
+
           transport.connect(function () {
             transport[testConfig.enableFunc](enableCallback);
             transport[testConfig.enableFunc](enableCallback);
@@ -1355,8 +1356,8 @@ describe('Amqp', function () {
           fakeBaseClient.attachReceiverLink = sinon.stub().callsArgWithAsync(2, new Error('fake failed to attach'));
           transport.connect(function () {
             assert(fakeBaseClient.attachReceiverLink.notCalled);
-            var firstCallbackFired = false
-            function enableCallback (err) {
+            let firstCallbackFired = false
+            function enableCallback(err) {
               assert(fakeBaseClient.attachReceiverLink.calledOnceWith(transport._c2dEndpoint));
               assert.instanceOf(err, Error);
               if (firstCallbackFired) {
@@ -1373,7 +1374,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_034: [Any `error` event received on the C2D link shall trigger the emission of an `error` event by the transport, with an argument that is a `C2DDetachedError` object with the `innerError` property set to that error.]*/
         // disabled until the client supports it
         it('emits a CloudToDeviceDetachedError with an innerError property if the link fails after being established correctly', function (testCallback) {
-          var fakeError = new Error('fake C2D receiver link error');
+          const fakeError = new Error('fake C2D receiver link error');
           transport.on('error', function (err) {
             assert.instanceOf(err, errors.CloudToDeviceDetachedError);
             assert.strictEqual(err.innerError, fakeError);
@@ -1390,7 +1391,7 @@ describe('Amqp', function () {
         });
 
         it('forwards messages to the client once connected and authenticated', function (testCallback) {
-          var fakeMessage = new AmqpMessage();
+          const fakeMessage = new AmqpMessage();
 
           transport.on('message', function (msg) {
             assert.instanceOf(msg, Message);
@@ -1480,7 +1481,7 @@ describe('Amqp', function () {
         });
 
         it('waits until connected and authenticated if called while connecting', function () {
-          var connectCallback;
+          let connectCallback;
           fakeBaseClient.connect = sinon.stub().callsFake(function (config, callback) {
             connectCallback = callback;
           });
@@ -1498,7 +1499,7 @@ describe('Amqp', function () {
         });
 
         it('waits until connected and authenticated if called while authenticating', function () {
-          var authCallback;
+          let authCallback;
           fakeBaseClient.putToken = sinon.stub().callsFake(function (uri, options, callback) {
             authCallback = callback;
           });
@@ -1517,7 +1518,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_066: [The `updateTwinReportedProperties` method shall call its callback with an error if connecting fails.]*/
         /*Tests_SRS_NODE_DEVICE_AMQP_16_072: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if connecting fails.]*/
         it('calls its callback with an error if connecting the transport fails', function (testCallback) {
-          var testError = new Error('failed to connect');
+          const testError = new Error('failed to connect');
           fakeBaseClient.connect = sinon.stub().callsArgWith(1, testError);
 
           methodUnderTest(function (err) {
@@ -1531,7 +1532,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
         /*Tests_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
         it('calls its callback with an error if authentication fails to initialize CBS', function (testCallback) {
-          var testError = new Error('failed to authenticate');
+          const testError = new Error('failed to authenticate');
           fakeBaseClient.initializeCBS = sinon.stub().callsArgWith(0, testError);
 
           methodUnderTest(function (err) {
@@ -1546,7 +1547,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_067: [The `updateTwinReportedProperties` method shall call its callback with an error if authenticating fails.]*/
         /*Tests_SRS_NODE_DEVICE_AMQP_16_073: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with an error if authenticating fails.]*/
         it('calls its callback with an error if authentication fails to do a CBS putToken operation', function (testCallback) {
-          var testError = new Error('failed to authenticate');
+          const testError = new Error('failed to authenticate');
           fakeBaseClient.putToken = sinon.stub().callsArgWith(2, testError);
 
           methodUnderTest(function (err) {
@@ -1568,7 +1569,7 @@ describe('Amqp', function () {
         /*Tests_SRS_NODE_DEVICE_AMQP_16_075: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with and error if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` fails.]*/
         /*Tests_SRS_NODE_DEVICE_AMQP_16_076: [The `enableTwinDesiredPropertiesUpdates` method shall call its callback with no arguments if the call to `AmqpTwinClient.enableTwinDesiredPropertiesUpdates` succeeds.]*/
         it('calls its callback with an error if the twin client fails to send the request', function (testCallback) {
-          var testError = new Error('failed to send');
+          const testError = new Error('failed to send');
           sender.send = sinon.stub().callsArgWith(1, testError);
 
           methodUnderTest(function (err) {
@@ -1583,7 +1584,7 @@ describe('Amqp', function () {
         });
 
         it('tries to reconnect to send the message if the transport is disconnecting', function () {
-          var disconnectCallback;
+          let disconnectCallback;
 
           fakeBaseClient.disconnect = sinon.stub().callsFake(function (done) {
             disconnectCallback = done;
@@ -1652,7 +1653,7 @@ describe('Amqp', function () {
 
     describe('on(\'twinDesiredPropertiesUpdate\')', function () {
       it('emits a twinDesiredPropertiesUpdate if it receives a twinDesiredPropertiesUpdate from the twin client', function (testCallback) {
-        var fakePatch = { fake : 'patch' };
+        const fakePatch = { fake : 'patch' };
         transport.on('twinDesiredPropertiesUpdate', function (patch) {
           assert.strictEqual(patch, fakePatch);
           testCallback();
@@ -1664,7 +1665,7 @@ describe('Amqp', function () {
 
     describe('on(\'error\')', function () {
       it('emits a TwinDetachedError if it receives an error from the twin client', function (testCallback) {
-        var fakeError = new Error('fake');
+        const fakeError = new Error('fake');
         transport.on('error', function (err) {
           assert.instanceOf(err, errors.TwinDetachedError);
           assert.strictEqual(err.innerError, fakeError);
@@ -1679,7 +1680,7 @@ describe('Amqp', function () {
   /*Tests_SRS_NODE_DEVICE_AMQP_18_013: [If `amqp` receives a message on the C2D link, it shall emit a "message" event with the message as the event parameter.]*/
   describe('on(\'message\')', function () {
     it('calls the message handler when message received', function (testCallback) {
-      var testText = '__TEST_TEXT__';
+      const testText = '__TEST_TEXT__';
       transport.connect(function () {
         transport.on('message', function (msg) {
           assert.strictEqual(msg.data.toString(), testText);
@@ -1696,9 +1697,9 @@ describe('Amqp', function () {
   /*Tests_SRS_NODE_DEVICE_AMQP_18_014: [If `amqp` receives a message on the input message link, it shall emit an "inputMessage" event with the value of the annotation property "x-opt-input-name" as the first parameter and the agnostic message as the second parameter.]*/
   describe('on(\'inputMessage\')', function () {
     it('calls the message handler when message received', function (testCallback) {
-      var testText = '__TEST_TEXT__';
-      var testInputName = '__INPUT__';
-      var amqp = new Amqp(fakeX509ModuleAuthenticationProvider, fakeBaseClient);
+      const testText = '__TEST_TEXT__';
+      const testInputName = '__INPUT__';
+      const amqp = new Amqp(fakeX509ModuleAuthenticationProvider, fakeBaseClient);
 
       amqp.connect(function () {
         amqp.on('inputMessage', function (inputName, msg) {
@@ -1708,7 +1709,7 @@ describe('Amqp', function () {
         });
         amqp.enableInputMessages(function (err) {
           assert(!err);
-          var amqpMessage = AmqpMessage.fromMessage(new Message(testText));
+          const amqpMessage = AmqpMessage.fromMessage(new Message(testText));
           amqpMessage.message_annotations = { 'x-opt-input-name': testInputName };
           receiver.emit('message', amqpMessage);
         });

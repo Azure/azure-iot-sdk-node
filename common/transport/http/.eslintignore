@@ -5,8 +5,3 @@ dist
 # don't lint nyc coverage output
 coverage
 # don't lint tests
-# test
-# don't lint generated code
-pl
-# don't use rules on the config file
-.eslintrc.js

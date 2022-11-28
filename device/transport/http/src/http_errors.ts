@@ -60,7 +60,7 @@ export function translateError(message: string, body: any, response: IncomingMes
 
 /* Codes_SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
  * - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
- * - `reponseBody` shall contain the content of the HTTP response.
+ * - `responseBody` shall contain the content of the HTTP response.
  * - `message` shall contain a human-readable error message]
  */
   error.response = response;

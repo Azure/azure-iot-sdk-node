@@ -3,25 +3,25 @@
 
 'use strict';
 
-var EventEmitter = require('events').EventEmitter;
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var MqttWs = require('../dist/mqtt_ws.js').MqttWs;
+const EventEmitter = require('events').EventEmitter;
+const assert = require('chai').assert;
+const sinon = require('sinon');
+const MqttWs = require('../dist/mqtt_ws.js').MqttWs;
 
 describe('MqttWs', function () {
-  var fakeConfig = {
+  const fakeConfig = {
     host: 'host.name',
     deviceId: 'deviceId',
     sharedAccessSignature: 'sas'
   };
 
-  var fakeAuthenticationProvider = {
+  const fakeAuthenticationProvider = {
     getDeviceCredentials: function (callback) {
       callback(null, fakeConfig);
     }
   };
 
-  var fakeMqttBase = new EventEmitter();
+  const fakeMqttBase = new EventEmitter();
   fakeMqttBase.connect = sinon.stub().callsArg(1);
   fakeMqttBase.disconnect = sinon.stub().callsArg(0);
   fakeMqttBase.publish = sinon.stub().callsArg(3);
@@ -33,7 +33,7 @@ describe('MqttWs', function () {
     /* Tests_SRS_NODE_DEVICE_MQTT_12_001: [The `Mqtt` constructor shall accept the transport configuration structure */
     /* Tests_SRS_NODE_DEVICE_MQTT_12_002: [The `Mqtt` constructor shall store the configuration structure in a member variable */
     it('stores config and created transport in member', function () {
-      var mqttWs = new MqttWs(fakeAuthenticationProvider);
+      const mqttWs = new MqttWs(fakeAuthenticationProvider);
       assert.notEqual(mqttWs, null);
       assert.notEqual(mqttWs, undefined);
       assert.equal(mqttWs._authenticationProvider, fakeAuthenticationProvider);
@@ -43,7 +43,7 @@ describe('MqttWs', function () {
   describe('#connect', function () {
     /*Tests_SRS_NODE_DEVICE_MQTT_16_017: [The `MqttWs` constructor shall initialize the `uri` property of the `config` object to `wss://<host>:443/$iothub/websocket`.]*/
     it('sets the uri property to \'wss://<host>:443/$iothub/websocket\'', function (testCallback) {
-      var mqttWs = new MqttWs(fakeAuthenticationProvider, fakeMqttBase);
+      const mqttWs = new MqttWs(fakeAuthenticationProvider, fakeMqttBase);
       mqttWs.connect(function () {
         assert.strictEqual(fakeMqttBase.connect.firstCall.args[0].uri, 'wss://' + fakeConfig.host + ':443/$iothub/websocket');
         testCallback();

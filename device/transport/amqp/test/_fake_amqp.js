@@ -2,19 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var results = require('azure-iot-common').results;
+const EventEmitter = require('events').EventEmitter;
+const util = require('util');
+const results = require('azure-iot-common').results;
 
-var buildAmqpError = function () {
-  var linkError = new Error();
+const buildAmqpError = function () {
+  const linkError = new Error();
   linkError.condition = 'amqp:unauthorized-access';
   return linkError;
-};
-var FakeSenderLink = function(containingClient) {
+}
+
+const FakeSenderLink = function (containingClient) {
   EventEmitter.call(this);
-  var owningClient = containingClient;
-  this.send = function(message, callback) {
+  const owningClient = containingClient;
+  this.send = function (message, callback) {
     owningClient.lastSendMessage = message;
     if (owningClient.sendMessageShouldSucceed) {
       callback(null, {});
@@ -25,12 +26,12 @@ var FakeSenderLink = function(containingClient) {
   util.inherits(FakeSenderLink, EventEmitter);
 };
 
-var FakeReceiverLink = function() {
+const FakeReceiverLink = function () {
   EventEmitter.call(this);
   util.inherits(FakeReceiverLink, EventEmitter);
 };
 
-var FakeAmqp = function() {
+const FakeAmqp = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -40,9 +41,9 @@ var FakeAmqp = function() {
   this.sendMessageShouldSucceed = true;
   this.fakeSenderLink = new FakeSenderLink(this);
   this.fakeReceiverLink = new FakeReceiverLink();
-  this.setDisconnectHandler = function() {};
+  this.setDisconnectHandler = function () {};
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
     this.attachSenderLinkOptions = linkOptions;
     attachCallback(null, this.fakeSenderLink);
@@ -51,17 +52,17 @@ var FakeAmqp = function() {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     this.attachReceiverEndpoint = endpoint;
     this.attachReceiverLinkOptions = linkOptions;
     attachCallback(null, this.fakeReceiverLink);
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
@@ -80,7 +81,7 @@ var FakeAmqp = function() {
   util.inherits(FakeAmqp, EventEmitter);
 };
 
-var FakeAmqpAttachSenderFails = function() {
+const FakeAmqpAttachSenderFails = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -91,30 +92,30 @@ var FakeAmqpAttachSenderFails = function() {
   this.fakeSenderLink = new FakeSenderLink(this);
   this.fakeReceiverLink = new FakeReceiverLink();
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     attachCallback(buildAmqpError());
   }
   this.sendShouldSucceed = function (shouldSucceed) {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     this.attachReceiverEndpoint = endpoint;
     this.attachReceiverLinkOptions = linkOptions;
     attachCallback(null, this.fakeReceiverLink);
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     detachCallback();
   }
   util.inherits(FakeAmqpAttachSenderFails, EventEmitter);
 };
 
-var FakeAmqpAttachReceiverFails = function() {
+const FakeAmqpAttachReceiverFails = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -125,7 +126,7 @@ var FakeAmqpAttachReceiverFails = function() {
   this.fakeSenderLink = new FakeSenderLink(this);
   this.fakeReceiverLink = new FakeReceiverLink();
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
     this.attachSenderLinkOptions = linkOptions;
     attachCallback(null, this.fakeSenderLink);
@@ -134,21 +135,21 @@ var FakeAmqpAttachReceiverFails = function() {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     attachCallback(buildAmqpError());
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     detachCallback();
   }
   util.inherits(FakeAmqpAttachReceiverFails, EventEmitter);
 };
 
-var FakeAmqpDetachReceiverFails = function() {
+const FakeAmqpDetachReceiverFails = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -159,7 +160,7 @@ var FakeAmqpDetachReceiverFails = function() {
   this.fakeSenderLink = new FakeSenderLink(this);
   this.fakeReceiverLink = new FakeReceiverLink();
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
     this.attachSenderLinkOptions = linkOptions;
     attachCallback(null, this.fakeSenderLink);
@@ -168,23 +169,23 @@ var FakeAmqpDetachReceiverFails = function() {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     this.attachReceiverEndpoint = endpoint;
     this.attachReceiverLinkOptions = linkOptions;
     attachCallback(null, this.fakeReceiverLink);
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     detachCallback(buildAmqpError());
   }
   util.inherits(FakeAmqpDetachReceiverFails, EventEmitter);
 };
 
-var FakeAmqpDetachSenderFails = function() {
+const FakeAmqpDetachSenderFails = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -195,7 +196,7 @@ var FakeAmqpDetachSenderFails = function() {
   this.fakeSenderLink = new FakeSenderLink(this);
   this.fakeReceiverLink = new FakeReceiverLink();
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
     this.attachSenderLinkOptions = linkOptions;
     attachCallback(null, this.fakeSenderLink);
@@ -204,23 +205,23 @@ var FakeAmqpDetachSenderFails = function() {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     this.attachReceiverEndpoint = endpoint;
     this.attachReceiverLinkOptions = linkOptions;
     attachCallback(null, this.fakeReceiverLink);
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback(buildAmqpError());
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     detachCallback();
   }
   util.inherits(FakeAmqpDetachSenderFails, EventEmitter);
 };
 
-var FakeAmqpAttachReceiverDelayCallback = function() {
+const FakeAmqpAttachReceiverDelayCallback = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -232,7 +233,7 @@ var FakeAmqpAttachReceiverDelayCallback = function() {
   this.fakeReceiverLink = new FakeReceiverLink();
   this.fakeAttachCallback = null;
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
     this.attachSenderLinkOptions = linkOptions;
     attachCallback(null, this.fakeSenderLink);
@@ -241,25 +242,25 @@ var FakeAmqpAttachReceiverDelayCallback = function() {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.invokeDelayCallback = function() {
+  this.invokeDelayCallback = function () {
     this.fakeAttachCallback(null, this.fakeReceiverLink);
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     this.fakeAttachCallback = attachCallback;
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     detachCallback();
   }
   util.inherits(FakeAmqpAttachReceiverDelayCallback, EventEmitter);
 };
 
-var FakeAmqpDetachReceiverDelayCallback = function() {
+const FakeAmqpDetachReceiverDelayCallback = function () {
   EventEmitter.call(this);
   this.attachSenderEndpoint = null;
   this.attachReceiverEndpoint = null;
@@ -271,7 +272,7 @@ var FakeAmqpDetachReceiverDelayCallback = function() {
   this.fakeReceiverLink = new FakeReceiverLink();
   this.fakeDetachCallback = null;
 
-  this.attachSenderLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachSenderLink = function (endpoint, linkOptions, attachCallback) {
     this.attachSenderEndpoint = endpoint;
     this.attachSenderLinkOptions = linkOptions;
     attachCallback(null, this.fakeSenderLink);
@@ -280,21 +281,21 @@ var FakeAmqpDetachReceiverDelayCallback = function() {
     this.sendMessageShouldSucceed = shouldSucceed;
   };
 
-  this.invokeDelayCallback = function() {
+  this.invokeDelayCallback = function () {
     this.fakeDetachCallback(null, this.fakeReceiverLink);
   };
 
-  this.attachReceiverLink = function(endpoint, linkOptions, attachCallback) {
+  this.attachReceiverLink = function (endpoint, linkOptions, attachCallback) {
     this.attachReceiverEndpoint = endpoint;
     this.attachReceiverLinkOptions = linkOptions;
     attachCallback(null, this.fakeReceiverLink);
   }
 
-  this.detachSenderLink = function(endpoint, detachCallback) {
+  this.detachSenderLink = function (endpoint, detachCallback) {
     detachCallback();
   }
 
-  this.detachReceiverLink = function(endpoint, detachCallback) {
+  this.detachReceiverLink = function (endpoint, detachCallback) {
     this.fakeDetachCallback = detachCallback;
   }
   util.inherits(FakeAmqpDetachReceiverDelayCallback, EventEmitter);

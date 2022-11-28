@@ -3,8 +3,8 @@
 
 'use strict';
 
-var device = require('azure-iot-device');
-var Http = require('./dist/http.js').Http;
+const device = require('azure-iot-device');
+const Http = require('./dist/http').Http;
 
 /**
  * The `azure-iot-device-http` module provides support for the HTTPS protocol to the device [client]{@link module:azure-iot-device.Client}.

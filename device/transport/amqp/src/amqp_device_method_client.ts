@@ -127,8 +127,8 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                           //
                           // The rhea library will de-serialize an encoded uuid (0x98) as a 16 byte buffer.
                           //
-                          let methodRequest: any = {};
-                          methodRequest.methods = {methodName: methodName};
+                          const methodRequest: any = {};
+                          methodRequest.methods = { methodName: methodName };
                           if (msg.body && msg.body.content) {
                             methodRequest.body = msg.body.content.toString();
                           }
@@ -177,7 +177,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
             attachCallback();
           },
           sendMethodResponse: (response, callback) => {
-            let message = new Message(JSON.stringify(response.payload));
+            const message = new Message(JSON.stringify(response.payload));
             message.correlationId = response.requestId;
             message.properties.add(methodMessagePropertyKeys.status, response.status);
             this._amqpClient.send(message, this._methodEndpoint, undefined, callback);

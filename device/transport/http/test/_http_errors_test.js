@@ -3,11 +3,11 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var errors = require('azure-iot-common').errors;
-var translateError = require('../dist/http_errors.js').translateError;
+let assert = require('chai').assert;
+let errors = require('azure-iot-common').errors;
+let translateError = require('../dist/http_errors.js').translateError;
 
-describe('translateError', function() {
+describe('translateError', function () {
 
 /*Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_002: [If the HTTP error code is unknown, `translateError` should return a generic Javascript `Error` object.]*/
 /*Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_003: [`translateError` shall return an `ArgumentError` if the HTTP response status code is `400`.]*/
@@ -25,25 +25,25 @@ describe('translateError', function() {
     { statusCode: 413, statusMessage: 'Request too large', errorMessage: 'Fake request too large', expectedErrorType: errors.MessageTooLargeError },
     { statusCode: 500, statusMessage: 'Internal Server Error', errorMessage: 'Fake internal server error', expectedErrorType: errors.InternalServerError },
     { statusCode: 503, statusMessage: 'Server Unavailable', errorMessage: 'Fake server unavailable', expectedErrorType: errors.ServiceUnavailableError }
-  ].forEach(function(testParams) {
-    it('returns an \'' + testParams.expectedErrorType.name + '\' if the response status code is \'' + testParams.statusCode + '\'', function(){
-      var fake_response = {
+  ].forEach(function (testParams) {
+    it('returns an \'' + testParams.expectedErrorType.name + '\' if the response status code is \'' + testParams.statusCode + '\'', function (){
+      let fake_response = {
       statusCode: testParams.statusCode,
       statusMessage: testParams.statusMessage,
     };
-    var fake_response_body = testParams.statusCode + ': ' + testParams.statusMessage;
+    let fake_response_body = testParams.statusCode + ': ' + testParams.statusMessage;
 
     /* Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_010: [`translateError` shall accept 3 arguments:
      * - A custom error message to give context to the user.
      * - the body of  the HTTP response, containing the explanation of why the request failed
      * - the HTTP response object itself]
      */
-    var err = translateError(new Error(testParams.errorMessage), fake_response_body, fake_response);
+    let err = translateError(new Error(testParams.errorMessage), fake_response_body, fake_response);
     assert.instanceOf(err, testParams.expectedErrorType);
 
     /* Tests_SRS_NODE_DEVICE_HTTP_ERRORS_16_001: [Any error object returned by `translateError` shall inherit from the generic `Error` Javascript object and have 3 properties:
      * - `response` shall contain the `IncomingMessage` object returned by the HTTP layer.
-     * - `reponseBody` shall contain the content of the HTTP response.
+     * - `responseBody` shall contain the content of the HTTP response.
      * - `message` shall contain a human-readable error message]
      */
     assert.equal(err.message, 'Error: ' + testParams.errorMessage);
