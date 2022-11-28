@@ -3,32 +3,33 @@
 
 'use strict';
 
-var Registry = require('azure-iothub').Registry;
-var ServiceClient = require('azure-iothub').Client;
-var ConnectionString = require('azure-iothub').ConnectionString;
-var SharedAccessSignature = require('azure-iothub').SharedAccessSignature;
-var deviceSas = require('azure-iot-device').SharedAccessSignature;
-var deviceSdk = require('azure-iot-device');
-var anHourFromNow = require('azure-iot-common').anHourFromNow;
-var uuid = require('uuid');
-var assert = require('chai').assert;
-var debug = require('debug')('e2etests:devicemethod');
+let Registry = require('azure-iothub').Registry;
+let ServiceClient = require('azure-iothub').Client;
+let ConnectionString = require('azure-iothub').ConnectionString;
+let SharedAccessSignature = require('azure-iothub').SharedAccessSignature;
+let deviceSas = require('azure-iot-device').SharedAccessSignature;
+let deviceSdk = require('azure-iot-device');
+let anHourFromNow = require('azure-iot-common').anHourFromNow;
+let uuid = require('uuid');
+let assert = require('chai').assert;
+let debug = require('debug')('e2etests:devicemethod');
 
-var deviceAmqp = require('azure-iot-device-amqp');
-var deviceMqtt = require('azure-iot-device-mqtt');
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let deviceAmqp = require('azure-iot-device-amqp');
+let deviceMqtt = require('azure-iot-device-mqtt');
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 [
   deviceMqtt.Mqtt,
   deviceMqtt.MqttWs,
   deviceAmqp.Amqp,
   deviceAmqp.AmqpWs
-].forEach(function(protocolCtor) {
-  describe('Device Methods over ' + protocolCtor.name, function() {
+].forEach(function (protocolCtor) {
+  describe('Device Methods over ' + protocolCtor.name, function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    var deviceClient;
-    var deviceDescription;
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    let deviceClient;
+    let deviceDescription;
 
     before(function (done) {
       deviceDescription = {
@@ -69,10 +70,11 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
     // create a new device for every test
     beforeEach(function (done) {
-      var host = ConnectionString.parse(hubConnectionString).HostName;
-      var sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
+      let host = ConnectionString.parse(hubConnectionString).HostName;
+      let sas = deviceSas.create(host, deviceDescription.deviceId, deviceDescription.authentication.symmetricKey.primaryKey, anHourFromNow()).toString();
       deviceClient = deviceSdk.Client.fromSharedAccessSignature(sas, protocolCtor);
       debug('connecting device client...');
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (err) {
         if (err) {
           debug('error connecting device client: ' + err.toString());
@@ -86,10 +88,10 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
     // delete the test device identity after every test
     afterEach(function (done) {
-      if (!!deviceClient) {
+      if (deviceClient) {
         debug('disconnecting device client...');
-        deviceClient.close(function(err) {
-          if (!!err) {
+        deviceClient.close(function (err) {
+          if (err) {
             console.warn('Could not close connection to device ' + deviceDescription.deviceId + ': ' + err.toString());
             return done(err);
           } else {
@@ -103,13 +105,13 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       }
     });
 
-    var methodName = 'method1';
-    var methodResult = 200;
+    let methodName = 'method1';
+    let methodResult = 200;
 
-    var setMethodHandler = function(testPayload) {
+    let setMethodHandler = function (testPayload) {
       debug('---------- new method test ------------');
       // setup device to handle the method call
-      deviceClient.onDeviceMethod(methodName, function(request, response) {
+      deviceClient.onDeviceMethod(methodName, function (request, response) {
         // validate request
         assert.isNotNull(request);
         assert.strictEqual(request.methodName, methodName);
@@ -120,9 +122,9 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         assert.isNotNull(response);
 
         // send the response
-        response.send(methodResult, testPayload, function(err) {
+        response.send(methodResult, testPayload, function (err) {
           debug('send method response with statusCode: ' + methodResult);
-          if(!!err) {
+          if(err) {
             console.error('An error ocurred when sending a method response:\n' +
                 err.toString());
           }
@@ -130,10 +132,10 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       });
     };
 
-    var sendMethodCall = function(serviceClient, deviceId, testPayload, done) {
-      setTimeout(function() {
+    let sendMethodCall = function (serviceClient, deviceId, testPayload, done) {
+      setTimeout(function () {
         // make the method call via the service
-        var methodParams = {
+        let methodParams = {
           methodName: methodName,
           payload: testPayload,
           connectTimeoutInSeconds: 30,
@@ -144,7 +146,7 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
         serviceClient.invokeDeviceMethod(
                 deviceId,
                 methodParams,
-                function(err, result) {
+                function (err, result) {
                   if(!err) {
                     debug('got method results');
                     debug(JSON.stringify(result, null, 2));
@@ -157,29 +159,29 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       }, 1000);
     };
 
-    [null, '', 'foo', { k1: 'v1' }, {}].forEach(function(testPayload) {
-      it('makes and receives a method call with ' + JSON.stringify(testPayload), function(done) {
+    [null, '', 'foo', { k1: 'v1' }, {}].forEach(function (testPayload) {
+      it('makes and receives a method call with ' + JSON.stringify(testPayload), function (done) {
         setMethodHandler(testPayload);
-        var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
+        let serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
         sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
       });
     });
 
-    it('makes and receives a method call when the client is created with a Shared Access Signature', function(done) {
-      var testPayload = 'foo';
-      var cn = ConnectionString.parse(hubConnectionString);
-      var sas = SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow());
-      var serviceClient = ServiceClient.fromSharedAccessSignature(sas);
+    it('makes and receives a method call when the client is created with a Shared Access Signature', function (done) {
+      let testPayload = 'foo';
+      let cn = ConnectionString.parse(hubConnectionString);
+      let sas = SharedAccessSignature.create(cn.HostName, cn.SharedAccessKeyName, cn.SharedAccessKey, anHourFromNow());
+      let serviceClient = ServiceClient.fromSharedAccessSignature(sas);
       setMethodHandler(testPayload);
       sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
     });
 
-    it('makes and receives a method call after renewing the SAS token', function(done) {
-      var testPayload = {'k1' : 'v1'};
+    it('makes and receives a method call after renewing the SAS token', function (done) {
+      let testPayload = { 'k1' : 'v1' };
       setMethodHandler(testPayload);
-        deviceClient.on('_sharedAccessSignatureUpdated', function() {
-        setTimeout(function() {
-          var serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
+        deviceClient.on('_sharedAccessSignatureUpdated', function () {
+        setTimeout(function () {
+          let serviceClient = ServiceClient.fromConnectionString(hubConnectionString);
           sendMethodCall(serviceClient, deviceDescription.deviceId, testPayload, done);
         }, 1000);
       });

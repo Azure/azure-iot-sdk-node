@@ -3,32 +3,33 @@
 
 'use strict';
 
-var ModuleTestHelper = require('./module_test_helper.js');
-var assert = require('chai').assert;
-var debug = require('debug')('e2etests:module-twin');
-var Amqp = require('azure-iot-device-amqp').Amqp;
-var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
-var Mqtt = require('azure-iot-device-mqtt').Mqtt;
-var MqttWs = require('azure-iot-device-mqtt').MqttWs;
+let ModuleTestHelper = require('./module_test_helper.js');
+let assert = require('chai').assert;
+let debug = require('debug')('e2etests:module-twin');
+let Amqp = require('azure-iot-device-amqp').Amqp;
+let AmqpWs = require('azure-iot-device-amqp').AmqpWs;
+let Mqtt = require('azure-iot-device-mqtt').Mqtt;
+let MqttWs = require('azure-iot-device-mqtt').MqttWs;
 
-var transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
+let transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
 
-describe('module twin', function() {
+describe('module twin', function () {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  transportsToTest.forEach(function(Transport) {
-    describe('using ' + Transport.name, function() {
-      var testModule = {};
+  transportsToTest.forEach(function (Transport) {
+    describe('using ' + Transport.name, function () {
+      let testModule = {};
 
-      before(function(done) {
+      before(function (done) {
         debug('using ModuleTestHelper to create modules');
-        ModuleTestHelper.createModule(testModule, Transport, function(err) {
+        ModuleTestHelper.createModule(testModule, Transport, function (err) {
           debug('ModuleTestHelper.createModule returned ' + (err ? err : 'success'));
           if (err) {
             done(err);
           } else {
             debug('using ModuleTestHelper to get twin objects');
-            ModuleTestHelper.getTwinObjects(testModule, function(err) {
+            ModuleTestHelper.getTwinObjects(testModule, function (err) {
               debug('ModuleTestHelper.getTwinObjects returned ' + (err ? err : 'success'));
               done(err);
             });
@@ -36,16 +37,16 @@ describe('module twin', function() {
         });
       });
 
-      after(function(done) {
+      after(function (done) {
         debug('using ModuleTestHelper to clean up after tests');
-        ModuleTestHelper.cleanUpAfterTest(testModule, function(err) {
+        ModuleTestHelper.cleanUpAfterTest(testModule, function (err) {
           debug('ModuleTestHelper.cleanUpAfterTest returned ' + (err ? err : 'success'));
           done(err);
         });
       });
 
-      it ('can receive desired property changes', function(done) {
-        var patch = {
+      it ('can receive desired property changes', function (done) {
+        let patch = {
           properties: {
             desired: {
               fake_key: '__FAKE_VALUE__'
@@ -53,7 +54,7 @@ describe('module twin', function() {
           }
         };
         debug('adding handler for properties.desired');
-        testModule.deviceTwin.on('properties.desired', function(props) {
+        testModule.deviceTwin.on('properties.desired', function (props) {
           debug('received properties:' + JSON.stringify(props));
           if (props.fake_key === patch.properties.desired.fake_key) {
             debug('key matches.  Finishing test');
@@ -65,26 +66,26 @@ describe('module twin', function() {
 
         setTimeout(function () {
           debug('sending desired properties');
-          testModule.serviceTwin.update(patch, function(err) {
+          testModule.serviceTwin.update(patch, function (err) {
             debug('twin.update returned ' + (err ? err : 'success'));
             assert(!err);
           });
         }, 10000);
       });
 
-      it('can send reported properties', function(done) {
-        var patch = {
+      it('can send reported properties', function (done) {
+        let patch = {
           another_fake_key: '__ANOTHER_FAKE_VALUE__'
         };
 
         debug('updating reported properties');
-        testModule.deviceTwin.properties.reported.update(patch, function(err) {
+        testModule.deviceTwin.properties.reported.update(patch, function (err) {
           debug('twin.properties.reported.update returned ' + (err ? err : 'success'));
           if (err) {
             done(err);
           } else {
             debug('getting service twin');
-            testModule.serviceTwin.get(function(err, twin) {
+            testModule.serviceTwin.get(function (err, twin) {
               debug('serviceTwin.get returned ' + (err ? err : 'success'));
               if (err) {
                 done(err);

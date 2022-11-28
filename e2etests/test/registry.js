@@ -3,21 +3,21 @@
 
 'use strict';
 
-var azureStorage = require('azure-storage');
-var Registry = require('azure-iothub').Registry;
-var errors = require('azure-iot-common').errors;
-var assert = require('chai').assert;
-var uuid = require('uuid');
-var debug = require('debug')('e2etests:registry');
+let azureStorage = require('azure-storage');
+let Registry = require('azure-iothub').Registry;
+let errors = require('azure-iot-common').errors;
+let assert = require('chai').assert;
+let uuid = require('uuid');
+let debug = require('debug')('e2etests:registry');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
 
-var deviceIdOnly = {
+let deviceIdOnly = {
   deviceId: uuid.v4()
 };
 
-var deviceIdWithKeys = {
+let deviceIdWithKeys = {
   deviceId: uuid.v4(),
   authentication: {
     symmetricKey: {
@@ -28,7 +28,7 @@ var deviceIdWithKeys = {
   status: "disabled"
 };
 
-var deviceIdWithThumbprints = {
+let deviceIdWithThumbprints = {
   deviceId: uuid.v4(),
   authentication: {
     x509Thumbprint: {
@@ -40,16 +40,17 @@ var deviceIdWithThumbprints = {
 };
 
 describe('Registry', function () {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   it('Creates a device with only a deviceId and gets it', function (done){
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
-    registry.create(deviceIdOnly, function(createErr, createResult) {
+    registry.create(deviceIdOnly, function (createErr, createResult) {
       if (createErr) {
         done(createErr);
       } else {
         assert.equal(createResult.deviceId, deviceIdOnly.deviceId, 'created device doesn\'t have the requested deviceId');
-        registry.get(deviceIdOnly.deviceId, function(getErr, getResult) {
+        registry.get(deviceIdOnly.deviceId, function (getErr, getResult) {
           if (getErr) {
             done(getErr);
           } else {
@@ -62,14 +63,14 @@ describe('Registry', function () {
   });
 
   it('Creates a device with secret key parameters and gets it', function (done){
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
-    registry.create(deviceIdWithKeys, function(createErr, createResult) {
+    registry.create(deviceIdWithKeys, function (createErr, createResult) {
       if (createErr) {
         done(createErr);
       } else {
         assert.equal(createResult.deviceId, deviceIdWithKeys.deviceId, 'created device doesn\'t have the requested deviceId');
-        registry.get(deviceIdWithKeys.deviceId, function(getErr, getResult) {
+        registry.get(deviceIdWithKeys.deviceId, function (getErr, getResult) {
           if (getErr) {
             done(getErr);
           } else {
@@ -85,14 +86,14 @@ describe('Registry', function () {
   });
 
   it('Creates a device with thumbprint parameters and gets it', function (done){
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
-    registry.create(deviceIdWithThumbprints, function(createErr, createResult) {
+    registry.create(deviceIdWithThumbprints, function (createErr, createResult) {
       if (createErr) {
         done(createErr);
       } else {
         assert.equal(createResult.deviceId, deviceIdWithThumbprints.deviceId, 'created device doesn\'t have the requested deviceId');
-        registry.get(deviceIdWithThumbprints.deviceId, function(getErr, getResult) {
+        registry.get(deviceIdWithThumbprints.deviceId, function (getErr, getResult) {
           if (getErr) {
             done(getErr);
           } else {
@@ -107,22 +108,22 @@ describe('Registry', function () {
     });
   });
 
-  it('Fails to create a device with an invalid name', function(done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
+  it('Fails to create a device with an invalid name', function (done) {
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
-    registry.create({deviceId: 'invalid/name' }, function(createErr) {
+    registry.create({ deviceId: 'invalid/name' }, function (createErr) {
       assert.isNotNull(createErr);
       done();
     });
   });
 
   it('Lists devices and all test devices are there', function (done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    registry.list(function(err, deviceList) {
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    registry.list(function (err, deviceList) {
       if (err) {
         done(err);
       } else {
-        var found = 0;
+        let found = 0;
 
         deviceList.forEach(function (device) {
           if (device.deviceId === deviceIdOnly.deviceId) {
@@ -146,8 +147,8 @@ describe('Registry', function () {
   });
 
   it('Deletes a device and then fails to get it', function (done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    registry.delete(deviceIdOnly.deviceId, function(delErr){
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    registry.delete(deviceIdOnly.deviceId, function (delErr){
       if(delErr) {
         done(delErr);
       } else {
@@ -159,14 +160,14 @@ describe('Registry', function () {
     });
   });
 
-  it('Lists devices and one one device remains', function(done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    registry.list(function(err, deviceList) {
+  it('Lists devices and one one device remains', function (done) {
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    registry.list(function (err, deviceList) {
       if (err) {
         done(err);
       } else {
-        var foundOne = false;
-        var foundTwo = false;
+        let foundOne = false;
+        let foundTwo = false;
 
         deviceList.forEach(function (device) {
           if (device.deviceId === deviceIdOnly.deviceId) {
@@ -189,14 +190,14 @@ describe('Registry', function () {
   });
 
   it('Updates the device and gets it', function (done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
     deviceIdWithKeys.authentication.symmetricKey.secondaryKey = Buffer.from('qwertyuiopasdfghjkl').toString('base64');
     registry.update(deviceIdWithKeys, function (updateErr, updatedDevice) {
       if (updateErr) {
         done(updateErr);
       } else {
         assert.equal(updatedDevice.authentication.symmetricKey.secondaryKey, deviceIdWithKeys.authentication.symmetricKey.secondaryKey);
-        registry.get(deviceIdWithKeys.deviceId, function(getErr, getResult) {
+        registry.get(deviceIdWithKeys.deviceId, function (getErr, getResult) {
           if (getErr) {
             done(getErr);
           } else {
@@ -208,18 +209,18 @@ describe('Registry', function () {
     });
   });
 
-  it('Fails to delete a device if it doesn\'t exist', function(done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    registry.delete('doesntexist' + uuid.v4(), function(delErr){
+  it('Fails to delete a device if it doesn\'t exist', function (done) {
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    registry.delete('doesntexist' + uuid.v4(), function (delErr){
       assert.equal(delErr.name, errors.DeviceNotFoundError.name);
       done();
     });
   });
 
-  [deviceIdWithKeys.deviceId, deviceIdWithThumbprints.deviceId].forEach(function(deviceId) {
+  [deviceIdWithKeys.deviceId, deviceIdWithThumbprints.deviceId].forEach(function (deviceId) {
     it('Deletes device created for the test with id ' + deviceId, function (done) {
-      var registry = Registry.fromConnectionString(hubConnectionString);
-      registry.delete(deviceId, function(delErr){
+      let registry = Registry.fromConnectionString(hubConnectionString);
+      registry.delete(deviceId, function (delErr){
         if(delErr) {
           done(delErr);
         } else {
@@ -233,9 +234,9 @@ describe('Registry', function () {
   });
 
   it('Can create an edge and device scope relationship', function (done){
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
-    var edgeDevice = {
+    let edgeDevice = {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
@@ -249,7 +250,7 @@ describe('Registry', function () {
       }
     };
 
-    var scopedDevice = {
+    let scopedDevice = {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
@@ -260,7 +261,7 @@ describe('Registry', function () {
       status: "enabled"
     };
 
-    registry.create(edgeDevice, function(edgeCreateErr, edgeCreateResult) {
+    registry.create(edgeDevice, function (edgeCreateErr, edgeCreateResult) {
       if (edgeCreateErr) {
         done(edgeCreateErr);
       } else {
@@ -268,16 +269,16 @@ describe('Registry', function () {
         assert(edgeCreateResult.capabilities.iotEdge, 'Created edge device does not contain correct capabilities.');
         assert(edgeCreateResult.deviceScope, 'Created edge device does not contain a scope value.');
         scopedDevice.deviceScope = edgeCreateResult.deviceScope;
-        registry.create(scopedDevice, function(scopedDeviceCreateError, scopedDeviceCreateResult) {
+        registry.create(scopedDevice, function (scopedDeviceCreateError, scopedDeviceCreateResult) {
           if (scopedDeviceCreateError) {
-            registry.delete(edgeCreateResult.deviceId, function() {
+            registry.delete(edgeCreateResult.deviceId, function () {
               done(scopedDeviceCreateError);
             });
           } else {
             debug('Created scoped device: ', scopedDeviceCreateResult.deviceId);
             assert.equal(scopedDeviceCreateResult.deviceScope, scopedDevice.deviceScope, 'Created scoped device does not contain correct scope.');
             scopedDeviceCreateResult.deviceScope = uuid.v4();
-            registry.update(scopedDeviceCreateResult, function(updateErr) {
+            registry.update(scopedDeviceCreateResult, function (updateErr) {
               assert(updateErr, 'Scoped device was incorrectly allowed to update its scope property.');
               registry.delete(edgeCreateResult.deviceId, function (edgeDeleteError) {
                 registry.delete(scopedDeviceCreateResult.deviceId, function (scopedDeleteError) {
@@ -292,9 +293,9 @@ describe('Registry', function () {
   });
 
   it('Can create nested Edge devices', function (done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
-    var rootEdgeDevice = {
+    let rootEdgeDevice = {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
@@ -308,7 +309,7 @@ describe('Registry', function () {
       }
     };
 
-    var childEdgeDevice = {
+    let childEdgeDevice = {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
@@ -322,7 +323,7 @@ describe('Registry', function () {
       }
     };
 
-    var leafDevice = {
+    let leafDevice = {
       deviceId: 'delete-me-' + uuid.v4(),
       authentication: {
         symmetricKey: {
@@ -333,7 +334,7 @@ describe('Registry', function () {
       status: "enabled"
     };
 
-    registry.create(rootEdgeDevice, function(rootEdgeDeviceCreateError, rootEdgeDeviceCreateResult) {
+    registry.create(rootEdgeDevice, function (rootEdgeDeviceCreateError, rootEdgeDeviceCreateResult) {
       if (rootEdgeDeviceCreateError) {
         done(rootEdgeDeviceCreateError);
       } else {
@@ -341,9 +342,9 @@ describe('Registry', function () {
         assert(rootEdgeDeviceCreateResult.capabilities.iotEdge, 'Created root edge device does not contain correct capabilities.');
         assert(rootEdgeDeviceCreateResult.deviceScope, 'Created root edge device does not contain a scope value.');
         childEdgeDevice.parentScopes = [rootEdgeDeviceCreateResult.deviceScope];
-        registry.create(childEdgeDevice, function(childEdgeDeviceCreateError, childEdgeDeviceCreateResult) {
+        registry.create(childEdgeDevice, function (childEdgeDeviceCreateError, childEdgeDeviceCreateResult) {
           if (childEdgeDeviceCreateError) {
-            registry.delete(rootEdgeDeviceCreateResult.deviceId, function() {
+            registry.delete(rootEdgeDeviceCreateResult.deviceId, function () {
               done(childEdgeDeviceCreateError);
             });
           } else {
@@ -353,10 +354,10 @@ describe('Registry', function () {
             assert.equal(childEdgeDeviceCreateResult.parentScopes[0], childEdgeDevice.parentScopes[0], 'Created child edge device does not contain correct parentScopes.');
             leafDevice.deviceScope = childEdgeDeviceCreateResult.deviceScope;
             leafDevice.parentScopes = [childEdgeDeviceCreateResult.deviceScope];
-            registry.create(leafDevice, function(leafDeviceCreateError, leafDeviceCreateResult) {
+            registry.create(leafDevice, function (leafDeviceCreateError, leafDeviceCreateResult) {
               if (leafDeviceCreateError) {
-                registry.delete(childEdgeDeviceCreateResult.deviceId, function() {
-                  registry.delete(rootEdgeDeviceCreateResult.deviceId, function() {
+                registry.delete(childEdgeDeviceCreateResult.deviceId, function () {
+                  registry.delete(rootEdgeDeviceCreateResult.deviceId, function () {
                     done(childEdgeDeviceCreateError);
                   });
                 });
@@ -364,9 +365,9 @@ describe('Registry', function () {
                 debug('Created leaf device: ', leafDeviceCreateResult.deviceId);
                 assert.equal(leafDeviceCreateResult.parentScopes[0], leafDevice.parentScopes[0], 'Created leaf device does not contain correct parentScopes.');
                 assert.equal(leafDeviceCreateResult.deviceScope, leafDevice.deviceScope, 'Created leaf device does not contain correct scope.');
-                registry.delete(leafDeviceCreateResult.deviceId, function(leafDeviceDeleteError) {
-                  registry.delete(childEdgeDeviceCreateResult.deviceId, function(childEdgeDeviceDeleteError) {
-                    registry.delete(rootEdgeDeviceCreateResult.deviceId, function(rootEdgeDeleteError) {
+                registry.delete(leafDeviceCreateResult.deviceId, function (leafDeviceDeleteError) {
+                  registry.delete(childEdgeDeviceCreateResult.deviceId, function (childEdgeDeviceDeleteError) {
+                    registry.delete(rootEdgeDeviceCreateResult.deviceId, function (rootEdgeDeleteError) {
                       done(leafDeviceDeleteError || childEdgeDeviceDeleteError || rootEdgeDeleteError);
                     });
                   });
@@ -379,23 +380,26 @@ describe('Registry', function () {
     });
   });
 
-  it.skip('Imports then exports devices', function(done) {
+  // eslint-disable-next-line mocha/no-skipped-tests
+  it.skip('Imports then exports devices', function (done) {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 
-    var testDeviceCount = 10;
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    var blobSvc = azureStorage.createBlobService(storageConnectionString);
+    let testDeviceCount = 10;
+    let registry = Registry.fromConnectionString(hubConnectionString);
+    let blobSvc = azureStorage.createBlobService(storageConnectionString);
 
-    var inputContainerName = 'nodee2e-import-' + uuid.v4();
-    var outputContainerName = 'nodee2e-export-' + uuid.v4();
-    var deviceFile = 'devices.txt';
+    let inputContainerName = 'nodee2e-import-' + uuid.v4();
+    let outputContainerName = 'nodee2e-export-' + uuid.v4();
+    let deviceFile = 'devices.txt';
 
-    var inputBlobSasUrl, outputBlobSasUrl;
-    var devicesToImport = [];
+    let inputBlobSasUrl;
+    let outputBlobSasUrl;
+    let devicesToImport = [];
 
-    for (var i = 0; i < testDeviceCount; i++) {
-      var deviceId = 'nodee2e-' + uuid.v4();
-      var device = {
+    for (let i = 0; i < testDeviceCount; i++) {
+      let deviceId = 'nodee2e-' + uuid.v4();
+      let device = {
         id: deviceId,
         authentication: {
           symmetricKey: {
@@ -410,7 +414,7 @@ describe('Registry', function () {
     }
 
 
-    var devicesText = '';
+    let devicesText = '';
     devicesToImport.forEach(function (device) {
       device.importMode = 'createOrUpdate';
       devicesText += JSON.stringify(device) + '\r\n';
@@ -418,19 +422,19 @@ describe('Registry', function () {
 
     debug('Devices to import: ' + devicesText);
 
-    var createContainers = function() {
-      return new Promise(function(resolve, reject) {
+    let createContainers = function () {
+      return new Promise(function (resolve, reject) {
         debug('Create input container');
         blobSvc.createContainerIfNotExists(inputContainerName, function (err) {
           if(err) {
             reject(new Error('Could not create input container: ' + err.message));
           } else {
-            var startDate = new Date();
-            var expiryDate = new Date(startDate);
+            let startDate = new Date();
+            let expiryDate = new Date(startDate);
             expiryDate.setMinutes(startDate.getMinutes() + 100);
             startDate.setMinutes(startDate.getMinutes() - 100);
 
-            var inputSharedAccessPolicy = {
+            let inputSharedAccessPolicy = {
               AccessPolicy: {
                 Permissions: 'rl',
                 Start: startDate,
@@ -438,7 +442,7 @@ describe('Registry', function () {
               },
             };
 
-            var outputSharedAccessPolicy = {
+            let outputSharedAccessPolicy = {
               AccessPolicy: {
                 Permissions: 'rwd',
                 Start: startDate,
@@ -446,14 +450,14 @@ describe('Registry', function () {
               },
             };
 
-            var inputSasToken = blobSvc.generateSharedAccessSignature(inputContainerName, null, inputSharedAccessPolicy);
+            let inputSasToken = blobSvc.generateSharedAccessSignature(inputContainerName, null, inputSharedAccessPolicy);
             inputBlobSasUrl = blobSvc.getUrl(inputContainerName, null, inputSasToken);
             debug('Create output container');
             blobSvc.createContainerIfNotExists(outputContainerName, function (err) {
               if (err) {
                   reject(new Error('Could not create output container: ' + err.message));
               } else {
-                  var outputSasToken = blobSvc.generateSharedAccessSignature(outputContainerName, null, outputSharedAccessPolicy);
+                  let outputSasToken = blobSvc.generateSharedAccessSignature(outputContainerName, null, outputSharedAccessPolicy);
                   outputBlobSasUrl = blobSvc.getUrl(outputContainerName, null, outputSasToken);
                   resolve();
               }
@@ -463,9 +467,9 @@ describe('Registry', function () {
       });
     };
 
-    var deleteContainers = function() {
+    let deleteContainers = function () {
       return new Promise(function (resolve, reject) {
-        var blobSvc = azureStorage.createBlobService(storageConnectionString);
+        let blobSvc = azureStorage.createBlobService(storageConnectionString);
         debug('Delete input container');
         blobSvc.deleteContainer(inputContainerName, function (err) {
           if(err) {
@@ -484,32 +488,32 @@ describe('Registry', function () {
       });
     };
 
-    var verifyDeviceProperties = function (importedDevice, exportedDevice) {
+    let verifyDeviceProperties = function (importedDevice, exportedDevice) {
       return importedDevice.id === exportedDevice.id &&
               importedDevice.authentication.symmetricKey.primaryKey === exportedDevice.authentication.symmetricKey.primaryKey &&
               importedDevice.authentication.symmetricKey.secondaryKey === exportedDevice.authentication.symmetricKey.secondaryKey &&
               importedDevice.status === exportedDevice.status;
     };
 
-    var verifyOutputBlob = function() {
+    let verifyOutputBlob = function () {
       return new Promise(function (resolve, reject){
         debug('Verifying export blob');
-        blobSvc.getBlobToText(outputContainerName, deviceFile, function(err, result) {
+        blobSvc.getBlobToText(outputContainerName, deviceFile, function (err, result) {
           if(err) {
             reject(new Error('Could not get export blob: ' + err.message));
           } else {
-            var devicesTextTable = result.split('\r\n');
-            var exportedDevices = [];
-            for (var i = 0; i < devicesTextTable.length; i++) {
+            let devicesTextTable = result.split('\r\n');
+            let exportedDevices = [];
+            for (let i = 0; i < devicesTextTable.length; i++) {
               debug('[' + i + '] ' + devicesTextTable[i]);
               if (devicesTextTable[i].trim()) {
                   exportedDevices.push(JSON.parse(devicesTextTable[i]));
               }
             }
 
-            for (i = 0; i < devicesToImport.length; i++) {
-              var deviceFound = false;
-              for (var j = 0; j < exportedDevices.length; j++) {
+            for (let i = 0; i < devicesToImport.length; i++) {
+              let deviceFound = false;
+              for (let j = 0; j < exportedDevices.length; j++) {
                 if (verifyDeviceProperties(devicesToImport[i], exportedDevices[j])) {
                   deviceFound = true;
                   debug('Found device: ' + devicesToImport[i].id);
@@ -528,7 +532,7 @@ describe('Registry', function () {
       });
     };
 
-    var runExportJob = function() {
+    let runExportJob = function () {
       return new Promise(function (resolve, reject){
         debug('Starting export job');
         registry.exportDevicesToBlob(outputBlobSasUrl, false, function (err, result) {
@@ -536,14 +540,14 @@ describe('Registry', function () {
             reject(new Error('Could not create export job: ' + err.message));
           } else {
             debug('Export job created');
-            var exportJobId = result.jobId;
-            var jobFinished = false;
-            var exportInterval = setInterval(function() {
+            let exportJobId = result.jobId;
+            let jobFinished = false;
+            const exportInterval = setInterval(function () {
               registry.getJob(exportJobId, function (err, result) {
                 if (err) {
                   reject(new Error('Could not get export job status: ' + err.message));
                 } else {
-                  var status = result.status;
+                  let status = result.status;
                   if (status === "completed" && !jobFinished) {
                     jobFinished = true;
                     debug('Export job completed');
@@ -558,7 +562,7 @@ describe('Registry', function () {
       });
     };
 
-    var runImportJob = function(devicesText) {
+    let runImportJob = function (devicesText) {
       return new Promise(function (resolve, reject){
         blobSvc.createBlockBlobFromText(inputContainerName, deviceFile, devicesText, function (err) {
           if(err) {
@@ -569,14 +573,14 @@ describe('Registry', function () {
               if(err) {
                 reject(new Error('Could not create import job: ' + err.message));
               } else {
-                var importJobId = result.jobId;
-                var jobFinished = false;
-                var importInterval = setInterval(function () {
+                let importJobId = result.jobId;
+                let jobFinished = false;
+                const importInterval = setInterval(function () {
                   registry.getJob(importJobId, function (err, result) {
                     if (err) {
                       reject(new Error('Could not get import job status: ' + err.message));
                     } else {
-                      var status = result.status;
+                      let status = result.status;
                       if (status === "completed" && !jobFinished) {
                         jobFinished = true;
                         debug('Import job completed');
@@ -593,10 +597,10 @@ describe('Registry', function () {
       });
     };
 
-    var deleteTestDevices = function() {
+    let deleteTestDevices = function () {
       return new Promise(function (resolve, reject){
         debug('Cleaning devices');
-        var devicesText = '';
+        let devicesText = '';
         devicesToImport.forEach(function (device) {
           device.importMode = 'delete';
           devicesText += JSON.stringify(device) + '\r\n';
@@ -609,20 +613,20 @@ describe('Registry', function () {
     };
 
     createContainers()
-    .then(function() { return runImportJob(devicesText); })
+    .then(function () { return runImportJob(devicesText); })
     .then(runExportJob)
     .then(verifyOutputBlob)
     .then(deleteTestDevices)
     .then(deleteContainers)
-    .then(function() { done(); })
-    .catch(function(err) { done(err); });
+    .then(function () { done(); })
+    .catch(function (err) { done(err); });
   });
 
   it('bulk Identity add/update/remove', function (done) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
+    let registry = Registry.fromConnectionString(hubConnectionString);
 
     // Specify the new devices.
-    var deviceAddArray = [
+    let deviceAddArray = [
       {
         deviceId: '0000e2e-node-registry-identity-j-delete-me' + uuid.v4(),
         status: 'disabled',
@@ -655,7 +659,7 @@ describe('Registry', function () {
       }
     ];
 
-    var deviceUpdateArray = [
+    let deviceUpdateArray = [
       {
         deviceId: deviceAddArray[0].deviceId,
         status: 'enabled'
@@ -670,7 +674,7 @@ describe('Registry', function () {
       }
     ];
 
-    var deviceRemoveArray = [
+    let deviceRemoveArray = [
       {
         deviceId: deviceAddArray[0].deviceId
       },

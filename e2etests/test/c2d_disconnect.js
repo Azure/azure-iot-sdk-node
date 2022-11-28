@@ -3,30 +3,30 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var debug = require('debug')('e2etests:c2ddisconnect');
-var uuid = require('uuid');
-var deviceAmqp = require('azure-iot-device-amqp');
-var deviceMqtt = require('azure-iot-device-mqtt');
+const assert = require('chai').assert;
+const debug = require('debug')('e2etests:c2ddisconnect');
+const uuid = require('uuid');
+const deviceAmqp = require('azure-iot-device-amqp');
+const deviceMqtt = require('azure-iot-device-mqtt');
 
 
-var serviceSdk = require('azure-iothub');
-var Message = require('azure-iot-common').Message;
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
-var NoRetry = require('azure-iot-common').NoRetry;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
+const serviceSdk = require('azure-iothub');
+const Message = require('azure-iot-common').Message;
+const createDeviceClient = require('./testUtils.js').createDeviceClient;
+const closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+const NoRetry = require('azure-iot-common').NoRetry;
+const DeviceIdentityHelper = require('./device_identity_helper.js');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var numberOfC2DMessages = 3;
-var sendMessageTimeout = null;
+const numberOfC2DMessages = 3;
+let sendMessageTimeout = null;
 
-var doConnectTest = function doConnectTest(doIt) {
+const doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
 };
 
-var protocolAndTermination = [
+const protocolAndTermination = [
   {
     testEnabled: true,
     transport: deviceAmqp.Amqp,
@@ -110,11 +110,13 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/service clients - disconnect c2d', function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
 
-    var serviceClient, deviceClient;
+    let serviceClient;
+    let deviceClient;
 
-    var provisionedDevice;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       debug('creating test device...');
@@ -164,12 +166,11 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service sends a C2D message, device receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub client', function (testCallback) {
-      var receivingSideDone = false;
-      var sendingSideDone = false;
-      var uuidData = uuid.v4();
-      var originalMessage = new Message(uuidData);
+      let receivingSideDone = false;
+      const uuidData = uuid.v4();
+      const originalMessage = new Message(uuidData);
       deviceClient.setRetryPolicy(new NoRetry());
-      var disconnectHandler = function () {
+      const disconnectHandler = function () {
         debug('We did get a disconnect message');
         deviceClient.removeListener('disconnect', disconnectHandler);
         if (receivingSideDone) {
@@ -182,6 +183,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       originalMessage.messageId = uuidData;
       originalMessage.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (openErr) {
         debug('device has opened.');
         if (openErr) {
@@ -199,7 +201,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
                 if (receivedMessage.messageId === originalMessage.messageId) {
                   debug('we found the sent message');
                   receivingSideDone = true;
-                  var terminateMessage = new Message('');
+                  const terminateMessage = new Message('');
                   terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                   terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                   terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -213,6 +215,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
 
           });
           debug('about to open the service client');
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           serviceClient.open(function (serviceErr) {
             debug('At service client open callback - error is:' + serviceErr);
             if (serviceErr) {
@@ -222,8 +225,6 @@ protocolAndTermination.forEach( function (testConfiguration) {
                 debug('At service client send callback - error is: ' + sendErr);
                 if (sendErr) {
                   testCallback(sendErr);
-                } else {
-                  sendingSideDone = true;
                 }
               });
             }
@@ -233,10 +234,10 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('Service sends ' + numberOfC2DMessages + ' C2D messages, device receives first and' + testConfiguration.closeReason + 'which is never seen by the iot hub client', function (testCallback) {
-      var originalMessages = {};
-      var faultInjected = false;
-      for (var i = 0; i < numberOfC2DMessages; i++) {
-        var uuidData = uuid.v4();
+      let originalMessages = {};
+      let faultInjected = false;
+      for (let i = 0; i < numberOfC2DMessages; i++) {
+        const uuidData = uuid.v4();
         originalMessages[uuidData] = {
           message: new Message(uuidData),
           sent: false,
@@ -246,9 +247,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
         originalMessages[uuidData].message.expiryTimeUtc = Date.now() + 60000;
       }
 
-      var allDone = function () {
-        for (var messageId in originalMessages) {
-          if (originalMessages.hasOwnProperty(messageId)) {
+      const allDone = function () {
+        for (const messageId in originalMessages) {
+          if (Object.prototype.hasOwnProperty.call(originalMessages, messageId)) {
             debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
             if (!originalMessages[messageId].sent || !originalMessages[messageId].received) {
               return false;
@@ -259,7 +260,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         return true;
       };
 
-      var sendMessage = function (messageId) {
+      const sendMessage = function (messageId) {
         serviceClient.send(provisionedDevice.deviceId, originalMessages[messageId].message, function (sendErr) {
           if (sendErr) {
             debug('service client: failed to send message with id: ' + messageId + ': ' + sendErr.toString());
@@ -277,8 +278,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
         });
       };
 
-      var sendNextMessage = function() {
-        for (var messageId in originalMessages) {
+      const sendNextMessage = function () {
+        for (const messageId in originalMessages) {
           if (originalMessages[messageId].sent) {
             continue;
           } else {
@@ -290,6 +291,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       };
 
       debug('connecting device client...');
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (openErr) {
         if (openErr) {
           debug('error connecting device client: ' + openErr.toString());
@@ -319,7 +321,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
                   originalMessages[receivedMessage.messageId].received = true;
 
                   if (!faultInjected) {
-                    var terminateMessage = new Message('');
+                    const terminateMessage = new Message('');
                     terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                     terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                     terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -344,6 +346,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             });
           });
           debug('service client: connecting...');
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           serviceClient.open(function (serviceErr) {
             if (serviceErr) {
               debug('service client: Failed to connect:' + serviceErr.toString());

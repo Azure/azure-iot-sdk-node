@@ -3,30 +3,30 @@
 
 'use strict';
 
-var debug = require('debug')('e2etests:d2cdisconnect');
-var uuid = require('uuid');
-var uuidBuffer = require('uuid-buffer');
-var deviceAmqp = require('azure-iot-device-amqp');
-var deviceMqtt = require('azure-iot-device-mqtt');
-var Message = require('azure-iot-common').Message;
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-var eventHubClient = require('@azure/event-hubs').EventHubClient;
-var EventPosition = require('@azure/event-hubs').EventPosition;
-var NoRetry = require('azure-iot-common').NoRetry;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
-var Rendezvous = require('./rendezvous_helper.js').Rendezvous;
+let debug = require('debug')('e2etests:d2cdisconnect');
+let uuid = require('uuid');
+let uuidBuffer = require('uuid-buffer');
+let deviceAmqp = require('azure-iot-device-amqp');
+let deviceMqtt = require('azure-iot-device-mqtt');
+let Message = require('azure-iot-common').Message;
+let createDeviceClient = require('./testUtils.js').createDeviceClient;
+let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
+let eventHubClient = require('@azure/event-hubs').EventHubClient;
+let EventPosition = require('@azure/event-hubs').EventPosition;
+let NoRetry = require('azure-iot-common').NoRetry;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
+let Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var doConnectTest = function doConnectTest(doIt) {
+let doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
 };
 
-var numberOfD2CMessages = 3;
-var sendMessageTimeout = null;
+let numberOfD2CMessages = 3;
+let sendMessageTimeout = null;
 
-var protocolAndTermination = [
+let protocolAndTermination = [
   {
     testEnabled: true,
     transport: deviceAmqp.Amqp,
@@ -109,8 +109,11 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect d2c', function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
-    var deviceClient, ehClient, provisionedDevice;
+    let deviceClient;
+    let ehClient;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
@@ -138,14 +141,14 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('device sends a message, event hub client receives it, and' + testConfiguration.closeReason + 'which is noted by the iot hub device client', function (testCallback) {
-      var rdv = new Rendezvous(testCallback);
-      var testStart = Date.now() - 5000;
-      var uuidData = uuid.v4();
-      var originalMessage = new Message(uuidData);
-      var messageReceived = false;
+      let rdv = new Rendezvous(testCallback);
+      let testStart = Date.now() - 5000;
+      let uuidData = uuid.v4();
+      let originalMessage = new Message(uuidData);
+      let messageReceived = false;
       originalMessage.messageId = uuidData;
 
-      var disconnectHandler = function () {
+      const disconnectHandler = function () {
         debug('device client: disconnected');
         deviceClient.removeListener('disconnect', disconnectHandler);
         if (messageReceived) {
@@ -154,20 +157,20 @@ protocolAndTermination.forEach( function (testConfiguration) {
           testCallback(new Error('device client: disconnected but the original message was not received.'));
         }
       };
-      var onEventHubError = function(err) {
+      let onEventHubError = function (err) {
         debug('eventhubs client: error: ' + err.toString());
         testCallback(err);
       };
-      var onEventHubMessage = function (eventData) {
+      let onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
-          var received_message_uuid = eventData.properties && eventData.properties.message_id && uuidBuffer.toString(eventData.properties.message_id);
+          let received_message_uuid = eventData.properties && eventData.properties.message_id && uuidBuffer.toString(eventData.properties.message_id);
           if (received_message_uuid && received_message_uuid === originalMessage.messageId) {
             rdv.imDone('ehClient');
             debug('eventhubs client: received the sent message');
             debug('device client: send the fault packet');
             messageReceived = true;
-            var terminateMessage = new Message('');
+            let terminateMessage = new Message('');
             terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
             terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
             terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -204,6 +207,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         });
       }).then(function () {
         debug('device client: connecting...');
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (openErr) {
           if (openErr) {
             debug('device client: error connecting: ' + openErr.toString());
@@ -228,11 +232,11 @@ protocolAndTermination.forEach( function (testConfiguration) {
     });
 
     doConnectTest(testConfiguration.testEnabled)('device sends ' + numberOfD2CMessages + ' messages, when event hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
-      var rdv = new Rendezvous(testCallback);
-      var originalMessages = {};
-      var faultInjected = false;
-      for (var i = 0; i < numberOfD2CMessages; i++) {
-        var uuidData = uuid.v4();
+      let rdv = new Rendezvous(testCallback);
+      let originalMessages = {};
+      let faultInjected = false;
+      for (let i = 0; i < numberOfD2CMessages; i++) {
+        let uuidData = uuid.v4();
         originalMessages[uuidData] = {
           message: new Message(uuidData),
           sent: false,
@@ -240,9 +244,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
         };
       }
 
-      var allMessagesSent = function () {
-        for (var messageId in originalMessages) {
-          if (originalMessages.hasOwnProperty(messageId)) {
+      let allMessagesSent = function () {
+        for (let messageId in originalMessages) {
+          if (Object.prototype.hasOwnProperty.call(originalMessages, messageId)) {
             debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
             if (!originalMessages[messageId].sent) {
               return false;
@@ -253,9 +257,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
         return true;
       };
 
-      var allMessagesReceived = function () {
-        for (var messageId in originalMessages) {
-          if (originalMessages.hasOwnProperty(messageId)) {
+      let allMessagesReceived = function () {
+        for (let messageId in originalMessages) {
+          if (Object.prototype.hasOwnProperty.call(originalMessages, messageId)) {
             debug('message ' + messageId + ': sent: ' + originalMessages[messageId].sent + '; received: ' + originalMessages[messageId].received);
             if (!originalMessages[messageId].received) {
               return false;
@@ -266,7 +270,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         return true;
       };
 
-      var sendMessage = function (messageId) {
+      let sendMessage = function (messageId) {
         debug('device client: sending ' + messageId);
         deviceClient.sendEvent(originalMessages[messageId].message, function (sendErr) {
           if (sendErr) {
@@ -285,8 +289,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
         });
       };
 
-      var sendNextMessage = function() {
-        for (var messageId in originalMessages) {
+      let sendNextMessage = function () {
+        for (let messageId in originalMessages) {
           if (originalMessages[messageId].sent) {
             continue;
           } else {
@@ -297,25 +301,25 @@ protocolAndTermination.forEach( function (testConfiguration) {
         debug('device client: all messages seem to have been sent');
       };
 
-      var startAfterTime = Date.now() - 5000;
+      let startAfterTime = Date.now() - 5000;
       debug('starting to listen to messages received since: ' + new Date(startAfterTime).toISOString());
 
-      var onEventHubError = function(err) {
+      let onEventHubError = function (err) {
         debug('eventhubs client: error: ' + err.toString());
         testCallback(err);
       };
 
-      var onEventHubMessage = function (eventData) {
+      let onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
-          var receivedMessageId = eventData.body.toString();
+          let receivedMessageId = eventData.body.toString();
           if (originalMessages[receivedMessageId]) {
             debug('eventhubs client: It was one of the messages we sent: ' + receivedMessageId);
             originalMessages[receivedMessageId].received = true;
             if (!faultInjected) {
               debug('eventhubs client: Fault has not been injected yet.');
               debug('device client: injecting fault now...');
-              var terminateMessage = new Message('');
+              let terminateMessage = new Message('');
               terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
               terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
               terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -362,6 +366,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         });
       }).then(function () {
         debug('device client: connecting...');
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (openErr) {
           if (openErr) {
             debug('device client: error: ' + openErr.toString());

@@ -2,15 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var deviceSdk = require('azure-iot-device');
+let deviceSdk = require('azure-iot-device');
 
 function createDeviceClient(deviceTransport, provisionedDevice) {
-  var deviceClient;
-  if (provisionedDevice.hasOwnProperty('primaryKey')) {
+  let deviceClient;
+  if (Object.prototype.hasOwnProperty.call(provisionedDevice, 'primaryKey')) {
     deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport);
-  } else if (provisionedDevice.hasOwnProperty('certificate')) {
+  } else if (Object.prototype.hasOwnProperty.call(provisionedDevice, 'certificate')) {
     deviceClient = deviceSdk.Client.fromConnectionString(provisionedDevice.connectionString, deviceTransport);
-    var options = {
+    let options = {
       cert: provisionedDevice.certificate,
       key: provisionedDevice.clientKey,
     };
@@ -27,8 +27,8 @@ function createDeviceClient(deviceTransport, provisionedDevice) {
 }
 
 function closeDeviceServiceClients(deviceClient, serviceClient, done) {
-  var serviceErr = null;
-  var deviceErr = null;
+  let serviceErr = null;
+  let deviceErr = null;
   serviceClient.close(function (err) {
     serviceErr = err || deviceErr;
     serviceClient = null;
@@ -46,8 +46,8 @@ function closeDeviceServiceClients(deviceClient, serviceClient, done) {
 }
 
 function closeDeviceEventHubClients(deviceClient, eventHubClient, done) {
-  var eventHubErr = null;
-  var deviceErr = null;
+  let eventHubErr = null;
+  let deviceErr = null;
 
   if (!deviceClient && !eventHubClient) {
     done();
@@ -81,12 +81,12 @@ function closeDeviceEventHubClients(deviceClient, eventHubClient, done) {
 }
 
 function getErrorDetailString(functionName, err) {
-  var detail = functionName + ' returned ' + (err ? err : 'success');
+  let detail = functionName + ' returned ' + (err ? err : 'success');
   if (err && err.responseBody) {
     if (err.response && err.response.headers) {
       if (err.response.headers['content-type'].indexOf('json') !== -1) {
         detail += '\n';
-        var body = JSON.parse(err.responseBody);
+        let body = JSON.parse(err.responseBody);
         delete body.StackTrace;
         detail += JSON.stringify(body, null, ' ');
       }

@@ -3,28 +3,26 @@
 
 'use strict';
 
-var debug = require('debug')('e2etests:methoddisconnect');
-var uuid = require('uuid');
-var assert = require('chai').assert;
+let debug = require('debug')('e2etests:methoddisconnect');
+let uuid = require('uuid');
+let assert = require('chai').assert;
 
-var deviceAmqp = require('azure-iot-device-amqp');
-var deviceMqtt = require('azure-iot-device-mqtt');
-var Message = require('azure-iot-common').Message;
-var NoRetry = require('azure-iot-common').NoRetry;
+let deviceAmqp = require('azure-iot-device-amqp');
+let deviceMqtt = require('azure-iot-device-mqtt');
+let Message = require('azure-iot-common').Message;
+let NoRetry = require('azure-iot-common').NoRetry;
+let serviceSdk = require('azure-iothub');
+let createDeviceClient = require('./testUtils.js').createDeviceClient;
+let closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
 
-var serviceSdk = require('azure-iothub');
-var Message = require('azure-iot-common').Message;
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-
-var doConnectTest = function doConnectTest(doIt) {
+let doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
 };
 
-var protocolAndTermination = [
+let protocolAndTermination = [
   {
     testEnabled: true,
     transport: deviceAmqp.Amqp,
@@ -114,11 +112,13 @@ var protocolAndTermination = [
 
 protocolAndTermination.forEach( function (testConfiguration) {
   describe(testConfiguration.transport.name + ' using device/eventhub clients - disconnect methods', function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
 
-    var deviceClient, serviceClient;
-    var secondMethodTimeout;
-    var provisionedDevice;
+    let deviceClient;
+    let serviceClient;
+    let secondMethodTimeout;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
@@ -142,14 +142,14 @@ protocolAndTermination.forEach( function (testConfiguration) {
       if (secondMethodTimeout) clearTimeout(secondMethodTimeout);
     });
 
-    var methodName1 = 'method1';
-    var methodName2 = 'method2';
-    var methodResult = 200;
+    let methodName1 = 'method1';
+    let methodName2 = 'method2';
+    let methodResult = 200;
 
-    var setMethodHandler = function(methodName, testPayload) {
+    let setMethodHandler = function (methodName, testPayload) {
       debug('Setting up new method handler for: ' + methodName);
       // setup device to handle the method call
-      deviceClient.onDeviceMethod(methodName, function(request, response) {
+      deviceClient.onDeviceMethod(methodName, function (request, response) {
         // validate request
         assert.isNotNull(request);
         assert.strictEqual(request.methodName, methodName);
@@ -160,9 +160,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
         assert.isNotNull(response);
 
         // send the response
-        response.send(methodResult, testPayload, function(err) {
+        response.send(methodResult, testPayload, function (err) {
           debug('send method response with statusCode: ' + methodResult);
-          if(!!err) {
+          if(err) {
             console.error('An error ocurred when sending a method response:\n' +
                 err.toString());
           }
@@ -170,8 +170,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
       });
     };
 
-    var sendMethodCall = function(serviceClient, methodName, testPayload, sendMethodCallback) {
-        var methodParams = {
+    let sendMethodCall = function (serviceClient, methodName, testPayload, sendMethodCallback) {
+        let methodParams = {
           methodName: methodName,
           payload: testPayload,
           connectTimeoutInSeconds: 10,
@@ -182,7 +182,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
         serviceClient.invokeDeviceMethod(
           provisionedDevice.deviceId,
           methodParams,
-          function(err, result) {
+          function (err, result) {
             if(!err) {
               debug('got method results');
               debug(JSON.stringify(result, null, 2));
@@ -195,9 +195,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
     };
 
     doConnectTest(testConfiguration.testEnabled)('Service sends a method, iothub client receives it, and' + testConfiguration.closeReason + 'which is noted by the device', function (testCallback) {
-      var firstMethodSent = false;
+      let firstMethodSent = false;
       deviceClient.setRetryPolicy(new NoRetry());
-      var disconnectHandler = function () {
+      const disconnectHandler = function () {
         debug('We did get a disconnect message');
         deviceClient.removeListener('disconnect', disconnectHandler);
         if (firstMethodSent) {
@@ -207,7 +207,8 @@ protocolAndTermination.forEach( function (testConfiguration) {
         }
       };
       deviceClient.on('disconnect', disconnectHandler);
-      var firstPayload = { k1: uuid.v4() };
+      let firstPayload = { k1: uuid.v4() };
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (err) {
         if (err) {
           debug('error connecting the device client: ' + err.toString());
@@ -217,11 +218,11 @@ protocolAndTermination.forEach( function (testConfiguration) {
           setMethodHandler(methodName1, firstPayload);
           debug('waiting 2 seconds before invoking ' + methodName1);
           setTimeout(function () {
-            sendMethodCall(serviceClient, methodName1, firstPayload, function(err) {
+            sendMethodCall(serviceClient, methodName1, firstPayload, function (err) {
               if (!err) {
                 debug('got result from first method invocation.  Having the client inject the fault');
                 firstMethodSent = true;
-                var terminateMessage = new Message('');
+                let terminateMessage = new Message('');
                 terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                 terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                 terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -245,16 +246,17 @@ protocolAndTermination.forEach( function (testConfiguration) {
       deviceClient.on('disconnect', function () {
         testCallback(new Error('unexpected disconnect'));
       });
-      var secondMethodSend = function() {
+      let secondMethodSend = function () {
         debug('invoking ' + methodName2);
-        sendMethodCall(serviceClient, methodName2, payload2, function(err) {
+        sendMethodCall(serviceClient, methodName2, payload2, function (err) {
           debug('got result from second method invocation.');
           testCallback(err);
         });
       };
-      var payload1 = { k1: uuid.v4() };
-      var payload2 = { k1: uuid.v4() };
+      let payload1 = { k1: uuid.v4() };
+      let payload2 = { k1: uuid.v4() };
       debug('connecting device client');
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (err) {
         if (err) {
           debug('error when opening the device client: ' + err.toString());
@@ -266,10 +268,10 @@ protocolAndTermination.forEach( function (testConfiguration) {
           debug('waiting 5 seconds for subscription before calling first method');
           setTimeout(function () {
             debug('calling method1');
-            sendMethodCall(serviceClient, methodName1, payload1, function(err) {
+            sendMethodCall(serviceClient, methodName1, payload1, function (err) {
               if (!err) {
                 debug('got result from first method invocation.  Having the client send the kill');
-                var terminateMessage = new Message('');
+                let terminateMessage = new Message('');
                 terminateMessage.properties.add('AzIoTHub_FaultOperationType', testConfiguration.operationType);
                 terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', testConfiguration.closeReason);
                 terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', testConfiguration.delayInSeconds);
@@ -278,8 +280,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
                   if (sendErr) {
                     debug('received an error while injecting the fault: ' + sendErr.toString());
                   }
-                  var delayBeforeSecondMethod = (testConfiguration.delayInSeconds + 5) * 1000;
+                  let delayBeforeSecondMethod = (testConfiguration.delayInSeconds + 5) * 1000;
                   debug('waiting ' + delayBeforeSecondMethod + ' milliseconds before invoking: ' + methodName2);
+                  // eslint-disable-next-line no-invalid-this
                   secondMethodTimeout = setTimeout(secondMethodSend.bind(this), delayBeforeSecondMethod);
                 });
               } else {

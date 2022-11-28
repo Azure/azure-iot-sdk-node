@@ -3,36 +3,37 @@
 
 'use strict';
 
-var uuid = require('uuid');
-var pem  = require('pem');
+const uuid = require('uuid');
+const pem  = require('pem');
 
-var UnauthorizedError = require('azure-iot-common').errors.UnauthorizedError;
-var DeviceNotFoundError = require('azure-iot-common').errors.DeviceNotFoundError;
-var NotConnectedError = require('azure-iot-common').errors.NotConnectedError;
-var Message = require('azure-iot-common').Message;
-var Registry = require('azure-iothub').Registry;
-var ServiceConnectionString = require('azure-iothub').ConnectionString;
-var DeviceClient = require('azure-iot-device').Client;
-var DeviceConnectionString = require('azure-iot-device').ConnectionString;
-var DeviceSAS = require('azure-iot-device').SharedAccessSignature;
-var Amqp = require('azure-iot-device-amqp').Amqp;
-var AmqpWs = require('azure-iot-device-amqp').AmqpWs;
-var Mqtt = require('azure-iot-device-mqtt').Mqtt;
-var MqttWs = require('azure-iot-device-mqtt').MqttWs;
-var Http = require('azure-iot-device-http').Http;
+const UnauthorizedError = require('azure-iot-common').errors.UnauthorizedError;
+const DeviceNotFoundError = require('azure-iot-common').errors.DeviceNotFoundError;
+const NotConnectedError = require('azure-iot-common').errors.NotConnectedError;
+const Message = require('azure-iot-common').Message;
+const Registry = require('azure-iothub').Registry;
+const ServiceConnectionString = require('azure-iothub').ConnectionString;
+const DeviceClient = require('azure-iot-device').Client;
+const DeviceConnectionString = require('azure-iot-device').ConnectionString;
+const DeviceSAS = require('azure-iot-device').SharedAccessSignature;
+const Amqp = require('azure-iot-device-amqp').Amqp;
+const AmqpWs = require('azure-iot-device-amqp').AmqpWs;
+const Mqtt = require('azure-iot-device-mqtt').Mqtt;
+const MqttWs = require('azure-iot-device-mqtt').MqttWs;
+const Http = require('azure-iot-device-http').Http;
 
-var transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+const transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
+const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
-describe('Authentication', function() {
+describe('Authentication', function () {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
-  var hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
-  var testDeviceId = 'nodee2etestDeviceAuth-' + uuid.v4();
-  var testDeviceKey = '';
+  const hostName = ServiceConnectionString.parse(hubConnectionString).HostName;
+  const testDeviceId = 'nodee2etestDeviceAuth-' + uuid.v4();
+  let testDeviceKey = '';
 
-  before('Creates a test device', function(beforeCallback) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
-    registry.create({ deviceId: testDeviceId }, function(err, createdDevice) {
+  before('Creates a test device', function (beforeCallback) {
+    const registry = Registry.fromConnectionString(hubConnectionString);
+    registry.create({ deviceId: testDeviceId }, function (err, createdDevice) {
       if (err) {
         beforeCallback(err);
       } else {
@@ -42,19 +43,19 @@ describe('Authentication', function() {
     });
   });
 
-  after('Destroys the test device', function(afterCallback) {
-    var registry = Registry.fromConnectionString(hubConnectionString);
+  after('Destroys the test device', function (afterCallback) {
+    const registry = Registry.fromConnectionString(hubConnectionString);
     registry.delete(testDeviceId, afterCallback);
   });
 
-  describe('ConnectionString', function() {
+  describe('ConnectionString', function () {
     // running timer/resource left after these tests
     transports.forEach(function (Transport) {
-      it('Gets an UnauthorizedError over ' + Transport.name + ' if the primary key is invalid', function(testCallback) {
-        var invalidPrimaryKey = Buffer.from('invalidPrimaryKey').toString('base64');
-        var invalidConnectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, testDeviceId, invalidPrimaryKey);
-        var deviceClient = DeviceClient.fromConnectionString(invalidConnectionString, Transport);
-        deviceClient.sendEvent(new Message('testMessage'), function(err) {
+      it('Gets an UnauthorizedError over ' + Transport.name + ' if the primary key is invalid', function (testCallback) {
+        const invalidPrimaryKey = Buffer.from('invalidPrimaryKey').toString('base64');
+        const invalidConnectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, testDeviceId, invalidPrimaryKey);
+        const deviceClient = DeviceClient.fromConnectionString(invalidConnectionString, Transport);
+        deviceClient.sendEvent(new Message('testMessage'), function (err) {
           if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
             testCallback();
           } else {
@@ -65,13 +66,13 @@ describe('Authentication', function() {
     });
   });
 
-  describe('SharedAccessSignature', function() {
-    transports.forEach(function(Transport) {
-      it('Gets an UnauthorizedError over ' + Transport.name + ' if the SAS Token is expired', function(testCallback) {
-        var yesterday = Math.ceil((Date.now() / 1000) - 86400);
-        var expiredSASToken = DeviceSAS.create(hostName, testDeviceId, testDeviceKey, yesterday).toString();
-        var deviceClient = DeviceClient.fromSharedAccessSignature(expiredSASToken, Transport);
-        deviceClient.sendEvent(new Message('testMessage'), function(err) {
+  describe('SharedAccessSignature', function () {
+    transports.forEach(function (Transport) {
+      it('Gets an UnauthorizedError over ' + Transport.name + ' if the SAS Token is expired', function (testCallback) {
+        const yesterday = Math.ceil((Date.now() / 1000) - 86400);
+        const expiredSASToken = DeviceSAS.create(hostName, testDeviceId, testDeviceKey, yesterday).toString();
+        const deviceClient = DeviceClient.fromSharedAccessSignature(expiredSASToken, Transport);
+        deviceClient.sendEvent(new Message('testMessage'), function (err) {
           if(err instanceof UnauthorizedError || err instanceof NotConnectedError) {
             testCallback();
           } else {
@@ -82,20 +83,20 @@ describe('Authentication', function() {
     });
   });
 
-  describe('DeviceId', function() {
+  describe('DeviceId', function () {
     // running timer/resource left after these tests
-    transports.forEach(function(Transport) {
+    transports.forEach(function (Transport) {
       [{
         reason: 'improperly formed',
         id: testDeviceId + '//foo'
       },{
         reason: 'does not exist',
         id: testDeviceId + 'foo'
-      }].forEach(function(deviceIdConfig){
-        it('Gets an UnauthorizedError over ' + Transport.name + ' if the Device ID is ' + deviceIdConfig.reason, function(testCallback) {
-          var connectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, deviceIdConfig.id, testDeviceKey);
-          var deviceClient = DeviceClient.fromConnectionString(connectionString, Transport);
-          deviceClient.sendEvent(new Message('testMessage'), function(err) {
+      }].forEach(function (deviceIdConfig){
+        it('Gets an UnauthorizedError over ' + Transport.name + ' if the Device ID is ' + deviceIdConfig.reason, function (testCallback) {
+          const connectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, deviceIdConfig.id, testDeviceKey);
+          const deviceClient = DeviceClient.fromConnectionString(connectionString, Transport);
+          deviceClient.sendEvent(new Message('testMessage'), function (err) {
             if (err instanceof UnauthorizedError || err instanceof DeviceNotFoundError || err instanceof NotConnectedError) {
               // AMQP and MQTT translate to Unauthorized but HTTP to DeviceNotFound
               testCallback();
@@ -108,14 +109,12 @@ describe('Authentication', function() {
     });
   });
 
-  describe.only('X509', function() {
-    var x509testDeviceId = 'nodee2etestDeviceAuthx509-' + uuid.v4();
-    var x509goodCert = '';
-    var x509goodKey = '';
-    var x509badCert = '';
-    var x509badKey = '';
-    var x509testConnectionString = '';
-    before(function(beforeCallback) {
+  describe('X509', function () {
+    let x509testDeviceId = 'nodee2etestDeviceAuthx509-' + uuid.v4();
+    let x509badCert = '';
+    let x509badKey = '';
+    let x509testConnectionString = '';
+    before(function (beforeCallback) {
       pem.createCertificate({ selfSigned: true, days: 1 }, function (err, certConstructionResult) {
         if (err) {
           beforeCallback(err);
@@ -124,8 +123,8 @@ describe('Authentication', function() {
             if (err) {
               beforeCallback(err);
             } else {
-              var thumbPrint = fingerPrintResult.fingerprint.replace(/:/g, '');
-              var registry = Registry.fromConnectionString(hubConnectionString);
+              const thumbPrint = fingerPrintResult.fingerprint.replace(/:/g, '');
+              const registry = Registry.fromConnectionString(hubConnectionString);
               registry.create({
                 deviceId: x509testDeviceId,
                 status: 'enabled',
@@ -135,13 +134,11 @@ describe('Authentication', function() {
                   }
                 }
               },
-              function(err) {
+              function (err) {
                 if (err) {
                   beforeCallback(err);
                 } else {
                   x509testConnectionString = DeviceConnectionString.createWithX509Certificate(hostName, x509testDeviceId);
-                  x509goodCert = certConstructionResult.certificate;
-                  x509goodKey = certConstructionResult.clientKey;
 
                   // Now create a valid certificate not associated with a device.
                   pem.createCertificate({ selfSigned: true, days: 1 }, function (err, badCertConstructionResult) {
@@ -161,20 +158,20 @@ describe('Authentication', function() {
       });
     });
 
-    after(function(afterCallback) {
-      var registry = Registry.fromConnectionString(hubConnectionString);
+    after(function (afterCallback) {
+      const registry = Registry.fromConnectionString(hubConnectionString);
       registry.delete(x509testDeviceId, afterCallback);
     });
 
-    transports.forEach(function(Transport) {
-      it('Gets an UnauthorizedError over ' + Transport.name + ' if the certificate doesn\'t match the thumbprint', function(testCallback) {
-        var deviceClient = DeviceClient.fromConnectionString(x509testConnectionString, Transport);
+    transports.forEach(function (Transport) {
+      it('Gets an UnauthorizedError over ' + Transport.name + ' if the certificate doesn\'t match the thumbprint', function (testCallback) {
+        const deviceClient = DeviceClient.fromConnectionString(x509testConnectionString, Transport);
         deviceClient.setOptions({
           cert: x509badCert,
           key: x509badKey,
           passphrase: undefined
         });
-        deviceClient.sendEvent(new Message('testMessage'), function(err) {
+        deviceClient.sendEvent(new Message('testMessage'), function (err) {
           if (err instanceof UnauthorizedError) {
             testCallback();
           }

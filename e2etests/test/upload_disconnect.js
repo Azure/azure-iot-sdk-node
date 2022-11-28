@@ -2,20 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
-var fs = require('fs');
-var assert = require('chai').assert;
-var uuid = require('uuid');
-var debug = require('debug')('e2etests:uploaddisconnect');
+let fs = require('fs');
+let assert = require('chai').assert;
+let uuid = require('uuid');
+let debug = require('debug')('e2etests:uploaddisconnect');
 
-var deviceAmqp = require('azure-iot-device-amqp');
-var deviceMqtt = require('azure-iot-device-mqtt');
-var serviceSdk = require('azure-iothub');
-var createDeviceClient = require('./testUtils.js').createDeviceClient;
-var closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
-var Message = require('azure-iot-common').Message;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
+let deviceAmqp = require('azure-iot-device-amqp');
+let deviceMqtt = require('azure-iot-device-mqtt');
+let serviceSdk = require('azure-iothub');
+let createDeviceClient = require('./testUtils.js').createDeviceClient;
+let closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
+let Message = require('azure-iot-common').Message;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 [
   deviceMqtt.Mqtt,
@@ -23,20 +23,24 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
   deviceAmqp.Amqp,
   deviceAmqp.AmqpWs
 ].forEach(function (deviceTransport) {
+  // eslint-disable-next-line mocha/no-skipped-tests
   describe.skip('Over ' + deviceTransport.name + ':', function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
-    var serviceClient, deviceClient;
-    var testFilesConfig = [{
+    let serviceClient;
+    let deviceClient;
+    let testFilesConfig = [{
       fileName: 'bigFile',
       fileSizeInKb: '512000',
     }];
 
-    var provisionedDevice;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
-      testFilesConfig.forEach(function(fileConfig) {
-        var fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
+      testFilesConfig.forEach(function (fileConfig) {
+        let fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
         fileContent.fill(uuid.v4());
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         fs.writeFileSync(fileConfig.fileName, fileContent);
       });
       DeviceIdentityHelper.createDeviceWithSas(function (err, testDeviceInfo) {
@@ -46,7 +50,8 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
     });
 
     after(function (afterCallback) {
-      testFilesConfig.forEach(function(fileConfig) {
+      testFilesConfig.forEach(function (fileConfig) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         fs.unlinkSync(fileConfig.fileName);
       });
       DeviceIdentityHelper.deleteDevice(provisionedDevice.deviceId, afterCallback);
@@ -61,40 +66,44 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
       closeDeviceServiceClients(deviceClient, serviceClient, done);
     });
 
-    testFilesConfig.forEach(function(fileConfig) {
-      it('device successfully uploads a file of ' + fileConfig.fileSizeInKb + 'Kb and the notification is received by the service', function(done) {
-        var testBlobName = 'e2eblob';
+    testFilesConfig.forEach(function (fileConfig) {
+      it('device successfully uploads a file of ' + fileConfig.fileSizeInKb + 'Kb and the notification is received by the service', function (done) {
+        let testBlobName = 'e2eblob';
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         fs.stat(fileConfig.fileName, function (err, fileStats) {
           if(err) {
             done(err);
           } else {
-            var testFileSize = fileStats.size;
-            var fileStream = fs.createReadStream(fileConfig.fileName);
+            let testFileSize = fileStats.size;
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
+            let fileStream = fs.createReadStream(fileConfig.fileName);
 
-            serviceClient.open(function(err) {
-              var startedDoingUpload = false;
-              var sawADisconnect = false;
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
+            serviceClient.open(function (err) {
+              let startedDoingUpload = false;
+              let sawADisconnect = false;
               if (err) {
                 done(err);
               } else {
-                serviceClient.getFileNotificationReceiver(function(err, fileNotificationReceiver) {
+                serviceClient.getFileNotificationReceiver(function (err, fileNotificationReceiver) {
                   if (err) {
                     done(err);
                   } else {
-                    fileNotificationReceiver.on('message', function(msg) {
-                      var notification = JSON.parse(msg.data.toString());
+                    fileNotificationReceiver.on('message', function (msg) {
+                      let notification = JSON.parse(msg.data.toString());
                       if (notification.deviceId === provisionedDevice.deviceId && notification.blobName === provisionedDevice.deviceId + '/' + testBlobName) {
                         assert.isString(notification.blobUri);
                         assert.equal(notification.blobSizeInBytes, testFileSize);
                         debug('did reach the service clients on message');
-                        fileNotificationReceiver.complete(msg, function(err) {
+                        fileNotificationReceiver.complete(msg, function (err) {
                           err = (err) ? err : ((sawADisconnect) ? undefined : new Error('Never saw the disconnecct'));
                           done(err);
                         });
                       }
                     });
 
-                    deviceClient.open(function(err) {
+                    // eslint-disable-next-line security/detect-non-literal-fs-filename
+                    deviceClient.open(function (err) {
                       deviceClient.on('disconnect', function () {
                         debug('We did get a disconnect message');
                         if (!startedDoingUpload) {
@@ -107,14 +116,14 @@ var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
                         done(err);
                       } else {
                         debug('started the file upload of ' + testBlobName);
-                        deviceClient.uploadToBlob(testBlobName, fileStream, fileStats.size, function(err) {
+                        deviceClient.uploadToBlob(testBlobName, fileStream, fileStats.size, function (err) {
                           debug('Reached the callback of the file upload of ' + testBlobName + ' err is: ' + err);
                           if(err) {
                             done(err);
                           }
                         });
                         startedDoingUpload = true;
-                        var terminateMessage = new Message('');
+                        let terminateMessage = new Message('');
                         terminateMessage.properties.add('AzIoTHub_FaultOperationType', 'KillTcp');
                         terminateMessage.properties.add('AzIoTHub_FaultOperationCloseReason', ' severs the TCP connection ');
                         terminateMessage.properties.add('AzIoTHub_FaultOperationDelayInSecs', 1);

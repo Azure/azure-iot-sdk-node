@@ -3,21 +3,21 @@
 
 'use strict';
 
-var uuid = require('uuid');
+let uuid = require('uuid');
 
-var serviceSdk = require('azure-iothub');
-var EventHubClient = require('@azure/event-hubs').EventHubClient;
-var EventPosition = require('@azure/event-hubs').EventPosition;
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-common').Message;
-var SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
-var ConnectionString = require('azure-iot-device').ConnectionString;
-var DeviceIdentityHelper = require('./device_identity_helper.js');
-var Rendezvous = require('./rendezvous_helper.js').Rendezvous;
-var debug = require('debug')('e2etests:sas_token_tests');
+let serviceSdk = require('azure-iothub');
+let EventHubClient = require('@azure/event-hubs').EventHubClient;
+let EventPosition = require('@azure/event-hubs').EventPosition;
+let Client = require('azure-iot-device').Client;
+let Message = require('azure-iot-common').Message;
+let SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
+let ConnectionString = require('azure-iot-device').ConnectionString;
+let DeviceIdentityHelper = require('./device_identity_helper.js');
+let Rendezvous = require('./rendezvous_helper.js').Rendezvous;
+let debug = require('debug')('e2etests:sas_token_tests');
 
-var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
-var transports  = [
+let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let transports  = [
   require('azure-iot-device-amqp').Amqp,
   require('azure-iot-device-amqp').AmqpWs,
   require('azure-iot-device-mqtt').Mqtt,
@@ -27,8 +27,9 @@ var transports  = [
 
 transports.forEach(function (deviceTransport) {
   describe('Shared Access Signature renewal test over ' + deviceTransport.name, function () {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
-    var provisionedDevice;
+    let provisionedDevice;
 
     before(function (beforeCallback) {
       DeviceIdentityHelper.createDeviceWithSymmetricKey(function (err, testDeviceInfo) {
@@ -44,29 +45,29 @@ transports.forEach(function (deviceTransport) {
     });
 
     function createTestMessage(body) {
-      var msg = new Message(body);
+      let msg = new Message(body);
       msg.expiryTimeUtc = Date.now() + 60000; // Expire 60s from now, to reduce the chance of us hitting the 50-message limit on the IoT Hub
       return msg;
     }
 
     function thirtySecondsFromNow() {
-      var raw = (Date.now() / 1000) + 30;
+      let raw = (Date.now() / 1000) + 30;
       return Math.ceil(raw);
     }
 
     function createNewSas() {
-      var cs = ConnectionString.parse(provisionedDevice.connectionString);
-      var sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
+      let cs = ConnectionString.parse(provisionedDevice.connectionString);
+      let sas = SharedAccessSignature.create(cs.HostName, provisionedDevice.deviceId, cs.SharedAccessKey, thirtySecondsFromNow());
       return sas.toString();
     }
 
     it('Renews SAS after connection and is still able to receive C2D messages', function (testCallback) {
-      var beforeUpdateSas = uuid.v4();
-      var afterUpdateSas = uuid.v4();
+      let beforeUpdateSas = uuid.v4();
+      let afterUpdateSas = uuid.v4();
 
-      var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
-      var serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
-      var finishUp = function() {
+      let deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
+      let serviceClient = serviceSdk.Client.fromConnectionString(hubConnectionString);
+      let finishUp = function () {
         deviceClient.close(function () {
           serviceClient.close(function () {
             testCallback();
@@ -74,11 +75,12 @@ transports.forEach(function (deviceTransport) {
         });
       };
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       deviceClient.open(function (err) {
         if (err) return testCallback(err);
-        var deviceClientParticipant = 'deviceClient';
-        var serviceClientParticipant = 'serviceClient';
-        var testRendezvous = new Rendezvous(finishUp);
+        let deviceClientParticipant = 'deviceClient';
+        let serviceClientParticipant = 'serviceClient';
+        let testRendezvous = new Rendezvous(finishUp);
         testRendezvous.imIn(deviceClientParticipant);
 
 
@@ -101,6 +103,7 @@ transports.forEach(function (deviceTransport) {
           });
         });
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         serviceClient.open(function (err) {
           if (err) return testCallback(err);
           testRendezvous.imIn(serviceClientParticipant);
@@ -111,35 +114,35 @@ transports.forEach(function (deviceTransport) {
       });
     });
 
-    it('Renews SAS after connection and is still able to send D2C messages', function(testCallback) {
-      var beforeSas = uuid.v4();
-      var afterSas = uuid.v4();
+    it('Renews SAS after connection and is still able to send D2C messages', function (testCallback) {
+      let beforeSas = uuid.v4();
+      let afterSas = uuid.v4();
 
       function createBufferTestMessage(uuidData) {
-        var buffer = Buffer.from(uuidData);
+        let buffer = Buffer.from(uuidData);
         return new Message(buffer);
       }
 
-      var deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
-      var ehClient;
+      let deviceClient = Client.fromSharedAccessSignature(createNewSas(), deviceTransport);
+      let ehClient;
 
-      var finishUp = function(err) {
+      let finishUp = function (err) {
         deviceClient.close(function () {
           ehClient.close().then(function () {
             testCallback(err);
           });
         });
       };
-      var deviceClientParticipant = 'deviceClient';
-      var ehClientParticipant = 'ehClient';
-      var testRendezvous = new Rendezvous(finishUp);
+      let deviceClientParticipant = 'deviceClient';
+      let ehClientParticipant = 'ehClient';
+      let testRendezvous = new Rendezvous(finishUp);
 
-      var onEventHubError = function(err) {
+      let onEventHubError = function (err) {
         debug('error received on event hubs client: ' + err.toString());
         finishUp(err);
       };
 
-      var onEventHubMessage = function (eventData) {
+      let onEventHubMessage = function (eventData) {
         debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
         debug('event hubs client: message is: ' + ((eventData.body) ? (eventData.body.toString()) : '(no body)'));
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
@@ -166,7 +169,7 @@ transports.forEach(function (deviceTransport) {
       };
 
       debug('opening event hubs client');
-      var monitorStartTime = new Date(Date.now() - 30000);
+      let monitorStartTime = new Date(Date.now() - 30000);
       EventHubClient.createFromIotHubConnectionString(hubConnectionString)
       .then(function (client) {
         ehClient = client;
@@ -183,6 +186,7 @@ transports.forEach(function (deviceTransport) {
           }, 3000);
         });
       }).then(function () {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (err) {
           if (err) return finishUp(err);
           testRendezvous.imIn(deviceClientParticipant);
