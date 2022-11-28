@@ -3,29 +3,29 @@
 
 'use strict';
 
-var EventEmitter = require('events').EventEmitter;
-var assert = require('chai').assert;
-var sinon = require('sinon');
+let EventEmitter = require('events').EventEmitter;
+let assert = require('chai').assert;
+let sinon = require('sinon');
 
-var DeviceClient = require('../dist/device_client.js').Client;
-var ModuleClient = require('../dist/module_client.js').ModuleClient;
-var Message = require('azure-iot-common').Message;
-var errors = require('azure-iot-common').errors;
+let DeviceClient = require('../dist/device_client.js').Client;
+let ModuleClient = require('../dist/module_client.js').ModuleClient;
+let Message = require('azure-iot-common').Message;
+let errors = require('azure-iot-common').errors;
 
 describe('DeviceClient Retry Logic', function () {
-  it('retries to receive cloud-to-device message', function(testCallback) {
-    var fakeTransport = new EventEmitter();
-    var fakeBlobClient = { updateSharedAccessSignature: function () {} };
+  it('retries to receive cloud-to-device message', function (testCallback) {
+    let fakeTransport = new EventEmitter();
+    let fakeBlobClient = { updateSharedAccessSignature: function () {} };
     sinon.spy(fakeTransport, 'on');
     fakeTransport.enableC2D = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-    var client = new DeviceClient(fakeTransport, null, fakeBlobClient);
+    let client = new DeviceClient(fakeTransport, null, fakeBlobClient);
     client._maxOperationTimeout = 100;
-    client.on('error', (err) => {
+    client.on('error', (_err) => {
       assert(fakeTransport.enableC2D.callCount >= 2);
       testCallback();
     });
-    client.on('message', function() {});
+    client.on('message', function () {});
   });
 });
 
@@ -75,11 +75,11 @@ function ModuleClientCtor(fakeTransport) {
         funcParam: {}
       }
     ].forEach(function (testConfig) {
-      it('retries to ' + testConfig.funcName, function(testCallback) {
-        var fakeTransport = new EventEmitter();
+      it('retries to ' + testConfig.funcName, function (testCallback) {
+        let fakeTransport = new EventEmitter();
         fakeTransport[testConfig.funcName] = sinon.stub().callsArgWith(1, new errors.TimeoutError('failed'));
 
-        var client = testClient.ctor(fakeTransport);
+        let client = testClient.ctor(fakeTransport);
         client._maxOperationTimeout = 100;
         client[testConfig.funcName](testConfig.funcParam, function () {
           assert(fakeTransport[testConfig.funcName].callCount >= 2);
@@ -88,26 +88,27 @@ function ModuleClientCtor(fakeTransport) {
       });
     });
 
-    it('retries to open/connect', function(testCallback) {
-      var fakeTransport = new EventEmitter();
+    it('retries to open/connect', function (testCallback) {
+      let fakeTransport = new EventEmitter();
       fakeTransport.connect = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-      var client = testClient.ctor(fakeTransport);
+      let client = testClient.ctor(fakeTransport);
       client._maxOperationTimeout = 100;
-      client.open(function (err) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      client.open(function (_err) {
         assert(fakeTransport.connect.callCount >= 2);
         testCallback();
       });
     });
 
-    it('retries to enable device methods', function(testCallback) {
-      var fakeTransport = new EventEmitter();
+    it('retries to enable device methods', function (testCallback) {
+      let fakeTransport = new EventEmitter();
       fakeTransport.onDeviceMethod = sinon.stub();
       fakeTransport.enableMethods = sinon.stub().callsArgWith(0, new errors.TimeoutError('failed'));
 
-      var client = testClient.ctor(fakeTransport);
+      let client = testClient.ctor(fakeTransport);
       client._maxOperationTimeout = 100;
-      client.on('error', (err) => {
+      client.on('error', (_err) => {
         assert(fakeTransport.onDeviceMethod.calledOnce);
         assert(fakeTransport.enableMethods.callCount >= 2);
         testCallback();

@@ -3,11 +3,11 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var SharedAccessSignature = require('../dist/shared_access_signature.js');
+let assert = require('chai').assert;
+let ArgumentError = require('azure-iot-common').errors.ArgumentError;
+let SharedAccessSignature = require('../dist/shared_access_signature.js');
 
-var incompleteSignatures = {
+let incompleteSignatures = {
   sr: 'SharedAccessSignature sig=signature&se=expiry',
   sig: 'SharedAccessSignature sr=audience&se=expiry',
   se: 'SharedAccessSignature sr=audience&sig=signature'
@@ -22,8 +22,8 @@ describe('SharedAccessSignature', function () {
     key - key
     expiry - expiry]*/
     it('creates a shared access signature', function () {
-      var expect = 'SharedAccessSignature sr=host%2Fdevices%2Fdevice&sig=wM3XiP6gD960IxP7J5WHqnxQHEcWC6YaQCtoMT%2BkKHc%3D&se=12345';
-      var sas = SharedAccessSignature.create('host', 'device', 'key', 12345);
+      let expect = 'SharedAccessSignature sr=host%2Fdevices%2Fdevice&sig=wM3XiP6gD960IxP7J5WHqnxQHEcWC6YaQCtoMT%2BkKHc%3D&se=12345';
+      let sas = SharedAccessSignature.create('host', 'device', 'key', 12345);
       assert.equal(expect, sas.toString());
     });
   });

@@ -57,6 +57,7 @@ export class Twin extends EventEmitter {
 
   /**
    * The constructor should not be used directly and instead the SDK user should use the {@link Client#getTwin} method to obtain a valid `Twin` object.
+   *
    * @constructor
    * @private
    * @param transport    The transport to use in order to communicate with the Azure IoT hub.
@@ -166,16 +167,18 @@ export class Twin extends EventEmitter {
     /* Codes_SRS_NODE_DEVICE_TWIN_18_032: [** When merging the patch, if any properties are set to `null`, `properties.reported.update` shall delete that property from `properties.reported`. **]** */
     traverse(dest).forEach(function (prop: any): void {
       if (prop === null) {
+        // eslint-disable-next-line no-invalid-this
         this.remove();
       }
     });
   }
 
   private _clearCachedProperties(): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.properties = {
       reported : {
-        update : function(state: any, done: (err?: null) => void): void {
+        update : function (state: any, done: (err?: null) => void): void {
           self._updateReportedProperties(state, done);
         }
       },
@@ -187,9 +190,11 @@ export class Twin extends EventEmitter {
   /* Codes_SRS_NODE_DEVICE_TWIN_18_039: [** After merging a GET result, the `Twin` object shall recursively fire property changed events for every changed property. **]** */
   /* Codes_SRS_NODE_DEVICE_TWIN_18_040: [** After merging a PATCH result, the `Twin` object shall recursively fire property changed events for every changed property. **]** */
   private _fireChangeEvents(desiredProperties: any): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.emit(Twin.desiredPath, desiredProperties);
-    traverse(desiredProperties).forEach(function(): void {
+    traverse(desiredProperties).forEach(function (): void {
+      // eslint-disable-next-line no-invalid-this
       const path = this.path.join('.');
       if (path) {
         /* Codes_SRS_NODE_DEVICE_TWIN_18_041: [** When firing a property changed event, the `Twin` object shall name the event from the property using dot notation starting with 'properties.desired.' **]** */
@@ -202,12 +207,13 @@ export class Twin extends EventEmitter {
   private _onDesiredPropertiesUpdate(patch: any): void {
     /*Codes_SRS_NODE_DEVICE_TWIN_16_012: [When a `twinDesiredPropertiesUpdates` event is emitted by the transport, the property patch passed as argument to the event handler shall be merged with the current desired properties.]*/
     this._mergePatch(this.properties.desired, patch);
-    /*Codes_SRS_NODE_DEVICE_TWIN_16_013: [Recursively for each desired property that is part of the patch received, an event named using the convention `properties.desired[.path]` shall be fired with an argument containing the value of the protperty.]*/
+    /*Codes_SRS_NODE_DEVICE_TWIN_16_013: [Recursively for each desired property that is part of the patch received, an event named using the convention `properties.desired[.path]` shall be fired with an argument containing the value of the property.]*/
     this._fireChangeEvents(patch);
   }
 
   /* Codes_SRS_NODE_DEVICE_TWIN_18_045: [** If a property is already set when a handler is added for that property, the `Twin` object shall fire a property changed event for the property. **]*  */
   private _handleNewListener(eventName: string): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     if (eventName.indexOf(Twin.desiredPath) === 0) {
       const propertyValue = _.at(this, eventName)[0];

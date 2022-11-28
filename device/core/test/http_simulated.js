@@ -3,19 +3,19 @@
 
 'use strict';
 
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var Message = require('azure-iot-common').Message;
-var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var SharedAccessSignature = require('../dist/shared_access_signature.js');
-var results = require('azure-iot-common').results;
+let EventEmitter = require('events').EventEmitter;
+let util = require('util');
+let Message = require('azure-iot-common').Message;
+let ArgumentError = require('azure-iot-common').errors.ArgumentError;
+let SharedAccessSignature = require('../dist/shared_access_signature.js');
+let results = require('azure-iot-common').results;
 
 function Response(statusCode) {
   this.statusCode = statusCode;
 }
 
 function makeError(statusCode) {
-  var err = new Error();
+  let err = new Error();
   err.response = new Response(statusCode);
   return err;
 }
@@ -24,28 +24,25 @@ function SimulatedHttp(authProvider) {
   EventEmitter.call(this);
   this._receiver = null;
   this.handleRequest = function (done) {
-    var self = this;
+    let self = this;
     authProvider.getDeviceCredentials(function (err, config) {
       if (self._x509) {
         done(null, new results.MessageEnqueued(new Response(204)));
       } else {
-        var sig = SharedAccessSignature.parse(config.sharedAccessSignature);
+        let sig = SharedAccessSignature.parse(config.sharedAccessSignature);
 
         if (config.host.indexOf('bad') >= 0) {                      // bad host
           authProvider.stop();
           done(new Error('getaddrinfo ENOTFOUND bad'));
-        }
-        else if (config.deviceId.indexOf('bad') >= 0) {             // bad policy
+        } else if (config.deviceId.indexOf('bad') >= 0) {             // bad policy
           authProvider.stop();
           done(makeError(404));
-        }
-        else {
-          var cmpSig = (SharedAccessSignature.create(config.host, config.deviceId, 'bad', sig.se)).toString();
+        } else {
+          let cmpSig = (SharedAccessSignature.create(config.host, config.deviceId, 'bad', sig.se)).toString();
           if (config.sharedAccessSignature === cmpSig) {  // bad key
             authProvider.stop();
             done(makeError(401));
-          }
-          else {
+          } else {
             authProvider.stop();
             done(null, new results.MessageEnqueued(new Response(204)));
           }
@@ -65,7 +62,7 @@ SimulatedHttp.prototype.disconnect = function (callback) {
   callback(null, new results.Disconnected());
 };
 
-SimulatedHttp.prototype.setOptions = function() {
+SimulatedHttp.prototype.setOptions = function () {
   this._x509 = true;
 };
 
@@ -102,11 +99,9 @@ SimulatedHttp.prototype.receive = function (done) {
 SimulatedHttp.prototype.sendFeedback = function (feedbackAction, message, done) {
   if (!message.lockToken) {
     done(new ArgumentError('invalid lockToken'));
-  }
-  else if (message.lockToken === 'FFA945D3-9808-4648-8DD7-D250DDE66EA9') {
+  } else if (message.lockToken === 'FFA945D3-9808-4648-8DD7-D250DDE66EA9') {
     done(makeError(412));
-  }
-  else {
+  } else {
     this.handleRequest(function (err, res) {
       done(err, res);
     });

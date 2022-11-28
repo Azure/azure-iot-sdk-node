@@ -6,7 +6,7 @@
 import { getAgentPlatformString } from 'azure-iot-common';
 import { NoErrorCallback, noErrorCallbackToPromise } from 'azure-iot-common';
 
-// tslint:disable-next-line:no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json');
 
 export function getUserAgentString(done: NoErrorCallback<string>): void;

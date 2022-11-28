@@ -39,6 +39,7 @@ export class X509AuthenticationProvider implements AuthenticationProvider {
 
   /**
    * Updates the certificate and key used by the device to connect and authenticate with an Azure IoT hub instance.
+   *
    * @param x509 The `X509` object containing the certificate and key.
    */
   setX509Options(x509: X509): void {

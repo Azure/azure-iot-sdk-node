@@ -8,7 +8,7 @@ import { Http as DefaultHttpTransport } from 'azure-iot-http-base';
 import { UploadParams } from './blob_uploader';
 import { BlobUploadResult } from './blob_upload_result';
 
-// tslint:disable-next-line:no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../../package.json');
 
 /**
@@ -41,7 +41,7 @@ export interface FileUploadInterface {
  */
 export class FileUploadApi implements FileUploadInterface {
     _authenticationProvider: AuthenticationProvider;
-    http: any; // TODO: need interface >_<
+    http: any;
 
     constructor(authenticationProvider: AuthenticationProvider, httpTransport?: any) {
         /*Codes_SRS_NODE_FILE_UPLOAD_ENDPOINT_16_019: [`FileUploadApi` shall throw a `ReferenceError` if `authenticationProvider` is falsy.]*/
@@ -83,7 +83,7 @@ export class FileUploadApi implements FileUploadInterface {
                 blobName: '<name of the blob for which a SAS URI will be generated>'
                 }
                 ```]*/
-                let headers: any = {
+                const headers: any = {
                     Host: deviceCredentials.host,
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export class FileUploadApi implements FileUploadInterface {
                 'Content-Length': <content length>,
                 'iothub-name': <hub name>
                 ```]*/
-                let headers: any = {
+                const headers: any = {
                     Host: deviceCredentials.host,
                     'User-Agent': packageJson.name + '/' + packageJson.version,
                     'Content-Type': 'application/json; charset=utf-8',

@@ -3,16 +3,15 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var errors = require('azure-iot-common').errors;
-var X509AuthenticationProvider = require('../dist/x509_authentication_provider').X509AuthenticationProvider;
+let assert = require('chai').assert;
+let errors = require('azure-iot-common').errors;
+let X509AuthenticationProvider = require('../dist/x509_authentication_provider').X509AuthenticationProvider;
 
 describe('X509AuthenticationProvider', function () {
   describe('#constructor + #getDeviceCredentials', function () {
     /*Tests_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_001: [The `constructor` shall store the credentials passed as argument.]*/
     it('creates an X509AuthenticationProvider with the credentials given as argument', function (testCallback) {
-      var initialCreds = {
+      let initialCreds = {
         deviceId: 'deviceId',
         host: 'host.name',
         x509: {
@@ -21,7 +20,7 @@ describe('X509AuthenticationProvider', function () {
         }
       };
 
-      var x509AuthProvider = new X509AuthenticationProvider(initialCreds);
+      let x509AuthProvider = new X509AuthenticationProvider(initialCreds);
       /*Tests_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_002: [The `getDeviceCredentials` method shall call its callback with a `null` error object and the stored device credentials as a second argument.]*/
       x509AuthProvider.getDeviceCredentials(function (err, creds) {
         assert.isNull(err);
@@ -37,7 +36,7 @@ describe('X509AuthenticationProvider', function () {
   describe('#setX509Options', function () {
     /*Tests_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_003: [The `setX509Options` method shall store the `X509` object passed as an argument with the existing credentials.]*/
     it('updates the x509 options', function (testCallback) {
-      var initialCreds = {
+      let initialCreds = {
         deviceId: 'deviceId',
         host: 'host.name',
         x509: {
@@ -46,12 +45,12 @@ describe('X509AuthenticationProvider', function () {
         }
       };
 
-      var newX509Options = {
+      let newX509Options = {
         cert: 'cert',
         key: 'key'
       };
 
-      var x509AuthProvider = new X509AuthenticationProvider(initialCreds);
+      let x509AuthProvider = new X509AuthenticationProvider(initialCreds);
       x509AuthProvider.getDeviceCredentials(function (err, creds) {
         assert.isNull(err);
         assert.strictEqual(creds.deviceId, initialCreds.deviceId);
@@ -75,7 +74,7 @@ describe('X509AuthenticationProvider', function () {
     /*Tests_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_004: [The `fromX509Options` method shall throw a `ReferenceError` if `deviceId` is falsy.]*/
     [undefined, null, ''].forEach(function (badDeviceId) {
       it('throws if deviceId is \'' + badDeviceId + '\'', function () {
-        var fakeX509Options = {
+        let fakeX509Options = {
           cert: 'cert',
           key: 'key'
         };
@@ -88,7 +87,7 @@ describe('X509AuthenticationProvider', function () {
     /*Tests_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_005: [The `fromX509Options` method shall throw a `ReferenceError` if `iotHubHostname` is falsy.]*/
     [undefined, null, ''].forEach(function (badHost) {
       it('throws if iotHubHostname is \'' + badHost + '\'', function () {
-        var fakeX509Options = {
+        let fakeX509Options = {
           cert: 'cert',
           key: 'key'
         };
@@ -119,14 +118,14 @@ describe('X509AuthenticationProvider', function () {
 
     /*Tests_SRS_NODE_X509_AUTHENTICATION_PROVIDER_16_009: [The `fromX509Options` method shall create a new instance of `X509AuthenticationProvider` with a credentials object created from the arguments.]*/
     it('creates a new instance of an X509AuthenticationProvider using the arguments provided', function (testCallback) {
-      var fakeX509Options = {
+      let fakeX509Options = {
         cert: 'cert',
         key: 'key'
       };
-      var fakeDeviceId = 'deviceId';
-      var fakeHost = 'host.name';
+      let fakeDeviceId = 'deviceId';
+      let fakeHost = 'host.name';
 
-      var x509AuthProvider = X509AuthenticationProvider.fromX509Options(fakeDeviceId, fakeHost, fakeX509Options);
+      let x509AuthProvider = X509AuthenticationProvider.fromX509Options(fakeDeviceId, fakeHost, fakeX509Options);
       x509AuthProvider.getDeviceCredentials(function (err, creds) {
         assert.isNull(err);
         assert.strictEqual(creds.deviceId, fakeDeviceId);

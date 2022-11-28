@@ -119,6 +119,7 @@ export class ModuleClient extends InternalClient {
 
   /**
    * Sends an event to the given module output
+   *
    * @param outputName Name of the output to send the event to
    * @param message Message to send to the given output
    * @param [callback] Optional function to call when the operation has been queued.
@@ -142,6 +143,7 @@ export class ModuleClient extends InternalClient {
 
   /**
    * Sends an array of events to the given module output
+   *
    * @param outputName Name of the output to send the events to
    * @param message Messages to send to the given output
    * @param [callback] Function to call when the operations have been queued.
@@ -247,6 +249,7 @@ export class ModuleClient extends InternalClient {
 
   /**
    * Passes options to the `ModuleClient` object that can be used to configure the transport.
+   *
    * @param options   A {@link DeviceClientOptions} object.
    * @param [done]    Optional callback to call once the options have been set.
    * @returns {Promise<results.TransportConfigured> | void} Promise if no callback function was passed, void otherwise.
@@ -347,6 +350,7 @@ export class ModuleClient extends InternalClient {
 
   /**
    * Creates an IoT Hub module client from the given authentication method and using the given transport type.
+   *
    * @param authenticationProvider  Object used to obtain the authentication parameters for the IoT hub.
    * @param transportCtor           Transport protocol used to connect to IoT hub.
    */
@@ -380,7 +384,7 @@ export class ModuleClient extends InternalClient {
    *     - IOTEDGE_AUTHSCHEME           Authentication scheme to use; must be "sasToken"
    *
    * @param transportCtor Transport protocol used to connect to IoT hub.
-   * @param [callback]    Optional callback to invoke when the ModuleClient has been constructured or if an
+   * @param [callback]    Optional callback to invoke when the ModuleClient has been constructed or if an
    *                      error occurs while creating the client.
    * @returns {Promise<ModuleClient> | void} Promise if no callback function was passed, void otherwise.
    */
@@ -453,6 +457,7 @@ export class ModuleClient extends InternalClient {
   private static _fromEnvironmentNormal(connectionString: string, transportCtor: any, callback: (err?: Error, client?: ModuleClient) => void): void {
     let ca = '';
     if (process.env.EdgeModuleCACertificateFile) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       fs.readFile(process.env.EdgeModuleCACertificateFile, 'utf8', (err, data) => {
         if (err) {
           callback(err);

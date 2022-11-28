@@ -256,7 +256,7 @@ export class Client extends InternalClient {
       if (!statusDescription && statusDescription !== '') throw new ReferenceError('statusDescription cannot be \' ' + statusDescription + ' \'.');
       const retryOp = new RetryOperation('notifyBlobUploadStatus', this._retryPolicy, this._maxOperationTimeout);
       retryOp.retry((opCallback) => {
-        let uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
+        const uploadResult = { isSuccess: isSuccess, statusCode: statusCode, statusDescription: statusDescription };
         /*Codes_SRS_NODE_DEVICE_CLIENT_41_015: [The `notifyBlobUploadStatus` method shall call the `notifyUploadComplete` method via the internal `_fileUploadApi` class.]*/
         this._fileUploadApi.notifyUploadComplete(correlationId, uploadResult, opCallback);
       }, (err) => {

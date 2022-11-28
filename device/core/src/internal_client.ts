@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/adjacent-overload-signatures */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -229,6 +230,7 @@ export abstract class InternalClient extends EventEmitter {
 
   /**
    * Passes options to the `Client` object that can be used to configure the transport.
+   *
    * @param options   A {@link DeviceClientOptions} object.
    * @param [done]    The optional callback to call once the options have been set.
    * @returns {Promise<results.TransportConfigured> | void} Promise if no callback function was passed, void otherwise.
@@ -242,10 +244,11 @@ export abstract class InternalClient extends EventEmitter {
 
       /*Codes_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall assume the `ca` property is the name of an already existent file and it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
       if (options.ca) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         fs.readFile(options.ca, 'utf8', (err, contents) => {
           if (!err) {
-            let localOptions: DeviceClientOptions = {};
-            for (let k in options) {
+            const localOptions: DeviceClientOptions = {};
+            for (const k in options) {
               localOptions[k] = options[k];
             }
             localOptions.ca = contents;
@@ -323,6 +326,7 @@ export abstract class InternalClient extends EventEmitter {
 
   /**
    * Sets the retry policy used by the client on all operations. The default is {@link azure-iot-common.ExponentialBackoffWithJitter|ExponentialBackoffWithJitter}.
+   *
    * @param policy {RetryPolicy}  The retry policy that should be used for all future operations.
    */
   setRetryPolicy(policy: RetryPolicy): void {
@@ -404,12 +408,13 @@ export abstract class InternalClient extends EventEmitter {
     }
 
     // Codes_SRS_NODE_INTERNAL_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
-    if (!!(this._methodCallbackMap[methodName])) {
+    if (this._methodCallbackMap[methodName]) {
       throw new Error('A handler for this method has already been registered with the client.');
     }
   }
 
   private _addMethodCallback(methodName: string, callback: (request: DeviceMethodRequest, response: DeviceMethodResponse) => void): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._transport.onDeviceMethod(methodName, (message) => {
       // build the response object
@@ -567,9 +572,9 @@ export interface BlobUpload {
  * @deprecated
  */
 export interface MethodMessage {
-  methods: { methodName: string; };
+  methods: { methodName: string };
   requestId: string;
-  properties: { [key: string]: string; };
+  properties: { [key: string]: string };
   body: Buffer;
 }
 

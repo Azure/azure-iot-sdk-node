@@ -3,16 +3,16 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var ArgumentError = require('azure-iot-common').errors.ArgumentError;
-var ConnectionString = require('../dist/connection_string.js');
+let assert = require('chai').assert;
+let ArgumentError = require('azure-iot-common').errors.ArgumentError;
+let ConnectionString = require('../dist/connection_string.js');
 
-var incompleteConnectionStrings = {
+let incompleteConnectionStrings = {
   HostName: 'DeviceId=id;SharedAccessKey=key;GatewayHostName=gateway',
   DeviceId: 'HostName=name;SharedAccessKey=key;GatewayHostName=gateway'
 };
 
-var invalidConnectionStrings = {
+let invalidConnectionStrings = {
   BothSharedAccessKeyAndx509:'DeviceId=id;HostName=name;SharedAccessKey=key;x509=true',
   BothSharedAccessKeyAndSharedAccessSignature:'DeviceId=id;HostName=name;SharedAccessKey=key;SharedAccessSignature=key',
   BothSharedAccessSignatureAndx509:'DeviceId=id;HostName=name;SharedAccessSignature=key;x509=true',
@@ -41,38 +41,38 @@ describe('ConnectionString', function () {
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_006: [It shall throw `ArgumentError` if `SharedAccessSignature` and `x509` are present at the same time.]*/
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_007: [It shall throw `ArgumentError` if `SharedAccessKey` and `SharedAccessSignature` are present at the same time.]*/
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_008: [It shall throw `ArgumentError` if none of `SharedAccessKey`, `SharedAccessSignature` and `x509` are present.]*/
-    ['BothSharedAccessKeyAndx509', 'BothSharedAccessKeyAndSharedAccessSignature', 'BothSharedAccessSignatureAndx509', 'NeitherSharedAccessKeyNorx509'].forEach(function(key) {
-      it('throws if the connection string is invalid because ' + key, function() {
-        assert.throws(function() {
+    ['BothSharedAccessKeyAndx509', 'BothSharedAccessKeyAndSharedAccessSignature', 'BothSharedAccessSignatureAndx509', 'NeitherSharedAccessKeyNorx509'].forEach(function (key) {
+      it('throws if the connection string is invalid because ' + key, function () {
+        assert.throws(function () {
           ConnectionString.parse(invalidConnectionStrings[key]);
         }, ArgumentError);
       });
     });
 
-    it('does not throw if x509 is true and SharedAccessKey is not present', function() {
-      assert.doesNotThrow(function() {
+    it('does not throw if x509 is true and SharedAccessKey is not present', function () {
+      assert.doesNotThrow(function () {
         ConnectionString.parse('HostName=name;DeviceId=id;x509=true');
       }, ArgumentError);
     });
   });
 
-  describe('createWithSharedAccessSignature', function() {
+  describe('createWithSharedAccessSignature', function () {
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_002: [The `createWithSharedAccessKey` static method shall returns a valid connection string with the values passed as arguments.]*/
-    it('creates a valid connection string', function() {
-      var expected = 'HostName=host;DeviceId=deviceId;SharedAccessKey=sak';
-      var actual = ConnectionString.createWithSharedAccessKey('host', 'deviceId', 'sak');
+    it('creates a valid connection string', function () {
+      let expected = 'HostName=host;DeviceId=deviceId;SharedAccessKey=sak';
+      let actual = ConnectionString.createWithSharedAccessKey('host', 'deviceId', 'sak');
       assert.strictEqual(actual, expected);
     });
 
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_003: [The `createWithSharedAccessKey` static method shall throw a `ReferenceError` if one or more of the `hostName`, `deviceId` or `sharedAccessKey` are falsy.]*/
     [null, undefined, ''].forEach(function (badValue) {
       [
-        { hostName: badValue, deviceId: 'deviceId', sharedAccessKey: 'sak', badParamName: 'hostName'},
-        { hostName: 'hostName', deviceId: badValue, sharedAccessKey: 'sak', badParamName: 'deviceId'},
-        { hostName: 'hostName', deviceId: 'deviceId', sharedAccessKey: badValue, badParamName: 'sharedAccessKey'}
-      ].forEach(function(config) {
-        it('throws ReferenceError when ' + config.badParamName + ' is \'' + config[config.badParamName] + '\'', function() {
-          assert.throws(function() {
+        { hostName: badValue, deviceId: 'deviceId', sharedAccessKey: 'sak', badParamName: 'hostName' },
+        { hostName: 'hostName', deviceId: badValue, sharedAccessKey: 'sak', badParamName: 'deviceId' },
+        { hostName: 'hostName', deviceId: 'deviceId', sharedAccessKey: badValue, badParamName: 'sharedAccessKey' }
+      ].forEach(function (config) {
+        it('throws ReferenceError when ' + config.badParamName + ' is \'' + config[config.badParamName] + '\'', function () {
+          assert.throws(function () {
             ConnectionString.createWithSharedAccessKey(config.hostName, config.deviceId, config.sharedAccessKey);
           }, ReferenceError);
         });
@@ -80,22 +80,22 @@ describe('ConnectionString', function () {
     });
   });
 
-  describe('createWithX509Certificate', function() {
+  describe('createWithX509Certificate', function () {
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_004: [The `createWithX509Certificate` static method shall returns a valid x509 connection string with the values passed as arguments.]*/
-    it('creates a valid connection string', function() {
-      var expected = 'HostName=host;DeviceId=deviceId;x509=true';
-      var actual = ConnectionString.createWithX509Certificate('host', 'deviceId');
+    it('creates a valid connection string', function () {
+      let expected = 'HostName=host;DeviceId=deviceId;x509=true';
+      let actual = ConnectionString.createWithX509Certificate('host', 'deviceId');
       assert.strictEqual(actual, expected);
     });
 
     /*Tests_SRS_NODE_DEVICE_CONNSTR_16_005: [The `createWithX509Certificate` static method shall throw a `ReferenceError` if one or more of the `hostName` or `deviceId` are falsy.]*/
     [null, undefined, ''].forEach(function (badValue) {
       [
-        { hostName: badValue, deviceId: 'deviceId', badParamName: 'hostName'},
-        { hostName: 'hostName', deviceId: badValue, badParamName: 'deviceId'},
-      ].forEach(function(config) {
-        it('throws ReferenceError when ' + config.badParamName + ' is \'' + config[config.badParamName] + '\'', function() {
-          assert.throws(function() {
+        { hostName: badValue, deviceId: 'deviceId', badParamName: 'hostName' },
+        { hostName: 'hostName', deviceId: badValue, badParamName: 'deviceId' },
+      ].forEach(function (config) {
+        it('throws ReferenceError when ' + config.badParamName + ' is \'' + config[config.badParamName] + '\'', function () {
+          assert.throws(function () {
             ConnectionString.createWithX509Certificate(config.hostName, config.deviceId);
           }, ReferenceError);
         });

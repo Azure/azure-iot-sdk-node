@@ -3,9 +3,9 @@
 
 'use strict'
 
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var results = require('azure-iot-common').results;
+let EventEmitter = require('events').EventEmitter;
+let util = require('util');
+let results = require('azure-iot-common').results;
 
 function FakeTransport() {
   EventEmitter.call(this);
@@ -73,11 +73,11 @@ function FakeTransport() {
     callback(null, { desired: {}, reported: {} });
   };
 
-  this.enableMethods = function(callback) {
+  this.enableMethods = function (callback) {
     callback();
   };
 
-  this.onDeviceMethod = function(methodName, callback) {
+  this.onDeviceMethod = function (_methodName, _callback) {
   }
 }
 

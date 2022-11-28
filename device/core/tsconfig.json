@@ -7,8 +7,7 @@
         "declaration": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "removeComments": false,
-        "resolveJsonModule": true
+        "removeComments": false
     },
     "include": [
         "./src/**/*.ts"

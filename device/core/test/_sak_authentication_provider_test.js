@@ -99,7 +99,6 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       };
       const fakeError = new Error('whoops');
       const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
-      const eventSpy = sinon.spy();
       sakAuthProvider.on('error', function (err) {
         assert.strictEqual(err, fakeError);
           sakAuthProvider.stop();
@@ -119,7 +118,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
 
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, 'whoops');
-      sakAuthProvider.getDeviceCredentials(function(err) {
+      sakAuthProvider.getDeviceCredentials(function (err) {
         assert.equal(err, 'whoops');
           sakAuthProvider.stop();
           testCallback();
@@ -135,7 +134,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
 
       sinon.stub(sakAuthProvider, '_sign').callsArgWith(2, null, 'signature');
-      sakAuthProvider._renewToken(function(err, creds) {
+      sakAuthProvider._renewToken(function (err, creds) {
         assert.equal(creds.sharedAccessSignature, 'signature');
       });
       sakAuthProvider.stop();
@@ -167,7 +166,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     /*Tests_SRS_NODE_SAK_AUTH_PROVIDER_16_007: [The `fromConnectionString` method shall throw an `errors.ArgumentError` if the `connectionString` does not have a SharedAccessKey parameter.]*/
     it('throws an ArgumentError if the connection string does not contain a shared access key', function () {
       assert.throws(function () {
-        var fakeConnectionString = 'DeviceId=deviceId;HostName=host;SharedAccessKeyName=foo';
+        const fakeConnectionString = 'DeviceId=deviceId;HostName=host;SharedAccessKeyName=foo';
         return SharedAccessKeyAuthenticationProvider.fromConnectionString(fakeConnectionString, 1, 1);
       }, errors.ArgumentError);
     });
@@ -193,7 +192,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
           sharedAccessKey: 'fakeKey'
         }
       }
-    ].forEach(function(testConfig) {
+    ].forEach(function (testConfig) {
       it('initializes the credentials from the connection string ' + testConfig.name, function (testCallback) {
         const sakAuthProvider = SharedAccessKeyAuthenticationProvider.fromConnectionString(testConfig.connectionString, 2, 1);
         sakAuthProvider.getDeviceCredentials(function (err, creds) {
@@ -266,7 +265,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     const validTimeInSeconds = 3600;
     const marginInSeconds = 1200;
     /* Tests_SRS_NODE_SAK_AUTH_PROVIDER_06_001: [The `setTokenRenewalValues` shall throw an `ArgumentError` if the `tokenValidTimeInSeconds` is less than or equal `tokenRenewalMarginInSeconds`.] */
-    it('throws if the valid <= margin ', () => {
+    it('throws if the valid <= margin ', function () {
       const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
@@ -277,7 +276,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     /* Tests_SRS_NODE_SAK_AUTH_PROVIDER_06_002: [If there is no timer running when `setTokenRenewalValues` is invoked, there will NOT be a timer running when it returns.] */
-    it('Will NOT start the timing loop', (done) => {
+    it('Will NOT start the timing loop', function (done) {
       const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
@@ -290,7 +289,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       done();
     });
 
-    it('Will continue the timing loop', (done) => {
+    it('Will continue the timing loop', function (done) {
       const fakeCredentials = {
         deviceId: 'fakeDeviceId',
         host: 'fake.host.name',
@@ -298,7 +297,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
       };
       const sakAuthProvider = new SharedAccessKeyAuthenticationProvider(fakeCredentials, 10, 1);
       assert.notOk(sakAuthProvider._renewalTimeout);
-      sakAuthProvider.getDeviceCredentials((errorFromGet, transportConfig) => {
+      sakAuthProvider.getDeviceCredentials((errorFromGet, _transportConfig) => {
         if (errorFromGet) {
           return done(errorFromGet);
         } else {
@@ -313,7 +312,7 @@ describe('SharedAccessKeyAuthenticationProvider', function () {
     });
 
     /* Tests_SRS_NODE_SAK_AUTH_PROVIDER_06_003: [If there is a timer running when `setTokenRenewalValues` is invoked it will cause a token renewal to happen almost immediately and cause the subsequent renewals to happen with as specified with the new values.] */
-    it('will reset the time when a new token is provided', (done) => {
+    it('will reset the time when a new token is provided', function (done) {
       const initialValidTimeInSeconds = 10000;
       const initialMarginInSeconds = 2000;
       const newValidTimeInSeconds = 20000;

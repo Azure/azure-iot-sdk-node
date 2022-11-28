@@ -3,22 +3,22 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var util = require('util');
-var sinon = require('sinon');
-var stream = require('stream');
-var EventEmitter = require('events').EventEmitter;
-var FakeTransport = require('./fake_transport.js');
-var Message = require('azure-iot-common').Message;
-var errors = require('azure-iot-common').errors;
-var results = require('azure-iot-common').results;
-var X509AuthenticationProvider = require('../dist/x509_authentication_provider').X509AuthenticationProvider;
-var SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
-var Client = require('../dist/device_client').Client;
+let assert = require('chai').assert;
+let util = require('util');
+let sinon = require('sinon');
+let stream = require('stream');
+let EventEmitter = require('events').EventEmitter;
+let FakeTransport = require('./fake_transport.js');
+let Message = require('azure-iot-common').Message;
+let errors = require('azure-iot-common').errors;
+let results = require('azure-iot-common').results;
+let X509AuthenticationProvider = require('../dist/x509_authentication_provider').X509AuthenticationProvider;
+let SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
+let Client = require('../dist/device_client').Client;
 
 describe('Device Client', function () {
-  var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
-  var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
+  let sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
+  let sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
 
   describe('#constructor', function () {
     it('throws if a connection string is passed', function () {
@@ -31,16 +31,16 @@ describe('Device Client', function () {
   describe('#fromConnectionString', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_05_006: [The fromConnectionString method shall return a new instance of the Client object, as by a call to new Client(new Transport(...)).]*/
     it('returns an instance of Client', function () {
-      var client = Client.fromConnectionString(sharedKeyConnectionString, FakeTransport);
+      let client = Client.fromConnectionString(sharedKeyConnectionString, FakeTransport);
       assert.instanceOf(client, Client);
     });
 
     it('doesn\'t try to renew the SAS token when using x509', function (testCallback) {
-      this.clock = sinon.useFakeTimers();
-      var clock = this.clock;
+      // eslint-disable-next-line no-invalid-this
+      let clock = sinon.useFakeTimers();
 
-      var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
-      var client = Client.fromConnectionString(x509ConnectionString, FakeTransport);
+      let x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
+      let client = Client.fromConnectionString(x509ConnectionString, FakeTransport);
       assert.instanceOf(client, Client);
 
       sinon.stub(client._transport, 'updateSharedAccessSignature').callsFake(function () {
@@ -48,14 +48,14 @@ describe('Device Client', function () {
         testCallback(new Error('updateSharedAccessSignature should not have been called'));
       });
 
-      this.clock.tick(3600000); // 1 hour: this should trigger the call to renew the SAS token.
+      clock.tick(3600000); // 1 hour: this should trigger the call to renew the SAS token.
       clock.restore();
       testCallback();
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_093: [The `fromConnectionString` method shall create a new `X509AuthorizationProvider` object with the connection string passed as argument if it contains an X509 parameter and pass this object to the transport constructor.]*/
     it('creates a X509AuthenticationProvider and passes it to the transport', function (testCallback) {
-      var x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
+      let x509ConnectionString = 'HostName=host;DeviceId=id;x509=true';
       Client.fromConnectionString(x509ConnectionString, function (authProvider) {
         assert.instanceOf(authProvider, X509AuthenticationProvider);
         testCallback();
@@ -64,7 +64,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_094: [The `fromConnectionString` method shall create a new `SharedAccessSignatureAuthenticationProvider` object with the connection string passed as argument if it contains a SharedAccessSignature parameter and pass this object to the transport constructor.]*/
     it('creates a SharedAccessSignatureAuthenticationProvider and passes it to the transport', function (testCallback) {
-      var SharedAccessSignatureConnectionString = 'HostName=host;DeviceId=id;SharedAccessSignature=' + sharedAccessSignature;
+      let SharedAccessSignatureConnectionString = 'HostName=host;DeviceId=id;SharedAccessSignature=' + sharedAccessSignature;
       Client.fromConnectionString(SharedAccessSignatureConnectionString, function (authProvider) {
         assert.instanceOf(authProvider, SharedAccessSignatureAuthenticationProvider);
         testCallback();
@@ -75,7 +75,7 @@ describe('Device Client', function () {
   describe('#fromSharedAccessSignature', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_030: [The fromSharedAccessSignature method shall return a new instance of the Client object] */
     it('returns an instance of Client', function () {
-      var client = Client.fromSharedAccessSignature(sharedAccessSignature, FakeTransport);
+      let client = Client.fromSharedAccessSignature(sharedAccessSignature, FakeTransport);
       assert.instanceOf(client, Client);
     });
   });
@@ -83,52 +83,52 @@ describe('Device Client', function () {
   describe('#fromAuthenticationProvider', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_091: [The `fromAuthenticationProvider` method shall return a `Client` object configured with a new instance of a transport created using the `transportCtor` argument.]*/
     it('returns an instance of Client', function () {
-      var client = Client.fromAuthenticationProvider({}, FakeTransport);
+      let client = Client.fromAuthenticationProvider({}, FakeTransport);
       assert.instanceOf(client, Client);
     });
   });
 
-  describe('#uploadToBlob', function() {
+  describe('#uploadToBlob', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_037: [The `uploadToBlob` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
-      it('throws a ReferenceError if \'blobName\' is \'' + blobName + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {});
-        assert.throws(function() {
-          client.uploadToBlob(blobName, new stream.Readable(), 42, function() {});
+      it('throws a ReferenceError if \'blobName\' is \'' + blobName + '\'', function () {
+        let client = new Client(new EventEmitter(), null, {});
+        assert.throws(function () {
+          client.uploadToBlob(blobName, new stream.Readable(), 42, function () {});
         });
       });
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_038: [The `uploadToBlob` method shall throw a `ReferenceError` if `stream` is falsy.]*/
     [undefined, null, ''].forEach(function (stream) {
-      it('throws a ReferenceError if \'stream\' is \'' + stream + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {});
-        assert.throws(function() {
-          client.uploadToBlob('blobName', stream, 42, function() {});
+      it('throws a ReferenceError if \'stream\' is \'' + stream + '\'', function () {
+        let client = new Client(new EventEmitter(), null, {});
+        assert.throws(function () {
+          client.uploadToBlob('blobName', stream, 42, function () {});
         });
       });
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_039: [The `uploadToBlob` method shall throw a `ReferenceError` if `streamLength` is falsy.]*/
     [undefined, null, '', 0].forEach(function (streamLength) {
-      it('throws a ReferenceError if \'streamLength\' is \'' + streamLength + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {});
-        assert.throws(function() {
-          client.uploadToBlob('blobName', new stream.Readable(), streamLength, function() {});
+      it('throws a ReferenceError if \'streamLength\' is \'' + streamLength + '\'', function () {
+        let client = new Client(new EventEmitter(), null, {});
+        assert.throws(function () {
+          client.uploadToBlob('blobName', new stream.Readable(), streamLength, function () {});
         });
       });
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_040: [The `uploadToBlob` method shall call the `done` callback with an `Error` object if the upload fails.]*/
-    it('calls the done callback with an Error object if the upload fails', function(done) {
-      var FakeBlobUploader = function () {
-        this.uploadToBlob = function(blobName, stream, streamLength, callback) {
+    it('calls the done callback with an Error object if the upload fails', function (done) {
+      let FakeBlobUploader = function () {
+        this.uploadToBlob = function (blobName, stream, streamLength, callback) {
           callback(new Error('fake error'));
         };
       };
 
-      var client = new Client(new EventEmitter(), null,  new FakeBlobUploader());
-      client.uploadToBlob('blobName', new stream.Readable(), 42, function(err) {
+      let client = new Client(new EventEmitter(), null,  new FakeBlobUploader());
+      client.uploadToBlob('blobName', new stream.Readable(), 42, function (err) {
         assert.instanceOf(err, Error);
         done();
       });
@@ -136,38 +136,38 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_041: [The `uploadToBlob` method shall call the `done` callback no parameters if the upload succeeds.]*/
     it('calls the done callback with no parameters if the upload succeeded', function (done) {
-      var FakeBlobUploader = function () {
-        this.uploadToBlob = function(blobName, stream, streamLength, callback) {
+      let FakeBlobUploader = function () {
+        this.uploadToBlob = function (blobName, stream, streamLength, callback) {
           callback();
         };
       };
 
-      var client = new Client(new EventEmitter(), null,  new FakeBlobUploader());
+      let client = new Client(new EventEmitter(), null,  new FakeBlobUploader());
       client.uploadToBlob('blobName', new stream.Readable(), 42, done);
     });
   });
 
-  describe('#getBlobSharedAccessSignature', function() {
+  describe('#getBlobSharedAccessSignature', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_001: [The `getBlobSharedAccessSignature` method shall throw a `ReferenceError` if `blobName` is falsy.]*/
     [undefined, null, ''].forEach(function (blobName) {
-      it('throws a ReferenceError if \'blobName\' is \'' + blobName + '\'', function() {
-        var client = new Client(new EventEmitter(), null, {}, {});
-        assert.throws(function() {
-          client.getBlobSharedAccessSignature(blobName, function() {});
+      it('throws a ReferenceError if \'blobName\' is \'' + blobName + '\'', function () {
+        let client = new Client(new EventEmitter(), null, {}, {});
+        assert.throws(function () {
+          client.getBlobSharedAccessSignature(blobName, function () {});
         });
       });
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_010: [The `getBlobSharedAccessSignature` method shall call the `done` callback with an `Error` object if the call fails.]*/
-    it('calls the done callback with an Error object if the upload fails', function(done) {
-      var FakeFileUploadApi = function () {
-        this.getBlobSharedAccessSignature = function(blobName, callback) {
+    it('calls the done callback with an Error object if the upload fails', function (done) {
+      let FakeFileUploadApi = function () {
+        this.getBlobSharedAccessSignature = function (blobName, callback) {
           callback(new Error('fake error'));
         };
       };
 
-      var client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
-      client.getBlobSharedAccessSignature('blobName', function(err) {
+      let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
+      client.getBlobSharedAccessSignature('blobName', function (err) {
         assert.instanceOf(err, Error);
         done();
       });
@@ -186,8 +186,8 @@ describe('Device Client', function () {
         }
       }
 
-      var client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
-      client.getBlobSharedAccessSignature('blobName', function(err, result) {
+      let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
+      client.getBlobSharedAccessSignature('blobName', function (err, result) {
         assert.isNull(err);
         assert.isNotNull(result);
         done();
@@ -195,16 +195,16 @@ describe('Device Client', function () {
     });
   });
 
-  describe('#notifyBlobUploadStatus', function() {
+  describe('#notifyBlobUploadStatus', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_005: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `isSuccess` is falsy.]*/
     [undefined, null, ''].forEach(function (isSuccess) {
-    it('throws a ReferenceError if \'isSuccess\' is \'' + isSuccess + '\'', function(done) {
+    it('throws a ReferenceError if \'isSuccess\' is \'' + isSuccess + '\'', function (done) {
       let statusCode = 1;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
       let client = new Client(new EventEmitter(), null, {}, {});
       try {
-        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function () {});
       } catch (err) {
         assert.strictEqual(err.name, "ReferenceError");
         done();
@@ -215,13 +215,13 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_006: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusCode` is falsy but not the number 0.]*/
     [undefined, null, ''].forEach(function (statusCode) {
-    it('throws a ReferenceError if \'statusCode\' is \'' + statusCode + '\'', function(done) {
+    it('throws a ReferenceError if \'statusCode\' is \'' + statusCode + '\'', function (done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
       let client = new Client(new EventEmitter(), null, {}, {});
       try {
-        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {
+        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function () {
         });
       } catch (err) {
         assert.strictEqual(err.name, "ReferenceError");
@@ -237,13 +237,13 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_007: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `statusDescription` is falsy but not an empty string.]*/
     [undefined, null, ''].forEach(function (statusDescription) {
-    it('throws a ReferenceError if \'statusDescription\' is \'' + statusDescription + '\'', function(done) {
+    it('throws a ReferenceError if \'statusDescription\' is \'' + statusDescription + '\'', function (done) {
       let isSuccess = 0;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
       let client = new Client(new EventEmitter(), null, {}, {});
       try {
-        client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+        client.notifyBlobUploadStatus(correlationId, isSuccess, 204, statusDescription, function () {});
       } catch (err) {
         assert.strictEqual(err.name, "ReferenceError");
         done();
@@ -254,13 +254,13 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_016: [The `notifyBlobUploadStatus` method shall throw a `ReferenceError` if `correlationId` is falsy.]*/
     [undefined, null, ''].forEach(function (correlationId) {
-      it('throws a ReferenceError if \'isSuccess\' is \'' + correlationId + '\'', function(done) {
+      it('throws a ReferenceError if \'isSuccess\' is \'' + correlationId + '\'', function (done) {
         let isSuccess = 0;
         let statusCode = 1;
         let statusDescription = 'NaN';
         let client = new Client(new EventEmitter(), null, {}, {});
         try {
-          client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function() {});
+          client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function () {});
         } catch (err) {
           assert.strictEqual(err.name, "ReferenceError");
           done();
@@ -270,18 +270,18 @@ describe('Device Client', function () {
       });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_41_013: [The `notifyBlobUploadStatus` method shall call the `done` callback with an `Error` object if the notify fails.]*/
-    it('calls the done callback with an Error object if the notify fails', function(done) {
+    it('calls the done callback with an Error object if the notify fails', function (done) {
       let isSuccess = false;
       let statusCode = 0;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
-      let FakeFileUploadApi = function (uploadResult) {
-        this.notifyUploadComplete = function(correlationId, uploadResult, callback) {
+      let FakeFileUploadApi = function (_uploadResult) {
+        this.notifyUploadComplete = function (correlationId, uploadResult, callback) {
           callback(new Error('fake notify error'));
         };
       };
       let client = new Client(new EventEmitter(), null, null, new FakeFileUploadApi());
-      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function(err) {
+      client.notifyBlobUploadStatus(correlationId, isSuccess, statusCode, statusDescription, function (err) {
       assert.instanceOf(err, Error);
         done();
       });
@@ -293,8 +293,8 @@ describe('Device Client', function () {
       let statusCode = 200;
       let statusDescription = 'NaN';
       let correlationId = 'fakeCorrelationId';
-      let FakeFileUploadApi = function (uploadResult) {
-        this.notifyUploadComplete = function(correlationId, uploadResult, callback) {
+      let FakeFileUploadApi = function (_uploadResult) {
+        this.notifyUploadComplete = function (correlationId, uploadResult, callback) {
           callback();
         };
       };
@@ -306,9 +306,9 @@ describe('Device Client', function () {
   describe('#on(\'message\')', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_002: [The ‘message’ event shall be emitted when a cloud-to-device message is received from the IoT Hub service.]*/
     it('emits a message event when a message is received', function (done) {
-      var fakeTransport = new FakeTransport();
-      var client = new Client(fakeTransport);
-      client.on('message', function(msg) {
+      let fakeTransport = new FakeTransport();
+      let client = new Client(fakeTransport);
+      client.on('message', function (msg) {
         /*Tests_SRS_NODE_DEVICE_CLIENT_16_003: [The ‘message’ event parameter shall be a ‘Message’ object.]*/
         assert.equal(msg.constructor.name, 'Message');
         done();
@@ -319,9 +319,9 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_004: [The client shall start listening for messages from the service whenever there is a listener subscribed to the ‘message’ event.]*/
     it('starts listening for messages when a listener subscribes to the message event', function () {
-      var fakeTransport = new FakeTransport();
+      let fakeTransport = new FakeTransport();
       sinon.spy(fakeTransport, 'enableC2D');
-      var client = new Client(fakeTransport);
+      let client = new Client(fakeTransport);
 
       // Calling 'on' thrice to make sure it's called each time on the receiver.
       // It should work because enableC2D does not check that it has not been called once before, instead leaving that job up to the transport level.
@@ -333,18 +333,18 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_005: [The client shall stop listening for messages from the service whenever the last listener unsubscribes from the ‘message’ event.]*/
     it('stops listening for messages when the last listener has unsubscribed', function (testCallback) {
-      var fakeTransport = new FakeTransport();
+      let fakeTransport = new FakeTransport();
       sinon.spy(fakeTransport, 'enableC2D');
       sinon.spy(fakeTransport, 'disableC2D');
       sinon.spy(fakeTransport, 'removeAllListeners');
 
-      var client = new Client(fakeTransport);
-      var listener1 = function () { };
-      var listener2 = function () { };
+      let client = new Client(fakeTransport);
+      let listener1 = function () { };
+      let listener2 = function () { };
       client.on('message', listener1);
       client.on('message', listener2);
 
-      process.nextTick(function() {
+      process.nextTick(function () {
         client.removeListener('message', listener1);
         assert.isTrue(fakeTransport.disableC2D.notCalled);
         client.removeListener('message', listener2);
@@ -355,10 +355,10 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
     it('emits an error if it fails to start listening for messages', function (testCallback) {
-      var fakeTransport = new FakeTransport();
-      var fakeError = new Error('fake');
+      let fakeTransport = new FakeTransport();
+      let fakeError = new Error('fake');
       sinon.stub(fakeTransport, 'enableC2D').callsFake(function (callback) { callback(fakeError); });
-      var client = new Client(fakeTransport);
+      let client = new Client(fakeTransport);
       client.on('error', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -372,11 +372,11 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_066: [ The client shall emit an error if connecting the transport fails while subscribing to message events ]*/
     it('emits an error if it fails to stop listening for messages', function (testCallback) {
-      var fakeTransport = new FakeTransport();
-      var fakeError = new Error('fake');
+      let fakeTransport = new FakeTransport();
+      let fakeError = new Error('fake');
       sinon.spy(fakeTransport, 'enableC2D');
       sinon.stub(fakeTransport, 'disableC2D').callsFake(function (callback) { callback(fakeError); });
-      var client = new Client(fakeTransport);
+      let client = new Client(fakeTransport);
       client.on('error', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
@@ -390,7 +390,8 @@ describe('Device Client', function () {
   });
 
   describe('transport.on(\'disconnect\') handler', function () {
-    var fakeTransport, fakeRetryPolicy;
+    let fakeTransport;
+    let fakeRetryPolicy;
     beforeEach(function () {
       fakeRetryPolicy = {
         shouldRetry: function () { return true; },
@@ -405,7 +406,7 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_097: [If the transport emits a `disconnect` event while the client is subscribed to c2d messages updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableC2D` method.]*/
     it('reenables C2D after being disconnected if C2D was enabled', function () {
-      var client = new Client(fakeTransport);
+      let client = new Client(fakeTransport);
       client.setRetryPolicy(fakeRetryPolicy);
       client.on('message', function () {});
       assert.isTrue(fakeTransport.enableC2D.calledOnce);
@@ -415,8 +416,8 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_102: [If the retry policy fails to reestablish the C2D functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
     it('emits a disconnect event if reenabling C2D fails', function (testCallback) {
-      var fakeError = new Error('fake');
-      var client = new Client(fakeTransport);
+      let fakeError = new Error('fake');
+      let client = new Client(fakeTransport);
       client.on('disconnect', function (err) {
         assert.instanceOf(err, results.Disconnected);
         assert.strictEqual(err.transportObj, fakeError);
@@ -433,7 +434,7 @@ describe('Device Client', function () {
 
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_099: [If the transport emits a `disconnect` event while the client is subscribed to direct methods the retry policy shall be used to reconnect and re-enable the feature using the transport `enableTwinDesiredPropertiesUpdates` method.]*/
       it('reenables device methods after being disconnected if methods were enabled', function () {
-        var client = new Client(fakeTransport);
+        let client = new Client(fakeTransport);
         client.setRetryPolicy(fakeRetryPolicy);
         client.onDeviceMethod('method', function () { });
         assert.isTrue(fakeTransport.enableMethods.calledOnce);
@@ -443,8 +444,8 @@ describe('Device Client', function () {
 
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_100: [If the retry policy fails to reestablish the direct methods functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
       it('emits a disconnect event if reenabling methods fails', function (testCallback) {
-        var fakeError = new Error('fake');
-        var client = new Client(fakeTransport);
+        let fakeError = new Error('fake');
+        let client = new Client(fakeTransport);
         client.on('disconnect', function (err) {
           assert.instanceOf(err, results.Disconnected);
           assert.strictEqual(err.transportObj, fakeError);
@@ -464,7 +465,7 @@ describe('Device Client', function () {
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_042: [The `setOptions` method shall throw a `ReferenceError` if the options object is falsy.]*/
     [null, undefined].forEach(function (options) {
       it('throws is options is ' + options, function () {
-        var client = new Client(new EventEmitter());
+        let client = new Client(new EventEmitter());
         assert.throws(function () {
           client.setOptions(options, function () { });
         }, ReferenceError);
@@ -473,18 +474,18 @@ describe('Device Client', function () {
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_043: [The `done` callback shall be invoked no parameters when it has successfully finished setting the client and/or transport options.]*/
     it('calls the done callback with no parameters when it has successfully configured the transport', function (done) {
-      var client = new Client(new FakeTransport());
+      let client = new Client(new FakeTransport());
       client.setOptions({}, done);
     });
 
     /*Tests_SRS_NODE_DEVICE_CLIENT_16_044: [The `done` callback shall be invoked with a standard javascript `Error` object and no result object if the client could not be configured as requested.]*/
     it('calls the done callback with an error when it failed to configured the transport', function (done) {
-      var failingTransport = new FakeTransport();
+      let failingTransport = new FakeTransport();
       sinon.stub(failingTransport, 'setOptions').callsFake(function (options, done) {
         done(new Error('dummy error'));
       });
 
-      var client = new Client(failingTransport);
+      let client = new Client(failingTransport);
       client.setOptions({}, function (err) {
         assert.instanceOf(err, Error);
         done();
@@ -493,9 +494,9 @@ describe('Device Client', function () {
 
     it('calls setOptions of blob uploader with supplied options', function (done) {
       /*Tests_SRS_NODE_DEVICE_CLIENT_99_103: [The `setOptions` method shall set `blobUploadClient` options.]*/
-      var fakeOptions = '__FAKE_OPTIONS__';
-      var fakeBlobUploader = { setOptions: sinon.fake() };
-      var client = new Client(new FakeTransport(), null, fakeBlobUploader);
+      let fakeOptions = '__FAKE_OPTIONS__';
+      let fakeBlobUploader = { setOptions: sinon.fake() };
+      let client = new Client(new FakeTransport(), null, fakeBlobUploader);
       client.setOptions(fakeOptions, function () {
         assert.isTrue(fakeBlobUploader.setOptions.calledWith(fakeOptions));
         done();
@@ -504,9 +505,9 @@ describe('Device Client', function () {
 
     it('calls setOptions of file uploader with supplied options', function (done) {
       /*Tests_SRS_NODE_DEVICE_CLIENT_99_104: [The `setOptions` method shall set `fileUploadClient` options.]*/
-      var fakeOptions = '__FAKE_OPTIONS__';
-      var fakeFileUploader = { setOptions: sinon.fake() };
-      var client = new Client(new FakeTransport(), null, null, fakeFileUploader);
+      let fakeOptions = '__FAKE_OPTIONS__';
+      let fakeFileUploader = { setOptions: sinon.fake() };
+      let client = new Client(new FakeTransport(), null, null, fakeFileUploader);
       client.setOptions(fakeOptions, function () {
         assert.isTrue(fakeFileUploader.setOptions.calledWith(fakeOptions));
         done();
@@ -516,7 +517,7 @@ describe('Device Client', function () {
   });
 
   describe('#onDeviceMethod', function () {
-    var FakeMethodTransport = function (config) {
+    let FakeMethodTransport = function (config) {
       EventEmitter.call(this);
       this.config = config;
 
@@ -541,8 +542,7 @@ describe('Device Client', function () {
         this.on('method_' + methodName, callback);
       };
 
-      this.sendMethodResponse = function (response, done) {
-        response = response;
+      this.sendMethodResponse = function (_response, done) {
         if (!!done && typeof (done) === 'function') {
           done(null);
         }
@@ -561,8 +561,8 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_020: [ onDeviceMethod shall throw a ReferenceError if methodName is falsy. ]
     [undefined, null].forEach(function (methodName) {
       it('throws ReferenceError when methodName is "' + methodName + '"', function () {
-        var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        let transport = new FakeMethodTransport();
+        let client = new Client(transport);
         assert.throws(function () {
           client.onDeviceMethod(methodName, function () { });
         }, ReferenceError);
@@ -572,8 +572,8 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_024: [ onDeviceMethod shall throw a TypeError if methodName is not a string. ]
     [new Date(), 42].forEach(function (methodName) {
       it('throws TypeError when methodName is "' + methodName + '"', function () {
-        var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        let transport = new FakeMethodTransport();
+        let client = new Client(transport);
         assert.throws(function () {
           client.onDeviceMethod(methodName, function () { });
         }, TypeError);
@@ -583,8 +583,8 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_022: [ onDeviceMethod shall throw a ReferenceError if callback is falsy. ]
     [undefined, null].forEach(function (callback) {
       it('throws ReferenceError when callback is "' + callback + '"', function () {
-        var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        let transport = new FakeMethodTransport();
+        let client = new Client(transport);
         assert.throws(function () {
           client.onDeviceMethod('doSomeTests', callback);
         }, ReferenceError);
@@ -594,8 +594,8 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_025: [ onDeviceMethod shall throw a TypeError if callback is not a Function. ]
     ['not_a_function', 42].forEach(function (callback) {
       it('throws TypeError when callback is "' + callback + '"', function () {
-        var transport = new FakeMethodTransport();
-        var client = new Client(transport);
+        let transport = new FakeMethodTransport();
+        let client = new Client(transport);
         assert.throws(function () {
           client.onDeviceMethod('doSomeTests', callback);
         }, TypeError);
@@ -605,8 +605,9 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_001: [ The onDeviceMethod method shall cause the callback function to be invoked when a cloud-to-device method invocation signal is received from the IoT Hub service. ]
     it('calls callback when C2D method call arrives', function (done) {
       // setup
-      var transport = new FakeMethodTransport();
-      var client = new Client(transport);
+      let transport = new FakeMethodTransport();
+      let client = new Client(transport);
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       client.open(function () {
         client.onDeviceMethod('firstMethod', function () { }); // This will connect the method receiver
         client.onDeviceMethod('reboot', function () {
@@ -621,9 +622,9 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_003: [ The client shall start listening for method calls from the service whenever there is a listener subscribed for a method callback. ]
     it('registers callback on transport when a method event is subscribed to', function () {
       // setup
-      var transport = new FakeMethodTransport();
-      var client = new Client(transport);
-      var callback = sinon.spy();
+      let transport = new FakeMethodTransport();
+      let client = new Client(transport);
+      let callback = sinon.spy();
       transport.on('newListener', callback);
 
       // test
@@ -639,8 +640,8 @@ describe('Device Client', function () {
     // Tests_SRS_NODE_DEVICE_CLIENT_13_023: [ onDeviceMethod shall throw an Error if a listener is already subscribed for a given method call. ]
     it('throws if a listener is already subscribed for a method call', function () {
       // setup
-      var transport = new FakeMethodTransport();
-      var client = new Client(transport);
+      let transport = new FakeMethodTransport();
+      let client = new Client(transport);
       client.onDeviceMethod('reboot', function () { });
 
       // test
@@ -651,10 +652,10 @@ describe('Device Client', function () {
     });
 
     it('emits an error if the transport fails to enable the methods feature', function (testCallback) {
-      var transport = new FakeMethodTransport();
-      var fakeError = new Error('fake');
+      let transport = new FakeMethodTransport();
+      let fakeError = new Error('fake');
       sinon.stub(transport, 'enableMethods').callsFake(function (callback) { callback(fakeError); });
-      var client = new Client(transport);
+      let client = new Client(transport);
       client.on('error', function (err) {
         assert.strictEqual(err, fakeError);
         testCallback();
