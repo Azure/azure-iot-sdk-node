@@ -3,14 +3,14 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var createDeviceMethodExchange = require('../../dist/device_method').createDeviceMethodExchange;
-var DeviceMethodResponse = require('../../dist/device_method').DeviceMethodResponse;
-var DeviceMethodRequest = require('../../dist/device_method').DeviceMethodRequest;
+let assert = require('chai').assert;
+let createDeviceMethodExchange = require('../../dist/device_method').createDeviceMethodExchange;
+let DeviceMethodResponse = require('../../dist/device_method').DeviceMethodResponse;
+let DeviceMethodRequest = require('../../dist/device_method').DeviceMethodRequest;
 
-describe("DeviceMethodRequest", function() {
-    describe("#createDeviceMethodExchange", function() {
-        it("creates exchange successfully", function() {
+describe("DeviceMethodRequest", function () {
+    describe("#createDeviceMethodExchange", function () {
+        it("creates exchange successfully", function () {
             const request = new DeviceMethodRequest("requestId", "methodName");
             const response = new DeviceMethodResponse("otherRequestId", {});
             const exchange = createDeviceMethodExchange(request, response);

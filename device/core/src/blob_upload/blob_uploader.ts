@@ -38,8 +38,8 @@ export interface Aborter {
  * @private
  */
 export type BlobResponse = {
-  statusCode: number,
-  body: string
+  statusCode: number;
+  body: string;
 };
 
 /**
@@ -53,7 +53,7 @@ export interface BlobService {
  * @private
  */
 export interface BlockBlobClient {
-  uploadStream(stream: Stream, bufferSize?: undefined | number, maxConcurrancy?: undefined | number,  options?: any): Promise<any>;
+  uploadStream(stream: Stream, bufferSize?: undefined | number, maxConcurrency?: undefined | number,  options?: any): Promise<any>;
 }
 
 /**
@@ -71,7 +71,7 @@ export interface StorageApi {
 export class BlobUploader implements BlobUploaderInterface {
   storageApi: StorageApi; // temporary, revert back to StorageApi once things are fixed...
 
-  constructor(storageApi?: StorageApi) { // TODO: interface
+  constructor(storageApi?: StorageApi) {
     if (storageApi) {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_008: [`BlobUploader` should use the `storageApi` object to upload data if `storageApi` is truthy.]*/
       this.storageApi = storageApi;
@@ -82,8 +82,8 @@ export class BlobUploader implements BlobUploaderInterface {
   }
 
   uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done: TripleValueCallback<any, BlobResponse>): void;
-  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number): Promise<{ body: any, result: BlobResponse }>;
-  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done?: TripleValueCallback<any, BlobResponse>): Promise<{ body: any, result: BlobResponse }> | void {
+  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number): Promise<{ body: any; result: BlobResponse }>;
+  uploadToBlob(blobInfo: UploadParams, stream: Stream, streamLength: number, done?: TripleValueCallback<any, BlobResponse>): Promise<{ body: any; result: BlobResponse }> | void {
     tripleValueCallbackToPromise((_callback) => {
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_001: [`uploadToBlob` shall throw a `ReferenceError` if `blobInfo` is falsy.]*/
       if (!blobInfo) throw new ReferenceError('blobInfo cannot be \'' + blobInfo + '\'');
@@ -121,7 +121,7 @@ export class BlobUploader implements BlobUploaderInterface {
       );
       uploadPromise
       .then((uploadBlobResponse: any) => {
-        /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` calback with the result of the storage api call.]*/
+        /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_16_005: [`uploadToBlob` shall call the `_callback` callback with the result of the storage api call.]*/
         _callback(null, uploadBlobResponse);
       })
       .catch((err: Error) => {

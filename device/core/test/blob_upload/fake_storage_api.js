@@ -7,23 +7,23 @@ class fakeBlockBlobClient {
   constructor() {}
 
   static uploadStream() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       resolve('fakeUploadResponse');
     });
   }
 }
 
 class BlockBlobClient {
-  constructor(url, pipeline) {
+  constructor(_url, _pipeline) {
     return fakeBlockBlobClient
   }
 }
 
 function newPipeline() {
-  return function() {};
+  return function () {};
 }
 
-function AnonymousCredential() {};
+function AnonymousCredential() {}
 
 
 module.exports = {

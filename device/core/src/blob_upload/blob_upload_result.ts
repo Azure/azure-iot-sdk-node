@@ -44,16 +44,16 @@ export class BlobUploadResult {
    */
   static fromAzureStorageCallbackArgs(err?: Error & RestErrorStub, uploadResponse?: BlobUploadCommonResponseStub): BlobUploadResult {
     // According to the Azure Storage JK SDK, the Azure Storage REST API returns 500/404 status Code in HTTP responses when an error occurs.
-    // @azure/ms-rest-js deserialization will throw `RestError` directly, and the Storage SDK propogates this error to the top.
+    // @azure/ms-rest-js deserialization will throw `RestError` directly, and the Storage SDK propagates this error to the top.
     // But this seems to be incorrect temporarily (Github Issue filed on part of Azure Storage SDK for JS Team).
     // Currently, the thrown `RestError` should be further deserialized according to the response headers and bodies.
     /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_001: [If `err` is `null` and `uploadResponse` is falsy a `ReferenceError` shall be thrown]*/
     if (!err && !uploadResponse) { throw new ReferenceError('err and uploadResponse cannot both be null'); }
     let uploadResult: BlobUploadResult;
     if (err) {
-      const statusCode = err.hasOwnProperty('statusCode') ? err.statusCode : -1;
-      const statusDescription = err.hasOwnProperty('response') ? err.response : err.message;
-      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_002: [If `err` is not `null`, the `BlobUploadResult` shall have the `isSucess` property set to `false`]*/
+      const statusCode = ((Object.prototype.hasOwnProperty.call(err, 'statusCode')) ? (err.statusCode) : (-1));
+      const statusDescription = ((Object.prototype.hasOwnProperty.call(err, 'response')) ? (err.response) : (err.message));
+      /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_002: [If `err` is not `null`, the `BlobUploadResult` shall have the `isSuccess` property set to `false`]*/
       uploadResult = new BlobUploadResult(false, statusCode, statusDescription);
     } else {
       if (uploadResponse.errorCode && uploadResponse.errorCode) {

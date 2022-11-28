@@ -3,22 +3,22 @@
 
 'use strict';
 
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var sinon = require('sinon');
-var assert = require('chai').assert;
-var DeviceMethodResponse = require('../../dist/device_method').DeviceMethodResponse;
+let EventEmitter = require('events').EventEmitter;
+let util = require('util');
+let sinon = require('sinon');
+let assert = require('chai').assert;
+let DeviceMethodResponse = require('../../dist/device_method').DeviceMethodResponse;
 
-describe('DeviceMethodResponse', function() {
-  var MockReceiver = function() {
+describe('DeviceMethodResponse', function () {
+  let MockReceiver = function () {
     EventEmitter.call(this);
 
-    this.onDeviceMethod = function(methodName, callback) {
+    this.onDeviceMethod = function (methodName, callback) {
       this.on('method_' + methodName, callback);
     };
 
     // causes a mock method event to be raised
-    this.emitMethodCall = function(methodName) {
+    this.emitMethodCall = function (methodName) {
       this.emit('method_' + methodName, {
         methods: { methodName: methodName },
         properties: {},
@@ -29,17 +29,16 @@ describe('DeviceMethodResponse', function() {
   };
   util.inherits(MockReceiver, EventEmitter);
 
-  var MockTransport = function(config) {
+  let MockTransport = function (config) {
     EventEmitter.call(this);
     this.config = config;
     this.receiver = new MockReceiver();
 
-    this.getReceiver = function(callback) {
+    this.getReceiver = function (callback) {
       callback(null, this.receiver);
     };
 
-    this.sendMethodResponse = function(response, done) {
-      response = response; // suppress js lint errors about unused params
+    this.sendMethodResponse = function (_response, done) {
       if(!!done && typeof(done) === 'function') {
         done(null);
       }
@@ -47,8 +46,8 @@ describe('DeviceMethodResponse', function() {
   };
   util.inherits(MockTransport, EventEmitter);
 
-  describe('#constructor', function() {
-    var inputs = [
+  describe('#constructor', function () {
+    let inputs = [
       { val: undefined, err: ReferenceError },
       { val: null, err: ReferenceError },
       { val: '', err: Error }
@@ -56,45 +55,45 @@ describe('DeviceMethodResponse', function() {
 
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_001: [ DeviceMethodRequest shall throw a ReferenceError if requestId is falsy or is not a string. ]
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_002: [ DeviceMethodRequest shall throw an Error if requestId is an empty string. ]
-    inputs.forEach(function(inp) {
-      it('throws a ' + inp.err.name + ' if \'requestId\' is \'' + inp.val + '\'', function() {
-        assert.throws(function() {
+    inputs.forEach(function (inp) {
+      it('throws a ' + inp.err.name + ' if \'requestId\' is \'' + inp.val + '\'', function () {
+        assert.throws(function () {
           return new DeviceMethodResponse(inp.val, {});
         }, inp.err);
       });
     });
 
     // Codes_SRS_NODE_DEVICE_METHOD_RESPONSE_13_006: [ DeviceMethodResponse shall throw a ReferenceError if transport is falsy. ]
-    [null, undefined].forEach(function(inp) {
-      it('throws a ReferenceError if \'transport\' is \'' + inp + '\'', function() {
-        assert.throws(function() {
+    [null, undefined].forEach(function (inp) {
+      it('throws a ReferenceError if \'transport\' is \'' + inp + '\'', function () {
+        assert.throws(function () {
           return new DeviceMethodResponse('1', inp);
         }, ReferenceError);
       });
     });
   });
 
-  describe('#send', function() {
+  describe('#send', function () {
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_007: [ DeviceMethodResponse.send shall throw a ReferenceError if status is undefined or not a number. ]
     [undefined, null, 'not_a_number'].forEach(function (status) {
-      it('throws if status passed to response.send is "' + status + '"', function() {
+      it('throws if status passed to response.send is "' + status + '"', function () {
         // setup
-        var transport = new MockTransport();
-        var res = new DeviceMethodResponse('1', transport);
+        let transport = new MockTransport();
+        let res = new DeviceMethodResponse('1', transport);
 
         // test & assert
-        assert.throws(function() {
-          res.send(status, undefined, function(err) {});
+        assert.throws(function () {
+          res.send(status, undefined, function (_err) {});
         }, ReferenceError);
       });
     });
 
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_008: [ DeviceMethodResponse.send shall notify the service and supply the response for the request along with the status by calling sendMethodResponse on the underlying transport object. ]
-    it('shall send response to transport\'s sendMethodResponse function', function() {
+    it('shall send response to transport\'s sendMethodResponse function', function () {
       // setup
-      var transport = new MockTransport();
-      var spy = sinon.spy(transport, 'sendMethodResponse');
-      var res = new DeviceMethodResponse('1', transport);
+      let transport = new MockTransport();
+      let spy = sinon.spy(transport, 'sendMethodResponse');
+      let res = new DeviceMethodResponse('1', transport);
 
       // test
       res.send(200);
@@ -105,24 +104,24 @@ describe('DeviceMethodResponse', function() {
     });
 
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_009: [ DeviceMethodResponse.send shall throw an Error object if it is called more than once for the same request. ]
-    it('throws if response.send is called more than once', function() {
+    it('throws if response.send is called more than once', function () {
       // setup
-      var transport = new MockTransport();
-      var res = new DeviceMethodResponse('1', transport);
+      let transport = new MockTransport();
+      let res = new DeviceMethodResponse('1', transport);
 
       // test & assert
       res.send(200);
-      assert.throws(function() {
-        res.send(202, undefined, function(err) {});
+      assert.throws(function () {
+        res.send(202, undefined, function (_err) {});
       }, Error);
     });
 
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_010: [ DeviceMethodResponse.send shall invoke the callback specified by done if it is not falsy. ]
-    it('calls the callback passed to response.send when no payload is passed.', function() {
+    it('calls the callback passed to response.send when no payload is passed.', function () {
       // setup
-      var transport = new MockTransport();
-      var res = new DeviceMethodResponse('1', transport);
-      var callback = sinon.spy();
+      let transport = new MockTransport();
+      let res = new DeviceMethodResponse('1', transport);
+      let callback = sinon.spy();
 
       // test
       res.send(200, callback);
@@ -132,11 +131,11 @@ describe('DeviceMethodResponse', function() {
       assert.isNull(callback.args[0][0]);
     });
 
-    it('calls the callback passed to response.send when a payload is passed.', function() {
+    it('calls the callback passed to response.send when a payload is passed.', function () {
       // setup
-      var transport = new MockTransport();
-      var res = new DeviceMethodResponse('1', transport);
-      var callback = sinon.spy();
+      let transport = new MockTransport();
+      let res = new DeviceMethodResponse('1', transport);
+      let callback = sinon.spy();
 
       // test
       res.send(200, 'payload', callback);
@@ -146,24 +145,24 @@ describe('DeviceMethodResponse', function() {
       assert.isNull(callback.args[0][0]);
     });
 
-    it('throws if the callback is not the last argument', function() {
+    it('throws if the callback is not the last argument', function () {
       // setup
-      var transport = new MockTransport();
-      var res = new DeviceMethodResponse('1', transport);
+      let transport = new MockTransport();
+      let res = new DeviceMethodResponse('1', transport);
 
       // test and assert
-      assert.throws(function() {
-        res.send(200, function() {}, 'payload');
+      assert.throws(function () {
+        res.send(200, function () {}, 'payload');
       });
     });
 
     // Tests_SRS_NODE_DEVICE_METHOD_RESPONSE_13_011: [ DeviceMethodResponse.send shall pass the status of sending the response to the service to done. ]
-    it('calls the callback passed to response.send with error if transport fails', function() {
+    it('calls the callback passed to response.send with error if transport fails', function () {
       // setup
-      var transport = new MockTransport();
-      var res = new DeviceMethodResponse('1', transport);
-      var callback = sinon.spy();
-      var sendMethodResponseStub = sinon.stub(transport, 'sendMethodResponse');
+      let transport = new MockTransport();
+      let res = new DeviceMethodResponse('1', transport);
+      let callback = sinon.spy();
+      let sendMethodResponseStub = sinon.stub(transport, 'sendMethodResponse');
       sendMethodResponseStub.callsArgWith(1, new Error('boo'));
 
       // test

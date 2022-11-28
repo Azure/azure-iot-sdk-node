@@ -4,7 +4,7 @@ import { SharedAccessKeyAuthenticationProvider } from './sak_authentication_prov
 import { HttpRequestOptions, RestApiClient } from 'azure-iot-http-base';
 import * as url from 'url';
 
-// tslint:disable-next-line:no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json');
 
 /**
@@ -102,7 +102,7 @@ export class IotEdgeAuthenticationProvider extends SharedAccessKeyAuthentication
       tokenCredential: undefined
     };
 
-    // TODO: The user agent string below needs to be constructed using the utils.getUserAgentString function.
+    // Consider: The user agent string below needs to be constructed using the utils.getUserAgentString function.
     // But that is an async function and since we can't do async things while initializing fields, one way to
     // handle this might be to make this._restApiClient a lazily initialized object.
     this._restApiClient = new RestApiClient(config, `${packageJson.name}/${packageJson.version}`);

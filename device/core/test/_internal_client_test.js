@@ -3,27 +3,27 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var sinon = require('sinon');
-var uuid = require('uuid');
-var fs = require('fs');
-var EventEmitter = require('events').EventEmitter;
-var SimulatedHttp = require('./http_simulated.js');
-var FakeTransport = require('./fake_transport.js');
-var clientTests = require('./_client_common_testrun.js');
-var results = require('azure-iot-common').results;
-var errors = require('azure-iot-common').errors;
-var Message = require('azure-iot-common').Message;
-var NoRetry = require('azure-iot-common').NoRetry;
-var SharedAccessKeyAuthenticationProvider = require('../dist/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
-var SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
-var Twin = require('../dist/twin').Twin;
-var DeviceClient = require('../dist/device_client').Client;
-var ModuleClient = require('../dist/module_client').ModuleClient;
+let assert = require('chai').assert;
+let sinon = require('sinon');
+let uuid = require('uuid');
+let fs = require('fs');
+let EventEmitter = require('events').EventEmitter;
+let SimulatedHttp = require('./http_simulated.js');
+let FakeTransport = require('./fake_transport.js');
+let clientTests = require('./_client_common_testrun.js');
+let results = require('azure-iot-common').results;
+let errors = require('azure-iot-common').errors;
+let Message = require('azure-iot-common').Message;
+let NoRetry = require('azure-iot-common').NoRetry;
+let SharedAccessKeyAuthenticationProvider = require('../dist/sak_authentication_provider').SharedAccessKeyAuthenticationProvider;
+let SharedAccessSignatureAuthenticationProvider = require('../dist/sas_authentication_provider').SharedAccessSignatureAuthenticationProvider;
+let Twin = require('../dist/twin').Twin;
+let DeviceClient = require('../dist/device_client').Client;
+let ModuleClient = require('../dist/module_client').ModuleClient;
 
 [ModuleClient, DeviceClient].forEach(function (ClientCtor) {
   describe(ClientCtor.name, function () {
-    var sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
+    let sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
     describe('#constructor', function () {
       /*Tests_SRS_NODE_DEVICE_CLIENT_05_001: [The InternalClient constructor shall throw ReferenceError if the transport argument is falsy.]*/
       /*Tests_SRS_NODE_MODULE_CLIENT_05_001: [The InternalClient constructor shall throw ReferenceError if the transport argument is falsy.]*/
@@ -36,9 +36,9 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       });
 
     /*Tests_SRS_NODE_INTERNAL_CLIENT_41_001: [A `connect` event will be emitted when a `connected` event is received from the transport.]*/
-    it('emits `connect` when a connected event is received from the transport', (testCallback) => {
+    it('emits `connect` when a connected event is received from the transport', function (testCallback) {
         const dummyTransport = new FakeTransport();
-        var client = new ClientCtor(dummyTransport);
+        let client = new ClientCtor(dummyTransport);
         client.on('connect', testCallback);
         dummyTransport.emit('connected');
       })
@@ -66,7 +66,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     });
 
     describe('#fromSharedAccessSignature', function () {
-      var sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
+      let sharedAccessSignature = '"SharedAccessSignature sr=hubName.azure-devices.net/devices/deviceId&sig=s1gn4tur3&se=1454204843"';
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
       /*Tests_SRS_NODE_MODULE_CLIENT_16_029: [The fromSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature argument is falsy.] */
       [null, undefined, '', 0].forEach(function (value) {
@@ -109,10 +109,9 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
       /*Tests_SRS_NODE_MODULE_CLIENT_16_090: [The `fromAuthenticationProvider` method shall pass the `authenticationProvider` object passed as argument to the transport constructor.]*/
       it('passes the authenticationProvider to the transport', function () {
-        var fakeAuthProvider = {};
-        var fakeTransportCtor = sinon.stub().returns(new EventEmitter());
+        let fakeAuthProvider = {};
+        let fakeTransportCtor = sinon.stub().returns(new EventEmitter());
         return ClientCtor.fromAuthenticationProvider(fakeAuthProvider, fakeTransportCtor);
-        assert.isTrue(fakeTransportCtor.calledWith(fakeAuthProvider));
       });
     });
 
@@ -120,14 +119,14 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_021: [The ‘setTransportOptions’ method shall call the ‘setOptions’ method on the transport object.]*/
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_022: [The ‘done’ callback shall be invoked with a null error object and a ‘TransportConfigured’ object once the transport has been configured.]*/
       it('calls the setOptions method on the transport object and gives it the options parameter', function (done) {
-        var testOptions = { foo: 42 };
-        var dummyTransport = new FakeTransport();
+        let testOptions = { foo: 42 };
+        let dummyTransport = new FakeTransport();
         sinon.stub(dummyTransport, 'setOptions').callsFake(function (options, callback) {
           assert.equal(options.http.receivePolicy, testOptions);
           callback(null, new results.TransportConfigured());
         });
 
-        var client = new ClientCtor(dummyTransport);
+        let client = new ClientCtor(dummyTransport);
         client.setTransportOptions(testOptions, function (err, result) {
           if (err) {
             done(err);
@@ -138,15 +137,15 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         });
       });
 
-      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_023: [The ‘done’ callback shall be invoked with a standard javascript Error object and no result object if the transport could not be configued as requested.]*/
+      /*Tests_SRS_NODE_INTERNAL_CLIENT_16_023: [The ‘done’ callback shall be invoked with a standard javascript Error object and no result object if the transport could not be configured as requested.]*/
       it('calls the \'done\' callback with an error object if setOptions failed', function (done) {
-        var dummyTransport = new FakeTransport();
+        let dummyTransport = new FakeTransport();
         sinon.stub(dummyTransport, 'setOptions').callsFake(function (options, callback) {
-          var err = new Error('fail');
+          let err = new Error('fail');
           callback(err);
         });
 
-        var client = new ClientCtor(dummyTransport);
+        let client = new ClientCtor(dummyTransport);
         client.setTransportOptions({ foo: 42 }, function (err) {
           assert.isNotNull(err);
           done();
@@ -156,7 +155,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_024: [The ‘setTransportOptions’ method shall throw a ‘ReferenceError’ if the options object is falsy] */
       [null, undefined, '', 0].forEach(function (option) {
         it('throws a ReferenceError if options is ' + option, function () {
-          var client = new ClientCtor(new FakeTransport());
+          let client = new ClientCtor(new FakeTransport());
           assert.throws(function () {
             client.setTransportOptions(option, function () { });
           }, ReferenceError);
@@ -165,7 +164,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_025: [The ‘setTransportOptions’ method shall throw a ‘NotImplementedError’ if the transport doesn’t implement a ‘setOption’ method.]*/
       it('throws a NotImplementedError if the setOptions method is not implemented on the transport', function () {
-        var client = new ClientCtor(new EventEmitter());
+        let client = new ClientCtor(new EventEmitter());
 
         assert.throws(function () {
           client.setTransportOptions({ foo: 42 }, function () { });
@@ -174,22 +173,22 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     });
 
     describe('#setOptions', function () {
-      beforeEach(function() {
+      beforeEach(function () {
         fs.writeFileSync('aziotfakepemfile', 'ca cert');
       });
-      afterEach(function() {
+      afterEach(function () {
         fs.unlinkSync('aziotfakepemfile');
       });
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_06_001: [The `setOptions` method shall assume the `ca` property is the name of an already existent file and it will attempt to read that file as a pem into a string value and pass the string to config object `ca` property.  Otherwise, it is assumed to be a pem string.] */
       it('sets CA cert with contents of file if provided', function (testCallback) {
-        var fakeBaseClient = new FakeTransport();
+        let fakeBaseClient = new FakeTransport();
         fakeBaseClient.setOptions = sinon.stub().callsArg(1);
-        var fakeMethodClient = {}
+        let fakeMethodClient = {}
         fakeMethodClient.setOptions = sinon.stub();
-        var client = new ClientCtor(fakeBaseClient);
+        let client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
-        client.setOptions({ ca: 'aziotfakepemfile' }, function(err) {
+        client.setOptions({ ca: 'aziotfakepemfile' }, function (err) {
           assert.isNotOk(err);
           assert(fakeBaseClient.setOptions.called);
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
@@ -198,13 +197,13 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       });
 
       it('sets CA cert with contents of provided string', function (testCallback) {
-        var fakeBaseClient = new FakeTransport();
+        let fakeBaseClient = new FakeTransport();
         fakeBaseClient.setOptions = sinon.stub().callsArg(1);
-        var fakeMethodClient = {}
+        let fakeMethodClient = {}
         fakeMethodClient.setOptions = sinon.stub();
-        var client = new ClientCtor(fakeBaseClient);
+        let client = new ClientCtor(fakeBaseClient);
         client._methodClient = fakeMethodClient;
-        client.setOptions({ ca: 'ca cert' }, function(err) {
+        client.setOptions({ ca: 'ca cert' }, function (err) {
           assert.isNotOk(err);
           assert(fakeBaseClient.setOptions.called);
           assert.strictEqual(fakeBaseClient.setOptions.firstCall.args[0].ca, 'ca cert');
@@ -213,15 +212,15 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       });
 
       it('productInfo properly sets string', function (done) {
-        var testOptions = { productInfo: 'test'};
-        var dummyTransport = new FakeTransport();
+        let testOptions = { productInfo: 'test' };
+        let dummyTransport = new FakeTransport();
         sinon.stub(dummyTransport, 'setOptions').callsFake(function (options, callback) {
           assert.strictEqual(options.productInfo, testOptions.productInfo);
           callback(null, new results.TransportConfigured());
         });
 
-        var client = new ClientCtor(dummyTransport);
-        client.setOptions(testOptions, function (err, results) {
+        let client = new ClientCtor(dummyTransport);
+        client.setOptions(testOptions, function (err, _results) {
           if (err) {
             done(err);
           } else {
@@ -234,7 +233,8 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     describe('#open', function () {
       /* Tests_SRS_NODE_INTERNAL_CLIENT_12_001: [The open function shall call the transport’s connect function, if it exists.] */
       it('calls connect on the transport if the method exists', function (done) {
-        var client = new ClientCtor(new FakeTransport());
+        let client = new ClientCtor(new FakeTransport());
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function (err, result) {
           if (err) {
             done(err);
@@ -247,8 +247,9 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_045: [If the transport successfully establishes a connection the `open` method shall subscribe to the `disconnect` event of the transport.]*/
       it('subscribes to the \'disconnect\' event once connected', function (done) {
-        var transport = new FakeTransport();
-        var client = new ClientCtor(transport);
+        let transport = new FakeTransport();
+        let client = new ClientCtor(transport);
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function () {
           client.on('disconnect', function () {
             done();
@@ -260,25 +261,28 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_064: [The `open` method shall call the `openCallback` immediately with a null error object and a `results.Connected()` object if called while renewing the shared access signature.]*/
       it('calls the callback without trying connect while updating the shared access signature', function (testCallback) {
-        var transport = new FakeTransport();
+        let transport = new FakeTransport();
         sinon.spy(transport, 'connect');
         sinon.stub(transport, 'updateSharedAccessSignature').callsFake(function (sas, callback) {
+          // eslint-disable-next-line no-invalid-this
           this._updateSasCallback = callback; // will store the callback but not call it, blocking the state machine in the 'updating_sas' state.
         });
 
-        var unblockUpdateSas = function () {
+        let unblockUpdateSas = function () {
           transport._updateSasCallback(null, new results.SharedAccessSignatureUpdated()); // unblock the state machine and calls the stored callback.
         };
 
-        var client = new ClientCtor(transport);
+        let client = new ClientCtor(transport);
         client.blobUploadClient = { updateSharedAccessSignature: function () { } };
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function (err) {
           if (err) {
             testCallback(err);
           } else {
             assert.isTrue(transport.connect.calledOnce);
             client.updateSharedAccessSignature('newsas');
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
             client.open(testCallback);
             assert.isTrue(transport.connect.calledOnce);
             unblockUpdateSas();
@@ -288,8 +292,8 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_061: [The `open` method shall not throw if the `openCallback` callback has not been provided.]*/
       it('doesn\'t throw if the callback hasn\'t been passed as argument', function () {
-        var transport = new FakeTransport();
-        var client = new ClientCtor(transport);
+        let transport = new FakeTransport();
+        let client = new ClientCtor(transport);
         assert.doesNotThrow(function () {
           client.open();
         });
@@ -299,11 +303,12 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     describe('#close', function () {
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_001: [The close function shall call the transport’s disconnect function if it exists.] */
       it('calls disconnect on the transport if the method exists', function (done) {
-        var transport = new FakeTransport();
+        let transport = new FakeTransport();
         sinon.stub(transport, 'disconnect').callsFake(function () {
           done();
         });
-        var client = new ClientCtor(transport);
+        let client = new ClientCtor(transport);
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function () {
           client.close();
         });
@@ -311,9 +316,10 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_046: [** The `disconnect` method shall remove the listener that has been attached to the transport `disconnect` event.]*/
       it('unsubscribes for the \'disconnect\' event when disconnecting', function (done) {
-        var transport = new FakeTransport();
-        var client = new ClientCtor(transport);
-        var disconnectReceived = false;
+        let transport = new FakeTransport();
+        let client = new ClientCtor(transport);
+        let disconnectReceived = false;
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function () {
           client.on('disconnect', function () {
             disconnectReceived = true;
@@ -328,14 +334,15 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Test_SRS_NODE_INTERNAL_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
       it('disconnects the transport if called while updating the shared access signature', function (testCallback) {
-        var transport = new FakeTransport();
+        let transport = new FakeTransport();
         sinon.stub(transport, 'updateSharedAccessSignature').callsFake(function () {
           // will not call the callback, leaving the state machine in the 'updating_sas' state.
         });
         sinon.spy(transport, 'disconnect');
 
-        var client = new ClientCtor(transport);
+        let client = new ClientCtor(transport);
         client.blobUploadClient = { updateSharedAccessSignature: function () { } };
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function () {
           client.updateSharedAccessSignature('newSas');
           client.close(function () {
@@ -347,12 +354,12 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Test_SRS_NODE_INTERNAL_CLIENT_16_001: [The `close` function shall call the transport's `disconnect` function if it exists.]*/
       it('closes the transport when called while connecting', function (testCallback) {
-        var transport = new FakeTransport();
+        let transport = new FakeTransport();
         sinon.stub(transport, 'connect').callsFake(function () {
           // will not call the callback, leaving the state machine in the 'CONNECTING' state
         });
 
-        var client = new ClientCtor(transport);
+        let client = new ClientCtor(transport);
         client.open();
         client.close(testCallback);
       });
@@ -366,8 +373,9 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_071: [The `reject` method shall not throw if the `rejectCallback` is not passed.]*/
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_075: [The `abandon` method shall not throw if the `abandonCallback` is not passed.]*/
         it('doesn\'t throw if no callback is given and the method exists on the transport', function () {
-          var transport = new FakeTransport();
-          var client = new ClientCtor(transport);
+          let transport = new FakeTransport();
+          let client = new ClientCtor(transport);
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           client.open(function () {
             assert.doesNotThrow(function () {
               client[funcName]('message');
@@ -380,10 +388,11 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     describe('#on(\'error\')', function () {
       // errors right now bubble up through the transport disconnect handler.
       // ultimately we would like to get rid of that disconnect event and rely on the error event instead
+      // eslint-disable-next-line mocha/no-skipped-tests
       it.skip('forwards transport errors into a disconnect event', function (testCallback) {
-        var fakeError = new Error('fake');
-        var dummyTransport = new FakeTransport();
-        var client = new ClientCtor(dummyTransport);
+        let fakeError = new Error('fake');
+        let dummyTransport = new FakeTransport();
+        let client = new ClientCtor(dummyTransport);
         client.setRetryPolicy(new NoRetry());
         client.on('disconnect', function (err) {
           assert.strictEqual(err, fakeError);
@@ -405,7 +414,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_017: [The ‘abandon’ method shall throw a ReferenceError if the ‘message’ parameter is falsy.] */
         [undefined, null, '', 0].forEach(function (message) {
           it('throws if message is \'' + message + '\'', function () {
-            var client = new ClientCtor(new FakeTransport());
+            let client = new ClientCtor(new FakeTransport());
             assert.throws(function () {
               client[testConfig.methodName](message, function () { });
             }, ReferenceError);
@@ -416,11 +425,11 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_010: [The ‘reject’ method shall call the ‘reject’ method of the transport with the message as an argument]*/
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_013: [The ‘abandon’ method shall call the ‘abandon’ method of the transport with the message as an argument]*/
         it('calls the ' + testConfig.methodName + ' method on the transport with the message as an argument', function () {
-          var dummyTransport = new FakeTransport();
+          let dummyTransport = new FakeTransport();
           sinon.spy(dummyTransport, testConfig.methodName);
 
-          var client = new ClientCtor(dummyTransport);
-          var message = new Message();
+          let client = new ClientCtor(dummyTransport);
+          let message = new Message();
           client[testConfig.methodName](message, function () { });
           assert(client._transport[testConfig.methodName].calledOnce);
           assert(client._transport[testConfig.methodName].calledWith(message));
@@ -428,10 +437,10 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_008: [The ‘done’ callback shall be called with a null error object and a ‘MessageCompleted’ result once the transport has completed the message.]*/
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_011: [The ‘done’ callback shall be called with a null error object and a ‘MessageRejected’ result once the transport has rejected the message.]*/
-        /*Tests_SRS_NODE_INTERNAL_CLIENT_16_014: [The ‘done’ callback shall be called with a null error object and a ‘Messageabandoned’ result once the transport has abandoned the message.]*/
+        /*Tests_SRS_NODE_INTERNAL_CLIENT_16_014: [The ‘done’ callback shall be called with a null error object and a ‘MessageAbandoned’ result once the transport has abandoned the message.]*/
         it('calls the done callback with a null error object and a result', function (done) {
-          var client = new ClientCtor(new FakeTransport());
-          var message = new Message();
+          let client = new ClientCtor(new FakeTransport());
+          let message = new Message();
           client[testConfig.methodName](message, function (err, res) {
             if (err) {
               done(err);
@@ -446,14 +455,14 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_012: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not reject the message.]*/
         /*Tests_SRS_NODE_INTERNAL_CLIENT_16_015: [The ‘done’ callback shall be called with a standard javascript Error object and no result object if the transport could not abandon the message.]*/
         it('calls the done callback with an error if the transport fails to complete the message', function (done) {
-          var testError = new Error('fake error');
-          var dummyTransport = new FakeTransport();
+          let testError = new Error('fake error');
+          let dummyTransport = new FakeTransport();
           sinon.stub(dummyTransport, [testConfig.methodName]).callsFake(function (message, callback) {
             callback(testError);
           });
 
-          var client = new ClientCtor(dummyTransport);
-          var message = new Message();
+          let client = new ClientCtor(dummyTransport);
+          let message = new Message();
           client[testConfig.methodName](message, function (err) {
             assert.strictEqual(err, testError);
             done();
@@ -463,13 +472,13 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     });
 
     describe('#updateSharedAccessSignature', function () {
-      var DummyBlobUploadClient = function () { };
+      let DummyBlobUploadClient = function () { };
       DummyBlobUploadClient.prototype.updateSharedAccessSignature = function () { };
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_031: [The updateSharedAccessSignature method shall throw a ReferenceError if the sharedAccessSignature parameter is falsy.]*/
       [undefined, null, '', 0].forEach(function (sas) {
         it('throws a ReferenceError if sharedAccessSignature is \'' + sas + '\'', function () {
-          var client = new ClientCtor(new FakeTransport());
+          let client = new ClientCtor(new FakeTransport());
           assert.throws(function () {
             client.updateSharedAccessSignature(sas, function () { });
           }, ReferenceError);
@@ -478,11 +487,11 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_032: [The updateSharedAccessSignature method shall call the updateSharedAccessSignature method of the transport currently in use with the sharedAccessSignature parameter.]*/
       it('calls the transport `updateSharedAccessSignature` method with the sharedAccessSignature parameter', function () {
-        var dummyTransport = new FakeTransport();
+        let dummyTransport = new FakeTransport();
         sinon.spy(dummyTransport, 'updateSharedAccessSignature');
 
-        var client = new ClientCtor(dummyTransport, null, new DummyBlobUploadClient());
-        var sas = 'sas';
+        let client = new ClientCtor(dummyTransport, null, new DummyBlobUploadClient());
+        let sas = 'sas';
         client.updateSharedAccessSignature(sas, function () { });
         assert(dummyTransport.updateSharedAccessSignature.calledOnce);
         assert(dummyTransport.updateSharedAccessSignature.calledWith(sas));
@@ -490,12 +499,12 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_035: [The updateSharedAccessSignature method shall call the `done` callback with an error object if an error happened while renewing the token.]*/
       it('Calls the `done` callback with an error object if an error happened', function (done) {
-        var dummyTransport = new FakeTransport();
+        let dummyTransport = new FakeTransport();
         sinon.stub(dummyTransport, 'updateSharedAccessSignature').callsFake(function (sas, callback) {
           callback(new Error('foo'));
         });
 
-        var client = new ClientCtor(dummyTransport, null, new DummyBlobUploadClient());
+        let client = new ClientCtor(dummyTransport, null, new DummyBlobUploadClient());
         client.updateSharedAccessSignature('sas', function (err) {
           assert.isOk(err);
           done();
@@ -504,7 +513,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_036: [The updateSharedAccessSignature method shall call the `done` callback with a null error object and a result of type SharedAccessSignatureUpdated if the token was updated successfully.]*/
       it('Calls the `done` callback with a null error object and a SharedAccessSignatureUpdated result', function (done) {
-        var client = new ClientCtor(new FakeTransport(), null, new DummyBlobUploadClient());
+        let client = new ClientCtor(new FakeTransport(), null, new DummyBlobUploadClient());
         client.updateSharedAccessSignature('sas', function (err, res) {
           if (err) {
             done(err);
@@ -519,9 +528,9 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     describe('getTwin', function () {
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_094: [If this is the first call to `getTwin` the method shall instantiate a new `Twin` object  and pass it the transport currently in use.]*/
       it('creates the device twin correctly', function (testCallback) {
-        var transport = new FakeTransport();
+        let transport = new FakeTransport();
         sinon.spy(transport, 'getTwin');
-        var client = new ClientCtor(transport);
+        let client = new ClientCtor(transport);
         client.getTwin(function (err, twin) {
           assert.instanceOf(twin, Twin);
           assert.isTrue(transport.getTwin.calledOnce);
@@ -530,7 +539,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       });
 
       it('reuses the existing twin', function (testCallback) {
-        var client = new ClientCtor(new FakeTransport());
+        let client = new ClientCtor(new FakeTransport());
         client.getTwin(function (err, firstTwin) {
           client.getTwin(function (err, secondTwin) {
             assert.strictEqual(firstTwin, secondTwin);
@@ -541,7 +550,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_095: [The `getTwin` method shall call the `get()` method on the `Twin` object currently in use and pass it its `done` argument for a callback.]*/
       it('Calls the get() method on the Twin', function (testCallback) {
-        var client = new ClientCtor(new FakeTransport());
+        let client = new ClientCtor(new FakeTransport());
         client.getTwin(function (err, twin) {
           sinon.spy(twin, 'get');
           client.getTwin(function () {
@@ -556,7 +565,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_083: [The `setRetryPolicy` method shall throw a `ReferenceError` if the policy object is falsy.]*/
       [null, undefined, ''].forEach(function (badPolicy) {
         it('throws a ReferenceError if policy is \'' + badPolicy + '\'', function () {
-          var client = new ClientCtor(new EventEmitter());
+          let client = new ClientCtor(new EventEmitter());
           assert.throws(function () {
             client.setRetryPolicy(badPolicy);
           }, ReferenceError);
@@ -565,8 +574,8 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_084: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `shouldRetry` method.]*/
       it('throws an ArgumentError if the policy does not have a shouldRetry method', function () {
-        var client = new ClientCtor(new EventEmitter());
-        var badPolicy = {
+        let client = new ClientCtor(new EventEmitter());
+        let badPolicy = {
           nextRetryTimeout: function () { }
         };
         assert.throws(function () {
@@ -576,8 +585,8 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_085: [The `setRetryPolicy` method shall throw an `ArgumentError` if the policy object doesn't have a `nextRetryTimeout` method.]*/
       it('throws an ArgumentError if the policy does not have a nextRetryTimeout method', function () {
-        var client = new ClientCtor(new EventEmitter());
-        var badPolicy = {
+        let client = new ClientCtor(new EventEmitter());
+        let badPolicy = {
           shouldRetry: function () { }
         };
         assert.throws(function () {
@@ -587,14 +596,14 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_086: [Any operation happening after a `setRetryPolicy` call should use the policy set during that call.]*/
       it('uses the new retry policy for the next operation', function (testCallback) {
-        var testPolicy = {
+        let testPolicy = {
           shouldRetry: sinon.stub().returns(false),
           nextRetryTimeout: sinon.stub().returns(-1)
         };
-        var fakeTransport = new EventEmitter();
+        let fakeTransport = new EventEmitter();
         fakeTransport.sendEvent = sinon.stub().callsArgWith(1, new results.MessageEnqueued());
 
-        var client = new ClientCtor(fakeTransport);
+        let client = new ClientCtor(fakeTransport);
         client.setRetryPolicy(testPolicy);
         client.sendEvent(new Message('foo'), function () {
           assert.isTrue(testPolicy.shouldRetry.calledOnce);
@@ -606,15 +615,15 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_096: [The `setRetryPolicy` method shall call the `setRetryPolicy` method on the twin if it is set and pass it the `policy` object.]*/
       it('updates the twin retry policy', function (testCallback) {
-        var newPolicy = {
+        let newPolicy = {
           shouldRetry: function () { },
           nextRetryTimeout: function () { }
         };
 
-        var fakeTransport = new EventEmitter();
+        let fakeTransport = new EventEmitter();
         fakeTransport.getTwin = sinon.stub().callsArgWith(0, null, new Twin(fakeTransport, {}, 0));
 
-        var client = new ClientCtor(fakeTransport);
+        let client = new ClientCtor(fakeTransport);
         client.getTwin(function (err, twin) {
           sinon.spy(twin, 'setRetryPolicy');
           client.setRetryPolicy(newPolicy);
@@ -626,7 +635,8 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
     });
 
     describe('transport.on(\'disconnect\') handler', function () {
-      var fakeTransport, fakeRetryPolicy;
+      let fakeTransport;
+      let fakeRetryPolicy;
       beforeEach(function () {
         fakeRetryPolicy = {
           shouldRetry: function () { return true; },
@@ -641,7 +651,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_DEVICE_CLIENT_16_098: [If the transport emits a `disconnect` event while the client is subscribed to desired properties updates the retry policy shall be used to reconnect and re-enable the feature using the transport `enableMethods` method.]*/
       it('reenables device methods after being disconnected if Twin desired properties updates were enabled', function () {
-        var client = new ClientCtor(fakeTransport);
+        let client = new ClientCtor(fakeTransport);
         client.setRetryPolicy(fakeRetryPolicy);
         client.getTwin(function (err, twin) {
           twin.on('properties.desired', function () { });
@@ -653,8 +663,8 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_101: [If the retry policy fails to reestablish the twin desired properties updates functionality a `disconnect` event shall be emitted with a `results.Disconnected` object.]*/
       it('emits a disconnect event if reenabling twin desired properties updates fails', function (testCallback) {
-        var fakeError = new Error('fake');
-        var client = new ClientCtor(fakeTransport);
+        let fakeError = new Error('fake');
+        let client = new ClientCtor(fakeTransport);
         client.on('disconnect', function (err) {
           assert.instanceOf(err, results.Disconnected);
           assert.strictEqual(err.transportObj, fakeError);
@@ -675,7 +685,7 @@ var ModuleClient = require('../dist/module_client').ModuleClient;
 });
 
 describe('Over simulated HTTPS', function () {
-  var registry = {
+  let registry = {
     create: function (deviceId, done) {
       done(null, {
         deviceId: deviceId,
@@ -696,7 +706,7 @@ describe('Over simulated HTTPS', function () {
   // - modules don't support HTTP
   // - modules don't support x509
   // we should refactor this whole test suite to be more configurable for each client
-  // or get rid of it since it sortof duplicates the e2e tests at this point
+  // or get rid of it since it duplicates the e2e tests at this point
 
   // clientTests.sendEventTests(ModuleClient, SimulatedHttp, registry);
   // clientTests.sendEventBatchTests(ModuleClient, SimulatedHttp, registry);

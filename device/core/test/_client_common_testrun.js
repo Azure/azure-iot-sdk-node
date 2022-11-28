@@ -3,37 +3,37 @@
 
 'use strict';
 
-var assert = require('chai').assert;
-var fs = require('fs');
+let assert = require('chai').assert;
 
-var ConnectionString = require('azure-iot-common').ConnectionString;
-var NoRetry = require('azure-iot-common').NoRetry;
+let ConnectionString = require('azure-iot-common').ConnectionString;
+let NoRetry = require('azure-iot-common').NoRetry;
 
-var Message = require('azure-iot-common').Message;
+let Message = require('azure-iot-common').Message;
 
-var host = ConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
-var deviceId = 'node-client-integration-' + Math.random();
+let host = ConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
+let deviceId = 'node-client-integration-' + Math.random();
 
 function makeConnectionString(host, device, key) {
   return 'HostName=' + host + ';DeviceId=' + device + ';SharedAccessKey=' + key;
 }
 
-var x509Certificate = 'cert';
-var x509Key = 'key';
-var x509Passphrase = 'pass';
-var x509ConnectionString = 'HostName=' + host + ';DeviceId=x509Device;x509=true';
+let x509Certificate = 'cert';
+let x509Key = 'key';
+let x509Passphrase = 'pass';
+let x509ConnectionString = 'HostName=' + host + ';DeviceId=x509Device;x509=true';
 
 function badConfigTests(opName, Client, Transport, requestFn) {
-  var badConnectionStrings = [
+  let badConnectionStrings = [
     makeConnectionString('bad' + Math.random(), deviceId, 'key=='),
     makeConnectionString(host, 'bad' + Math.random(), 'key=='),
     makeConnectionString(host, deviceId, 'bad')
   ];
 
   function makeRequestWith(connectionString, test, done) {
-    var client = Client.fromConnectionString(connectionString, Transport);
+    let client = Client.fromConnectionString(connectionString, Transport);
     client.setRetryPolicy(new NoRetry());
-    client.open(function(err) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    client.open(function (err) {
       if (err) {
         test(err);
         client.close(done);
@@ -46,7 +46,7 @@ function badConfigTests(opName, Client, Transport, requestFn) {
     });
   }
 
-  var tests = [
+  let tests = [
     { name: 'hostname is malformed', expect: assert.isNotNull },
     { name: 'device is not registered', expect: assert.isNotNull },
     { name: 'password is wrong', expect: assert.isNotNull }
@@ -68,15 +68,15 @@ function singleMessageTests(Client, Transport, registry, testName, requestFn) {
     });
 
     describe('#' + testName + ' with a SharedAccessKey', function () {
-      var sakConnectionString;
-      before(function(done) {
-        registry.create({ deviceId: deviceId, status: "enabled" }, function(err, device) {
+      let sakConnectionString;
+      before(function (done) {
+        registry.create({ deviceId: deviceId, status: "enabled" }, function (err, device) {
           sakConnectionString = makeConnectionString(host, deviceId, device.authentication.symmetricKey.primaryKey);
           done();
         });
       });
 
-      after(function(done) {
+      after(function (done) {
         registry.delete(deviceId, done);
       });
       /*Tests_SRS_NODE_INTERNAL_CLIENT_05_007: [The sendEvent method shall send the event indicated by the message argument via the transport associated with the Client instance.]*/
@@ -85,8 +85,9 @@ function singleMessageTests(Client, Transport, registry, testName, requestFn) {
       response - a transport-specific response object]*/
       /*Tests_SRS_NODE_INTERNAL_CLIENT_18_010: [The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
       it('sends the event when the client is opened', function (done) {
-        var client = Client.fromConnectionString(sakConnectionString, Transport);
+        let client = Client.fromConnectionString(sakConnectionString, Transport);
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function (err, res) {
           if (err) {
             done(err);
@@ -107,8 +108,8 @@ function singleMessageTests(Client, Transport, registry, testName, requestFn) {
       });
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_048: [The `sendEvent` method shall automatically connect the transport if necessary.]*/
-      it('sends the event and automatically opens the client if necessary', function(done) {
-        var client = Client.fromConnectionString(sakConnectionString, Transport);
+      it('sends the event and automatically opens the client if necessary', function (done) {
+        let client = Client.fromConnectionString(sakConnectionString, Transport);
         requestFn(client, function (err, res) {
           if (err) {
             done(err);
@@ -129,13 +130,14 @@ function singleMessageTests(Client, Transport, registry, testName, requestFn) {
       response - a transport-specific response object]*/
       /*Tests_SRS_NODE_INTERNAL_CLIENT_18_010: [The `sendOutputEvent` method shall send the event indicated by the `message` argument via the transport associated with the Client instance. ]*/
       it('sends the event', function (done) {
-        var client = Client.fromConnectionString(x509ConnectionString, Transport);
+        let client = Client.fromConnectionString(x509ConnectionString, Transport);
         client.setOptions({
           cert: x509Certificate,
           key: x509Key,
           passphrase: x509Passphrase
         });
 
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         client.open(function (err, res) {
           if (err) {
             done(err);
@@ -156,8 +158,8 @@ function singleMessageTests(Client, Transport, registry, testName, requestFn) {
       });
 
       /*Tests_SRS_NODE_INTERNAL_CLIENT_16_048: [The `sendEvent` method shall automatically connect the transport if necessary.]*/
-      it('sends the event and automatically opens the client if necessary', function(done) {
-        var client = Client.fromConnectionString(x509ConnectionString, Transport);
+      it('sends the event and automatically opens the client if necessary', function (done) {
+        let client = Client.fromConnectionString(x509ConnectionString, Transport);
         client.setOptions({
           cert: x509Certificate,
           key: x509Key,
@@ -184,16 +186,16 @@ function batchMessageTests(Client, Transport, registry, testName, requestFn) {
       requestFn(client, done);
     });
 
-    describe('#' + testName + ' with a Shared Access Key', function() {
-      var sakConnectionString;
-      before(function(done) {
-        registry.create({ deviceId: deviceId, status: "enabled" }, function(err, device) {
+    describe('#' + testName + ' with a Shared Access Key', function () {
+      let sakConnectionString;
+      before(function (done) {
+        registry.create({ deviceId: deviceId, status: "enabled" }, function (err, device) {
           sakConnectionString = makeConnectionString(host, deviceId, device.authentication.symmetricKey.primaryKey);
           done();
         });
       });
 
-      after(function(done) {
+      after(function (done) {
         registry.delete(deviceId, done);
       });
 
@@ -203,7 +205,7 @@ function batchMessageTests(Client, Transport, registry, testName, requestFn) {
       response - a transport-specific response object]*/
       /*Tests_SRS_NODE_INTERNAL_CLIENT_18_011: [The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
       it('sends the event batch message', function (done) {
-        var client = Client.fromConnectionString(sakConnectionString, Transport);
+        let client = Client.fromConnectionString(sakConnectionString, Transport);
 
         requestFn(client, function (err, res) {
           if (err) {
@@ -218,14 +220,14 @@ function batchMessageTests(Client, Transport, registry, testName, requestFn) {
       });
     });
 
-    describe('#sendEventBatch with an x509 certificate', function() {
+    describe('#sendEventBatch with an x509 certificate', function () {
       /*Tests_SRS_NODE_INTERNAL_CLIENT_05_008: [The sendEventBatch method shall send the list of events (indicated by the messages argument) via the transport associated with the Client instance.]*/
       /*Tests_SRS_NODE_INTERNAL_CLIENT_05_017: [With the exception of receive, when a Client method completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
       err - null
       response - a transport-specific response object]*/
       /*Tests_SRS_NODE_INTERNAL_CLIENT_18_011: [The `sendOutputEventBatch` method shall send the list of events (indicated by the `messages` argument) via the transport associated with the Client instance. ]*/
       it('sends the event batch message', function (done) {
-        var client = Client.fromConnectionString(x509ConnectionString, Transport);
+        let client = Client.fromConnectionString(x509ConnectionString, Transport);
         client.setOptions({
           cert: x509Certificate,
           key: x509Key,
@@ -245,23 +247,23 @@ function batchMessageTests(Client, Transport, registry, testName, requestFn) {
   });
 }
 
-var sendEventTests = function(Client, Transport, registry) {
-  var message = new Message('hello');
+let sendEventTests = function (Client, Transport, registry) {
+  let message = new Message('hello');
   singleMessageTests(Client, Transport, registry, 'Client.sendEvent', function (client, done) {
     client.sendEvent(message, done);
   });
 }
 
-var sendOutputEventTests = function(Client, Transport, registry) {
-  var message = new Message('hello');
+let sendOutputEventTests = function (Client, Transport, registry) {
+  let message = new Message('hello');
   singleMessageTests(Client, Transport, registry, 'Client.sendOutputEvent', function (client, done) {
     client.sendOutputEvent('outputName', message, done);
   });
 }
 
-var sendEventBatchTests = function(Client, Transport, registry) {
-  var messages = [];
-  for (var i = 0; i < 5; i++) {
+let sendEventBatchTests = function (Client, Transport, registry) {
+  let messages = [];
+  for (let i = 0; i < 5; i++) {
     messages[i] = new Message('Event Msg ' + i);
   }
   batchMessageTests(Client, Transport, registry, 'client.sendEventBatch', function (client, done) {
@@ -269,9 +271,9 @@ var sendEventBatchTests = function(Client, Transport, registry) {
   });
 }
 
-var sendOutputEventBatchTests = function(Client, Transport, registry) {
-  var messages = [];
-  for (var i = 0; i < 5; i++) {
+let sendOutputEventBatchTests = function (Client, Transport, registry) {
+  let messages = [];
+  for (let i = 0; i < 5; i++) {
     messages[i] = new Message('Event Msg ' + i);
   }
   batchMessageTests(Client, Transport, registry, 'client.sendOutputEventBatch', function (client, done) {
@@ -280,6 +282,7 @@ var sendOutputEventBatchTests = function(Client, Transport, registry) {
 }
 
 
+// eslint-disable-next-line mocha/no-exports
 module.exports = {
   sendEventTests: sendEventTests,
   sendEventBatchTests: sendEventBatchTests,

@@ -61,7 +61,7 @@ export class BlobUploadClient implements BlobUpload {
       this._fileUploadApi.getBlobSharedAccessSignature(blobName, (err, uploadParams) => {
         if (err) {
           /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_16_005: [`uploadToBlob` shall call the `_callback` callback with a `BlobSasError` parameter if retrieving the SAS token fails.]*/
-          let error = new errors.BlobSasError('Could not obtain blob shared access signature.');
+          const error = new errors.BlobSasError('Could not obtain blob shared access signature.');
           error.innerError = err;
           _callback(error);
         } else {
@@ -73,19 +73,19 @@ export class BlobUploadClient implements BlobUpload {
               if (err) {
                 if (!uploadResult.isSuccess) {
                   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_002: [`uploadToBlob` shall call the `_callback` callback with a `BlobUploadNotificationError` if the blob upload failed.]*/
-                  let error = new errors.BlobUploadNotificationError('UploadToBlob failed, and could not notify the IoT Hub about the file upload status.');
+                  const error = new errors.BlobUploadNotificationError('UploadToBlob failed, and could not notify the IoT Hub about the file upload status.');
                   error.innerError = err;
                   _callback(error);
                 } else {
                   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_003: [`uploadToBlob` shall call the `_callback` callback with a `BlobUploadNotificationError` if notifying the IoT Hub instance of the transfer outcome fails.]*/
-                  let error = new errors.BlobUploadNotificationError('Could not notify the IoT Hub of the file upload completion.');
+                  const error = new errors.BlobUploadNotificationError('Could not notify the IoT Hub of the file upload completion.');
                   error.innerError = err;
                   _callback(error);
                 }
               } else {
                 if (!uploadResult.isSuccess) {
                   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_002: [`uploadToBlob` shall call the `_callback` callback with a `BlobUploadNotificationError` if the blob upload failed.]*/
-                  let error = new errors.BlobUploadNotificationError('UploadToBlob failed.');
+                  const error = new errors.BlobUploadNotificationError('UploadToBlob failed.');
                   error.innerError = err;
                   _callback(error);
                 } else {
