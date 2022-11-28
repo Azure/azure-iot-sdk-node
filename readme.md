@@ -48,8 +48,7 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 
 # Samples
 
-| [Device Library Samples](./device/samples/) | [Service Library Samples](./service/samples/) |
-|-----------------------------------------|-------------------------------------------|
+[Device Library Samples](./device/samples/)
 
 # npm Package List
 
@@ -62,13 +61,6 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 |  AMQP Transport | [![npm version](https://badge.fury.io/js/azure-iot-device-amqp.svg)](https://badge.fury.io/js/azure-iot-device-amqp) |
 |  HTTP Transport | [![npm version](https://badge.fury.io/js/azure-iot-device-http.svg)](https://badge.fury.io/js/azure-iot-device-http) |
 
-**Azure IoT Hub [Service Client Libraries](https://github.com/Azure/azure-iot-sdk-node/tree/main/service)**
-
-| Name            | npm package                                                                                                |
-|-----------------|------------------------------------------------------------------------------------------------------------|
-| Service SDK  | [![npm version](https://badge.fury.io/js/azure-iothub.svg)](https://badge.fury.io/js/azure-iothub) |
-
-
 **Azure IoT Hub Device Provisioning Service: Device Client Libraries**
 
 | Name                  | npm package                                                                                                |
@@ -80,12 +72,6 @@ The Azure IoT Node.js SDK enables developers to create IoT solutions written in 
 |  TPM Security Client  | [![npm version](https://badge.fury.io/js/azure-iot-security-tpm.svg)](https://badge.fury.io/js/azure-iot-security-tpm) |
 |  x509 Security Client |  [![npm version](https://badge.fury.io/js/azure-iot-security-x509.svg)](https://badge.fury.io/js/azure-iot-security-x509) |
 
-
-**Azure IoT Hub Device Provisioning Service: Service Client Libraries**
-
-| Name            | npm package                                                                                                |
-|-----------------|------------------------------------------------------------------------------------------------------------|
-| Service SDK     | [![npm version](https://badge.fury.io/js/azure-iot-provisioning-service.svg)](https://badge.fury.io/js/azure-iot-provisioning-service) |
 
 # Working from Source Code
 
