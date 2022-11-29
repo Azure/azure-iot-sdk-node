@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -45,7 +46,7 @@ const client: Client = Client.fromConnectionString(
 );
 
 let sendInterval: NodeJS.Timer;
-let connectCallback = function (err: Error): void {
+const connectCallback = function (err?: Error): void {
   if (err) {
     console.error('Could not connect: ' + err.message);
   } else {
@@ -89,14 +90,14 @@ let connectCallback = function (err: Error): void {
 
     client.on('disconnect', function (): void {
       clearInterval(sendInterval);
-      sendInterval = null;
+      sendInterval = (null as unknown as NodeJS.Timer);
       client.removeAllListeners();
       client.open(connectCallback);
     });
   }
 };
 
-let options: { cert: string; key: string; passphrase: string } = {
+const options: { cert: string; key: string; passphrase: string } = {
   cert: fs.readFileSync(certFile, 'utf-8').toString(),
   key: fs.readFileSync(keyFile, 'utf-8').toString(),
   passphrase: passphrase,
@@ -107,8 +108,8 @@ client.setOptions(options);
 client.open(connectCallback);
 
 // Helper function to print results in the console
-function printResultFor(op: any): (err: Error, res: any) => void {
-  return function printResult(err: Error, res: any): void {
+function printResultFor(op: any): (err?: Error, res?: any) => void {
+  return function printResult(err?: Error, res?: any): void {
     if (err) console.log(op + ' error: ' + err.toString());
     if (res) console.log(op + ' status: ' + res.constructor.name);
   };

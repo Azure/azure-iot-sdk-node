@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -19,20 +20,20 @@ if (deviceConnectionString === '') {
 
 const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-client.open(function(err: Error): void {
+client.open(function (err?: Error): void {
   if (!err) {
     client.onDeviceMethod('reboot', function onReboot(request: DeviceMethodRequest, response: DeviceMethodResponse): void {
-      response.send(200, 'Reboot started', function(err: Error): void {
+      response.send(200, 'Reboot started', function (err?: Error): void {
         if (err) {
-          console.error('An error occured when sending a method response:\n' + err.toString());
+          console.error('An error occurred when sending a method response:\n' + err.toString());
         } else {
           console.log('Response to method \'' + request.methodName + '\' sent successfully.');
         }
       });
 
       // Get device Twin
-      client.getTwin(function(err: Error, twin: Twin): void {
-        if (err) {
+      client.getTwin(function (err?: Error, twin?: Twin): void {
+        if (err || !twin) {
           console.error('could not get twin');
         } else {
           console.log('twin acquired');
@@ -46,7 +47,7 @@ client.open(function(err: Error): void {
                 startedRebootTime : new Date().toISOString(),
               }
             }
-          }, function(err: Error): void {
+          }, function (err?: Error): void {
             if (err) {
               console.error('Error updating twin');
             } else {

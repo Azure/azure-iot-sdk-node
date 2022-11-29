@@ -2,8 +2,9 @@
   "name": "sample-helpers-device-twin-service",
   "version": "1.0.0",
   "description": "Helper project that acts as a backend service to update device twin desired properties on a specific device.",
-  "main": "index.js",
+  "main": "twin-service.js",
   "scripts": {
+    "lint": "eslint twin-service.js --ext .js -f visualstudio",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,10 +12,19 @@
   "license": "ISC",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "azure-iothub": "^1.16.1"
   },
   "devDependencies": {
-    "encoding": "^0.1.13"
+    "encoding": "^0.1.13",
+    "eslint": "^8.26.0",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "eslint-plugin-jsdoc": "^39.3.25",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security": "^1.5.0"
   }
 }

@@ -3,40 +3,41 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var url = require('url');
-var async = require('async');
+const Client = require('azure-iot-device').Client;
+const url = require('url');
+const async = require('async');
 
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-client.open(function(err) {
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+client.open(function (err) {
   if (!err) {
-    client.onDeviceMethod('firmwareUpdate', function(request, response) {
+    client.onDeviceMethod('firmwareUpdate', function (request, response) {
       // Get the firmware image Uri from the body of the method request
-      var fwPackageUri = request.payload.fwPackageUri;
-      var fwPackageUriObj = url.parse(fwPackageUri);
+      const fwPackageUri = request.payload.fwPackageUri;
+      const fwPackageUriObj = url.parse(fwPackageUri);
 
       // Ensure that the url is to a secure url
       if (fwPackageUriObj.protocol !== 'https:') {
-        response.send(400, 'Invalid URL format.  Must use https:// protocol.', function(err) {
+        response.send(400, 'Invalid URL format.  Must use https:// protocol.', function (err) {
           if (err) console.error('Error sending method response :\n' + err.toString());
           else console.log('Response to method \'' + request.methodName + '\' sent successfully.');
         });
       } else {
         // Respond the cloud app for the device method
-        response.send(200, 'Firmware update started.', function(err) {
+        response.send(200, 'Firmware update started.', function (err) {
           if (err) console.error('Error sending method response :\n' + err.toString());
           else console.log('Response to method \'' + request.methodName + '\' sent successfully.');
         });
 
-        initiateFirmwareUpdateFlow(fwPackageUri, function(err){
+        initiateFirmwareUpdateFlow(fwPackageUri, function (err){
           if (!err) console.log("Completed firmwareUpdate flow");
         });
       }
@@ -52,7 +53,7 @@ function initiateFirmwareUpdateFlow(fwPackageUri, callback) {
       downloadImage(fwPackageUri, callback);
     },
     applyImage
-  ], function(err) {
+  ], function (err) {
     if (err) {
       console.error('Error : ' + err.message);
     }
@@ -63,7 +64,7 @@ function initiateFirmwareUpdateFlow(fwPackageUri, callback) {
 // Function that implements the 'downloadImage' phase of the
 // firmware update process.
 function downloadImage(fwPackageUriVal, callback) {
-  var imageResult = '[Fake firmware image data]';
+  const imageResult = '[Fake firmware image data]';
 
   async.waterfall([
     function (callback) {
@@ -77,7 +78,7 @@ function downloadImage(fwPackageUriVal, callback) {
       console.log("Downloading image from URI: " + fwPackageUriVal);
 
       // Replace this line with the code to download the image.  Delay used to simulate the download.
-      setTimeout(function() {
+      setTimeout(function () { //DevSkim: reviewed DS172411 on 2022-11-29
         callback(null);
       }, 4000);
     },
@@ -89,9 +90,9 @@ function downloadImage(fwPackageUriVal, callback) {
       callback);
     },
   ],
-  function(err) {
+  function (err) {
     if (err) {
-      reportFWUpdateThroughTwin( { status : 'Download image failed' }, function(err) {
+      reportFWUpdateThroughTwin( { status : 'Download image failed' }, function (err) {
         callback(err);
       });
     } else {
@@ -104,7 +105,7 @@ function downloadImage(fwPackageUriVal, callback) {
 // completing the image apply.
 function applyImage(imageData, callback) {
   async.waterfall([
-    function(callback) {
+    function (callback) {
       reportFWUpdateThroughTwin ({
         status: 'applying',
         startedApplyingImage: new Date().toISOString()
@@ -115,7 +116,7 @@ function applyImage(imageData, callback) {
       console.log("Applying firmware image");
 
       // Replace this line with the code to download the image.  Delay used to simulate the download.
-      setTimeout(function() {
+      setTimeout(function () { //DevSkim: reviewed DS172411 on 2022-11-29
         callback(null);
       }, 4000);
     },
@@ -129,7 +130,7 @@ function applyImage(imageData, callback) {
   ],
   function (err) {
     if (err) {
-      reportFWUpdateThroughTwin({ status : 'Apply image failed' }, function(err) {
+      reportFWUpdateThroughTwin({ status : 'Apply image failed' }, function (err) {
         callback(err);
       });
     }
@@ -140,15 +141,15 @@ function applyImage(imageData, callback) {
 // Helper function to update the twin reported properties.
 // Used by every phase of the firmware update.
 function reportFWUpdateThroughTwin(firmwareUpdateValue, callback) {
-  var patch = {
+  const patch = {
       iothubDM : {
         firmwareUpdate : firmwareUpdateValue
       }
   };
   console.log(JSON.stringify(patch, null, 2));
-  client.getTwin(function(err, twin) {
+  client.getTwin(function (err, twin) {
     if (!err) {
-      twin.properties.reported.update(patch, function(err) {
+      twin.properties.reported.update(patch, function (err) {
         callback(err);
       });
     } else {

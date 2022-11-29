@@ -3,30 +3,31 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
+const Client = require('azure-iot-device').Client;
 
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-client.open(function(err) {
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+client.open(function (err) {
   if (!err) {
     client.onDeviceMethod('reboot', function onReboot(request, response) {
-      response.send(200, 'Reboot started', function(err) {
+      response.send(200, 'Reboot started', function (err) {
         if (err) {
-          console.error('An error occured when sending a method response:\n' + err.toString());
+          console.error('An error occurred when sending a method response:\n' + err.toString());
         } else {
           console.log('Response to method \'' + request.methodName + '\' sent successfully.');
         }
       });
 
       // Get device Twin
-      client.getTwin(function(err, twin) {
+      client.getTwin(function (err, twin) {
         if (err) {
           console.error('could not get twin');
         } else {
@@ -41,7 +42,7 @@ client.open(function(err) {
                 startedRebootTime : new Date().toISOString(),
               }
             }
-          }, function(err) {
+          }, function (err) {
             if (err) {
               console.error('Error updating twin');
             } else {

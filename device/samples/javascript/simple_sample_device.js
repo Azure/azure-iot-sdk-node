@@ -18,7 +18,7 @@ const Message = require('azure-iot-device').Message;
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 let sendInterval;
 
-function disconnectHandler () {
+function disconnectHandler() {
   clearInterval(sendInterval);
   sendInterval = null;
   client.open().catch((err) => {
@@ -34,12 +34,12 @@ function disconnectHandler () {
 // When rejecting a message, the service that sent the C2D message is notified that the message won't be processed by the device. the method to use is client.reject(msg, callback).
 // When abandoning the message, IoT Hub will immediately try to resend it. The method to use is client.abandon(msg, callback).
 // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
-function messageHandler (msg) {
+function messageHandler(msg) {
   console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
   client.complete(msg, printResultFor('completed'));
 }
 
-function generateMessage () {
+function generateMessage() {
   const windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
   const temperature = 20 + (Math.random() * 10); // range: [20, 30]
   const humidity = 60 + (Math.random() * 20); // range: [60, 80]
@@ -49,11 +49,11 @@ function generateMessage () {
   return message;
 }
 
-function errorHandler (err) {
+function errorHandler(err) {
   console.error(err.message);
 }
 
-function connectHandler () {
+function connectHandler() {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
   if (!sendInterval) {
@@ -74,7 +74,7 @@ client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 
 client.open()
-.catch(err => {
+.catch((err) => {
   console.error('Could not connect: ' + err.message);
 });
 

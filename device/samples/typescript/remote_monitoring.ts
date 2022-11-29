@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -19,7 +20,7 @@ if (deviceConnectionString === '') {
   process.exit(-1);
 }
 
-const deviceId: string = ConnectionString.parse(
+const deviceId = ConnectionString.parse(
   deviceConnectionString
 ).DeviceId;
 
@@ -32,8 +33,8 @@ let externalTemperature: number = 55;
 const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 // Helper function to print results for an operation
-function printErrorFor(op: any): (err: Error) => void {
-  return function printError(err: Error): void {
+function printErrorFor(op: any): (err?: Error) => void {
+  return function printError(err?: Error): void {
     if (err) console.log(op + ' error: ' + err.toString());
   };
 }
@@ -86,7 +87,7 @@ const deviceMetaData: any = {
   ],
 };
 
-client.open(function (err: Error): void {
+client.open(function (err?: Error): void {
   if (err) {
     printErrorFor('open error:')(err);
   } else {
@@ -114,12 +115,12 @@ client.open(function (err: Error): void {
     });
 
     // start event data send routing
-    let sendInterval: NodeJS.Timer = setInterval(function (): void {
+    const sendInterval: NodeJS.Timer = setInterval(function (): void {
       temperature += generateRandomIncrement();
       externalTemperature += generateRandomIncrement();
       humidity += generateRandomIncrement();
 
-      let data: string = JSON.stringify({
+      const data: string = JSON.stringify({
         DeviceID: deviceId,
         Temperature: temperature,
         Humidity: humidity,

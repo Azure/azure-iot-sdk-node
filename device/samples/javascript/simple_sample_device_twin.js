@@ -4,28 +4,29 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const Client = require('azure-iot-device').Client;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // create the IoTHub client
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 console.log('got client');
 
 // connect to the hub
-client.open(function(err) {
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+client.open(function (err) {
   if (err) {
     console.error('could not open IotHub client');
   }  else {
     console.log('client opened');
 
     // Create device Twin
-    client.getTwin(function(err, twin) {
+    client.getTwin(function (err, twin) {
       if (err) {
         console.error('could not get twin');
       } else {
@@ -53,8 +54,8 @@ client.open(function(err) {
         //
 
         // ATTENTION!
-        // You will need to send the desired properties updates from a seperate 
-        // backend service. We have created a helper service for you in the 
+        // You will need to send the desired properties updates from a separate
+        // backend service. We have created a helper service for you in the
         // 'helpers/device-twin-service' directory. See readme for instructions.
 
         // Usage example #1: receiving all patches with a single event handler.
@@ -62,7 +63,7 @@ client.open(function(err) {
         // This code will output any properties that are received from the
         // service.
         //
-        twin.on('properties.desired', function(delta) {
+        twin.on('properties.desired', function (delta) {
             console.log('new desired properties received:');
             console.log(JSON.stringify(delta));
         });
@@ -82,7 +83,7 @@ client.open(function(err) {
         //  },
         // };
         //
-        twin.on('properties.desired.climate', function(delta) {
+        twin.on('properties.desired.climate', function (delta) {
             //
             // Notice that twin.properties.desired has already been updated before
             // this function was called.
@@ -121,7 +122,7 @@ client.open(function(err) {
         //  },
         //};
 
-        twin.on('properties.desired.climate.hvac.sytemControl', function(fanOn) {
+        twin.on('properties.desired.climate.hvac.systemControl', function (fanOn) {
             console.log('setting fan state to ' + fanOn);
         });
 
@@ -138,7 +139,7 @@ client.open(function(err) {
         //    desired: {
         //      modules : {
         //        wifi : { channel: 6, ssid: 'my_network' },
-        //        climate : { id: 17, units: 'farenheit' }
+        //        climate : { id: 17, units: 'fahrenheit' }
         //      }
         //    }
         //  }
@@ -166,12 +167,12 @@ client.open(function(err) {
 
         // To do this, first we have to keep track of "all modules that we know
         // about".
-        var moduleList = {};
+        let moduleList = {};
 
         // Then we use this internal list and compare it to the delta to know
         // if anything was added, removed, or updated.
-        twin.on('properties.desired.modules', function(delta) {
-          Object.keys(delta).forEach(function(key) {
+        twin.on('properties.desired.modules', function (delta) {
+          Object.keys(delta).forEach(function (key) {
 
             if (delta[key] === null && moduleList[key]) {
               // If our patch contains a null value, but we have a record of
@@ -201,13 +202,13 @@ client.open(function(err) {
         });
 
         // create a patch to send to the hub
-        var patch = {
+        const patch = {
           firmwareVersion:'1.2.1',
           weather:{ temperature: 72, humidity: 17 }
         };
 
          // send the patch to update reported properties
-        twin.properties.reported.update(patch, function(err) {
+        twin.properties.reported.update(patch, function (err) {
           if (err) throw err;
           console.log('twin state reported');
         });

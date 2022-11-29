@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -37,7 +38,7 @@ if (edgeCaCertPath === '') {
 const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 let sendInterval: NodeJS.Timer;
-let connectCallback = function (err: Error): void {
+const connectCallback = function (err?: Error): void {
   if (err) {
     console.error('Could not connect: ' + err.message);
   } else {
@@ -73,7 +74,7 @@ let connectCallback = function (err: Error): void {
 
     client.on('disconnect', function (): void {
       clearInterval(sendInterval);
-      sendInterval = null;
+      (sendInterval as any) = null;
       client.removeAllListeners();
       client.open(connectCallback);
     });
@@ -82,11 +83,11 @@ let connectCallback = function (err: Error): void {
 
 // Provide the Azure IoT device client via setOptions with the X509
 // Edge root CA certificate that was used to setup the Edge runtime
-const options: { ca: string; } = {
+const options: { ca: string } = {
   ca : fs.readFileSync(edgeCaCertPath, 'utf-8'),
 };
 
-client.setOptions(options, function(err: Error): void {
+client.setOptions(options, function (err?: Error): void {
   if (err) {
     console.log('SetOptions Error: ' + err);
   } else {
@@ -95,8 +96,8 @@ client.setOptions(options, function(err: Error): void {
 });
 
 // Helper function to print results in the console
-function printResultFor(op: any): (err: Error, res: any) => void {
-  return function printResult(err: Error, res: any): void {
+function printResultFor(op: any): (err?: Error, res?: any) => void {
+  return function printResult(err?: Error, res?: any): void {
     if (err) console.log(op + ' error: ' + err.toString());
     if (res) console.log(op + ' status: ' + res.constructor.name);
   };

@@ -4,28 +4,28 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var ConnectionString = require('azure-iot-device').ConnectionString;
-var Message = require('azure-iot-device').Message;
+const Client = require('azure-iot-device').Client;
+const ConnectionString = require('azure-iot-device').ConnectionString;
+const Message = require('azure-iot-device').Message;
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
-var deviceId = ConnectionString.parse(deviceConnectionString).DeviceId;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const deviceId = ConnectionString.parse(deviceConnectionString).DeviceId;
 
 // Sensors data
-var temperature = 50;
-var humidity = 50;
-var externalTemperature = 55;
+let temperature = 50;
+let humidity = 50;
+let externalTemperature = 55;
 
 // Create IoT Hub client
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
 // Helper function to print results for an operation
 function printErrorFor(op) {
@@ -40,7 +40,7 @@ function generateRandomIncrement() {
 }
 
 // Send device meta data
-var deviceMetaData = {
+const deviceMetaData = {
   'ObjectType': 'DeviceInfo',
   'IsSimulatedDevice': 0,
   'Version': '1.0',
@@ -76,6 +76,7 @@ var deviceMetaData = {
     }]
 };
 
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 client.open(function (err) {
   if (err) {
     printErrorFor('open')(err);
@@ -87,26 +88,25 @@ client.open(function (err) {
       console.log('receive data: ' + msg.getData());
 
       try {
-        var command = JSON.parse(msg.getData());
+        const command = JSON.parse(msg.getData());
         if (command.Name === 'SetTemperature') {
           temperature = command.Parameters.Temperature;
           console.log('New temperature set to :' + temperature + 'F');
         }
 
         client.complete(msg, printErrorFor('complete'));
-      }
-      catch (err) {
+      } catch (err) {
         printErrorFor('parse received message')(err);
       }
     });
 
     // start event data send routing
-    var sendInterval = setInterval(function () {
+    const sendInterval = setInterval(function () {
       temperature += generateRandomIncrement();
       externalTemperature += generateRandomIncrement();
       humidity += generateRandomIncrement();
 
-      var data = JSON.stringify({
+      const data = JSON.stringify({
         'DeviceID': deviceId,
         'Temperature': temperature,
         'Humidity': humidity,

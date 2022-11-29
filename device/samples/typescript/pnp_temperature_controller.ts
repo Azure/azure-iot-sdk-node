@@ -13,9 +13,9 @@ let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || '';
 
 // DPS connection information
 const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT || 'global.azure-devices-provisioning.net';
-const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
-const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE || '';
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID || '';
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY || '';
 const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE || 'connectionString';
 
 const modelIdObject: { modelId: string } = { modelId: 'dtmi:com:example:TemperatureController;2', };
@@ -136,23 +136,23 @@ const sendCommandResponse: ( request: { methodName: any }, response: any, status
   }
 };
 
-const helperLogCommandRequest: (request: { methodName: any; payload?: any; }) => void = (request: { methodName: any; payload?: any }) => {
+const helperLogCommandRequest: (request: { methodName: any; payload?: any }) => void = (request: { methodName: any; payload?: any }) => {
   console.log(
     'Received command request for command name: ' + request.methodName
   );
 
-  if (!!request.payload) {
+  if (request.payload) {
     console.log('The command request payload is:');
     console.log(request.payload);
   }
 };
 
-const helperCreateReportedPropertiesPatch: (propertiesToReport: any, componentName: any) => {} = (
+const helperCreateReportedPropertiesPatch: (propertiesToReport: any, componentName: any) => Record<string, unknown> = (
   propertiesToReport: any,
   componentName: any
 ) => {
   let patch;
-  if (!!componentName) {
+  if (componentName) {
     patch = {};
     propertiesToReport.__t = 'c';
     patch[componentName] = propertiesToReport;
@@ -160,7 +160,7 @@ const helperCreateReportedPropertiesPatch: (propertiesToReport: any, componentNa
     patch = {};
     patch = propertiesToReport;
   }
-  if (!!componentName) {
+  if (componentName) {
     console.log(
       'The following properties will be updated for component: ' + componentName
     );
@@ -177,7 +177,7 @@ const updateComponentReportedProperties: (deviceTwin: Twin, patch: any, componen
   componentName: string
 ) => {
   let logLine: string;
-  if (!!componentName) {
+  if (componentName) {
     logLine = 'Properties have been reported for component: ' + componentName;
   } else {
     logLine = 'Properties have been reported for root interface.';
@@ -225,7 +225,7 @@ const desiredPropertyPatchListener = (deviceTwin: Twin, componentNames: any) => 
         propertyContent.ad = 'Successfully executed patch';
         propertyContent.av = version;
         patchForRoot[key] = propertyContent;
-        updateComponentReportedProperties(deviceTwin, patchForRoot, null);
+        updateComponentReportedProperties(deviceTwin, patchForRoot, '');
       }
     });
   });
@@ -251,7 +251,7 @@ const exitListener: (deviceClient: Client) => Promise<void> = async (deviceClien
 };
 
 async function sendTelemetry(deviceClient: Client, data: string | Message.BufferConvertible, index: number, componentName: string): Promise<void> {
-  if (!!componentName) {
+  if (componentName) {
     console.log(
       'Sending telemetry message %d from component: %s ',
       index,
@@ -261,7 +261,7 @@ async function sendTelemetry(deviceClient: Client, data: string | Message.Buffer
     console.log('Sending telemetry message %d from root interface', index);
   }
   const msg = new Message(data);
-  if (!!componentName) {
+  if (componentName) {
     msg.properties.add(messageSubjectProperty, componentName);
   }
   msg.contentType = 'application/json';
@@ -281,12 +281,12 @@ async function provisionDevice(payload: ProvisioningPayload): Promise<void> {
     provSecurityClient
   );
 
-  if (!!payload) {
+  if (payload) {
     provisioningClient.setProvisioningPayload(payload);
   }
 
   try {
-    let result: RegistrationResult | any = await provisioningClient.register();
+    const result: RegistrationResult | any = await provisioningClient.register();
     deviceConnectionString = 'HostName=' + result.assignedHub + ';DeviceId=' + result.deviceId + ';SharedAccessKey=' + symmetricKey;
     console.log('registration succeeded');
     console.log('assigned hub=' + result.assignedHub);
@@ -363,8 +363,8 @@ async function main(): Promise<void> {
     }, 5500);
 
     intervalToken3 = setInterval(() => {
-      const data = JSON.stringify({ workingset: 1 + Math.random() * 90 });
-      sendTelemetry(client, data, index3, null).catch((err) =>
+      const data = JSON.stringify({ workingSet: 1 + Math.random() * 90 });
+      sendTelemetry(client, data, index3, '').catch((err) =>
         console.log('error ', err.toString())
       );
       index3 += 1;
@@ -376,9 +376,9 @@ async function main(): Promise<void> {
     try {
       resultTwin = await client.getTwin();
       // Only report readable properties
-      const patchRoot: {} = helperCreateReportedPropertiesPatch({ serialNumber: serialNumber }, null);
+      const patchRoot: Record<string, unknown> = helperCreateReportedPropertiesPatch({ serialNumber: serialNumber }, null);
       const patchThermostat1Info = helperCreateReportedPropertiesPatch({ maxTempSinceLastReboot: thermostat1.getMaxTemperatureValue(), }, thermostat1ComponentName);
-      const patchThermostat2Info = helperCreateReportedPropertiesPatch({maxTempSinceLastReboot: thermostat2.getMaxTemperatureValue(),}, thermostat2ComponentName);
+      const patchThermostat2Info = helperCreateReportedPropertiesPatch({ maxTempSinceLastReboot: thermostat2.getMaxTemperatureValue(), }, thermostat2ComponentName);
 
       const patchDeviceInfo = helperCreateReportedPropertiesPatch(
         {
@@ -395,7 +395,7 @@ async function main(): Promise<void> {
       );
 
       // the below things can only happen once the twin is there
-      updateComponentReportedProperties(resultTwin, patchRoot, null);
+      updateComponentReportedProperties(resultTwin, patchRoot, '');
       updateComponentReportedProperties(resultTwin, patchThermostat1Info, thermostat1ComponentName);
       updateComponentReportedProperties(resultTwin, patchThermostat2Info, thermostat2ComponentName);
       updateComponentReportedProperties(resultTwin, patchDeviceInfo, deviceInfoComponentName);

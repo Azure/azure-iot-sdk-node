@@ -15,7 +15,7 @@ registry.getTwin(deviceId, function (err, twin) {
   if (err) {
     console.error(err.constructor.name + ': ' + err.message);
   } else {
-    
+
     // Usage example #1: receiving all patches with a single event handler.
     const twinPatch1 = {
       properties: {
@@ -27,6 +27,7 @@ registry.getTwin(deviceId, function (err, twin) {
 
     // Usage example #2: receiving an event if anything under
     // properties.desired.climate changes
+    // eslint-disable-next-line no-unused-vars
     const twinPatch2 = {
       properties: {
         desired: {
@@ -42,12 +43,13 @@ registry.getTwin(deviceId, function (err, twin) {
     // Usage example #3: receiving an event for a single (scalar) property
     // value. This event is only fired if the fanOn boolean value is part
     // of the patch.
+    // eslint-disable-next-line no-unused-vars
     const twinPatch3 = {
       properties: {
         desired: {
           modules : {
             wifi : { channel: 6, ssid: 'my_network' },
-            climate : { id: 17, units: 'farenheit' }
+            climate : { id: 17, units: 'fahrenheit' }
           }
         }
       }
@@ -56,6 +58,7 @@ registry.getTwin(deviceId, function (err, twin) {
     // Usage example #4: handle add operations. The app developer
     // is responsible for inferring add/update/delete operations based on
     // the contents of the patch.
+    // eslint-disable-next-line no-unused-vars
     const twinPatch4 = {
       properties: {
         desired: {
@@ -69,6 +72,7 @@ registry.getTwin(deviceId, function (err, twin) {
     // Usage example #4: handle delete operations. The app developer
     // is responsible for inferring add/update/delete operations based on
     // the contents of the patch.
+    // eslint-disable-next-line no-unused-vars
     const twinPatch5 = {
       properties: {
         desired: {
@@ -76,15 +80,15 @@ registry.getTwin(deviceId, function (err, twin) {
         }
       }
     }
-    
+
     // set to the patch you want to update
     const twinPatch = twinPatch1;
     // const twinPatch = twinPatch2;
     // const twinPatch = twinPatch3;
-    // const twinPatch = twinPatch4;  
+    // const twinPatch = twinPatch4;
     // const twinPatch = twinPatch5;
 
-    twin.update(twinPatch, (err, twin) => {
+    twin.update(twinPatch, (err, _twin) => {
       if (err) {
         console.error(err.message);
       } else {
