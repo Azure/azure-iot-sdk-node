@@ -112,7 +112,7 @@ const sendCommandResponse = async (request, response, status, payload) => {
 const helperLogCommandRequest = (request) => {
   console.log('Received command request for command name: ' + request.methodName);
 
-  if (!!(request.payload)) {
+  if (request.payload) {
     console.log('The command request payload is:');
     console.log(request.payload);
   }
@@ -121,7 +121,7 @@ const helperLogCommandRequest = (request) => {
 
 const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) => {
   let patch;
-  if (!!(componentName)) {
+  if (componentName) {
     patch = { };
     propertiesToReport.__t = 'c';
     patch[componentName] = propertiesToReport;
@@ -129,7 +129,7 @@ const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) 
     patch = { };
     patch = propertiesToReport;
   }
-  if (!!(componentName)) {
+  if (componentName) {
     console.log('The following properties will be updated for component: ' + componentName);
   } else {
     console.log('The following properties will be updated for root interface.');
@@ -140,7 +140,7 @@ const helperCreateReportedPropertiesPatch = (propertiesToReport, componentName) 
 
 const updateComponentReportedProperties = (deviceTwin, patch, componentName) => {
   let logLine;
-  if (!!(componentName)) {
+  if (componentName) {
     logLine = 'Properties have been reported for component: ' + componentName;
   } else {
     logLine = 'Properties have been reported for root interface.';
@@ -170,8 +170,7 @@ const desiredPropertyPatchListener = (deviceTwin, componentNames) => {
           }
         });
         updateComponentReportedProperties(deviceTwin, patchForComponents, componentName);
-      }
-      else if  (key !== '$version') { // individual property for root
+      } else if  (key !== '$version') { // individual property for root
         const patchForRoot = { };
         console.log('Will update property: ' + key + ' to value: ' + values + ' for root');
         const propertyContent = { value: values };
@@ -205,13 +204,13 @@ const exitListener = async (deviceClient) => {
 };
 
 async function sendTelemetry(deviceClient, data, index, componentName) {
-  if (!!(componentName)) {
+  if (componentName) {
     console.log('Sending telemetry message %d from component: %s ', index, componentName);
   } else {
     console.log('Sending telemetry message %d from root interface', index);
   }
   const msg = new Message(data);
-  if (!!(componentName)) {
+  if (componentName) {
     msg.properties.add(messageSubjectProperty, componentName);
   }
   msg.contentType = 'application/json';
@@ -220,10 +219,10 @@ async function sendTelemetry(deviceClient, data, index, componentName) {
 }
 
 async function provisionDevice(payload) {
-  var provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
-  var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
+  const provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+  const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
 
-  if (!!(payload)) {
+  if (payload) {
     provisioningClient.setProvisioningPayload(payload);
   }
 

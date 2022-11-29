@@ -21,7 +21,7 @@ const data: { id: number; message: string }[] = [
   { id: 2, message: 'world' },
 ];
 
-let messages: any[] = [];
+const messages: any[] = [];
 
 data.forEach(function (value: { id: number; message: string }): void {
   messages.push(new Message(JSON.stringify(value)));

@@ -1,31 +1,32 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-device').Message;
-var fs = require('fs');
+const Client = require('azure-iot-device').Client;
+const Message = require('azure-iot-device').Message;
+const fs = require('fs');
 
 // String containing Hostname and Device Id in the following format:
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING; 
-var certFile = process.env.PATH_TO_CERTIFICATE_FILE;
-var keyFile = process.env.PATH_TO_KEY_FILE;
-var passphrase = process.env.KEY_PASSPHRASE_OR_EMPTY; // Key Passphrase if one exists.
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const certFile = process.env.PATH_TO_CERTIFICATE_FILE;
+const keyFile = process.env.PATH_TO_KEY_FILE;
+const passphrase = process.env.KEY_PASSPHRASE_OR_EMPTY; // Key Passphrase if one exists.
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
-var sendInterval;
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
+let sendInterval;
 
-var connectCallback = function (err) {
+const connectCallback = function (err) {
   if (err) {
     console.error('Could not connect: ' + err.message);
   } else {
@@ -44,11 +45,11 @@ var connectCallback = function (err) {
     // Create a message and send it to the IoT Hub every second
     if (!sendInterval) {
       sendInterval = setInterval(function () {
-        var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-        var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-        var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-        var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-        var message = new Message(data);
+        let windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
+        let temperature = 20 + (Math.random() * 10); // range: [20, 30]
+        let humidity = 60 + (Math.random() * 20); // range: [60, 80]
+        let data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        let message = new Message(data);
         message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
         console.log('Sending message: ' + message.getData());
         client.sendEvent(message, printResultFor('send'));
@@ -68,7 +69,7 @@ var connectCallback = function (err) {
   }
 };
 
- var options = {
+ const options = {
    cert : fs.readFileSync(certFile, 'utf-8').toString(),
    key : fs.readFileSync(keyFile, 'utf-8').toString(),
    passphrase: passphrase

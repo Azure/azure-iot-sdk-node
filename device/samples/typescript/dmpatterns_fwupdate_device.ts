@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -24,7 +25,7 @@ const client: Client = Client.fromConnectionString(
   Protocol
 );
 
-client.open(function (err: Error): void {
+client.open(function (err?: Error, _result1?: any): void {
   if (!err) {
     client.onDeviceMethod(
       'firmwareUpdate',
@@ -41,7 +42,7 @@ client.open(function (err: Error): void {
           response.send(
             400,
             'Invalid URL format.  Must use https:// protocol.',
-            function (err: Error): void {
+            function (err: Error | undefined): void {
               if (err)
                 console.error(
                   'Error sending method response :\n' + err.toString()
@@ -57,7 +58,7 @@ client.open(function (err: Error): void {
           response.send(
             200,
             'Firmware update started.',
-            function (err: Error): void {
+            function (err?: Error, _result1?: any): void {
               if (err)
                 console.error(
                   'Error sending method response :\n' + err.toString()
@@ -90,7 +91,7 @@ function initiateFirmwareUpdateFlow(fwPackageUri: any, callback: any): void {
       },
       applyImage,
     ],
-    function (err: Error): void {
+    function (err: Error | null | undefined, _result1: any | undefined): void {
       if (err) {
         console.error('Error : ' + err.message);
       }
@@ -119,7 +120,7 @@ function downloadImage(fwPackageUriVal: string, callback: any): void {
         console.log('Downloading image from URI: ' + fwPackageUriVal);
 
         // Replace this line with the code to download the image.  Delay used to simulate the download.
-        setTimeout(function (): void {
+        setTimeout(function (): void { //DevSkim: reviewed DS172411 on 2022-11-29
           callback(null);
         }, 4000);
       },
@@ -133,7 +134,7 @@ function downloadImage(fwPackageUriVal: string, callback: any): void {
         );
       },
     ],
-    function (err: Error): void {
+    function (err: Error | null | undefined, _result1: any | undefined ): void {
       if (err) {
         reportFWUpdateThroughTwin(
           { status: 'Download image failed' },
@@ -166,7 +167,7 @@ function applyImage(_imageData: any, callback: any): void {
         console.log('Applying firmware image');
 
         // Replace this line with the code to download the image.  Delay used to simulate the download.
-        setTimeout(function (): void {
+        setTimeout(function (): void { //DevSkim: reviewed DS172411 on 2022-11-29
           callback(null);
         }, 4000);
       },
@@ -180,7 +181,7 @@ function applyImage(_imageData: any, callback: any): void {
         );
       },
     ],
-    function (err: Error): void {
+    function (_result: any, err?: Error): void {
       if (err) {
         reportFWUpdateThroughTwin(
           { status: 'Apply image failed' },
@@ -206,8 +207,8 @@ function reportFWUpdateThroughTwin(
     },
   };
   console.log(JSON.stringify(patch, null, 2));
-  client.getTwin(function (err: Error, twin: Twin): void {
-    if (!err) {
+  client.getTwin(function (err: Error | undefined, twin: Twin | undefined): void {
+    if (!err && twin) {
       twin.properties.reported.update(patch, function (err: Error): void {
         callback(err);
       });

@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -25,15 +26,15 @@ console.log('got client');
 
 async function asyncMain(): Promise<void> {
   // connect to the hub
-  client.open(function (err: Error): void {
+  client.open(function (err?: Error): void {
     if (err) {
       console.error('could not open IotHub client');
     } else {
       console.log('client opened');
 
       // Create device Twin
-      client.getTwin(function (err: Error, twin: Twin): void {
-        if (err) {
+      client.getTwin(function (err?: Error, twin?: Twin): void {
+        if (err || !twin) {
           console.error('could not get twin');
         } else {
           console.log('twin created');
@@ -59,7 +60,7 @@ async function asyncMain(): Promise<void> {
           // that process the same properties at different levels.
 
           // ATTENTION!
-          // You will need to send the desired properties updates from a seperate
+          // You will need to send the desired properties updates from a separate
           // backend service. We have created a helper service for you in the
           // 'helpers/device-twin-service' directory. See readme for instructions.
 
@@ -132,7 +133,7 @@ async function asyncMain(): Promise<void> {
           // };
           //
           twin.on(
-            'properties.desired.climate.hvac.sytemControl',
+            'properties.desired.climate.hvac.systemControl',
             function (fanOn: any): void {
               console.log('setting fan state to ' + fanOn);
             }
@@ -151,7 +152,7 @@ async function asyncMain(): Promise<void> {
           //    desired: {
           //      modules : {
           //        wifi : { channel: 6, ssid: 'my_network' },
-          //        climate : { id: 17, units: 'farenheit' }
+          //        climate : { id: 17, units: 'fahrenheit' }
           //      }
           //    }
           //  }
@@ -179,7 +180,7 @@ async function asyncMain(): Promise<void> {
 
           // To do this, first we have to keep track of 'all modules that we know
           // about'.
-          let moduleList = {};
+          const moduleList = {};
 
           // Then we use this internal list and compare it to the delta to know
           // if anything was added, removed, or updated.
@@ -211,7 +212,7 @@ async function asyncMain(): Promise<void> {
           });
 
           // create a patch to send to the hub
-          let patch = {
+          const patch = {
             firmwareVersion: '1.2.1',
             weather: {
               temperature: 72,

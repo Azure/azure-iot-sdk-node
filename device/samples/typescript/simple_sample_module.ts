@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -12,9 +13,9 @@ import { ModuleClient, Message } from 'azure-iot-device';
 
 ModuleClient.fromEnvironment(
   Protocol,
-  function (err: Error, client: ModuleClient): void {
-    if (err) {
-      console.error('Could not create client: ' + err.toString());
+  function (err?: Error, client?: ModuleClient): void {
+    if (err || !client) {
+      console.error('Could not create client: ' + ((err) ? (err.toString()) : ('no client returned')));
       process.exit(-1);
     } else {
       console.log('got client');
@@ -23,7 +24,7 @@ ModuleClient.fromEnvironment(
         console.error(err.message);
       });
 
-      client.open(function (err: Error): void {
+      client.open(function (err?: Error): void {
         if (err) {
           console.error('Could not connect: ' + err.message);
         } else {
@@ -74,8 +75,8 @@ ModuleClient.fromEnvironment(
 );
 
 // Helper function to print results in the console
-function printResultFor(op: any): (err: Error, res: any) => void {
-  return function printResult(err: Error, res: any): void {
+function printResultFor(op: any): (err?: Error, res?: any) => void {
+  return function printResult(err?: Error, res?: any): void {
     if (err) console.log(op + ' error: ' + err.toString());
     if (res) console.log(op + ' status: ' + res.constructor.name);
   };

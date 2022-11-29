@@ -4,24 +4,25 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var client = null;
+const Client = require('azure-iot-device').Client;
+let client = null;
 
 function main() {
     // open a connection to the device
-    var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+    const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
     client = Client.fromConnectionString(deviceConnectionString, Protocol);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     client.open(onConnect);
 }
 
 function onConnect(err) {
-    if(!!err) {
+    if(err) {
         console.error('Could not connect: ' + err.message);
     } else {
         console.log('Connected to device. Registering handlers for methods.');
@@ -38,8 +39,8 @@ function onGetDeviceLog(request, response) {
     // Implement actual logic here.
 
     // complete the response
-    response.send(200, 'example payload', function(err) {
-        if(!!err) {
+    response.send(200, 'example payload', function (err) {
+        if(err) {
             console.error('An error ocurred when sending a method response:\n' +
                 err.toString());
         } else {
@@ -55,8 +56,8 @@ function onLockDoor(request, response) {
     // Implement actual logic here.
 
     // complete the response
-    response.send(200, function(err) {
-        if(!!err) {
+    response.send(200, function (err) {
+        if(err) {
             console.error('An error ocurred when sending a method response:\n' +
                 err.toString());
         } else {
@@ -71,7 +72,7 @@ function printDeviceMethodRequest(request) {
     console.log('Received method call for method \'' + request.methodName + '\'');
 
     // if there's a payload just do a default console log on it
-    if(!!(request.payload)) {
+    if(request.payload) {
         console.log('Payload:\n' + request.payload);
     }
 }

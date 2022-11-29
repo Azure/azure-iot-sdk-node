@@ -12,7 +12,7 @@ const ConnectionString = require('azure-iot-common').ConnectionString;
 const SymmetricKeySecurityClient = require('azure-iot-security-symmetric-key').SymmetricKeySecurityClient;
 const ProvisioningDeviceClient = require('azure-iot-provisioning-device').ProvisioningDeviceClient;
 
-// To see the dtdl of for this https://github.com/Azure/opendigitaltwins-dtdl
+// To see the DTDL of for this https://github.com/Azure/opendigitaltwins-dtdl
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
@@ -169,10 +169,10 @@ async function sendTelemetry(deviceClient, index) {
 }
 
 async function provisionDevice(payload) {
-  var provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
-  var provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
+  const provSecurityClient = new SymmetricKeySecurityClient(registrationId, symmetricKey);
+  const provisioningClient = ProvisioningDeviceClient.create(provisioningHost, idScope, new ProvProtocol(), provSecurityClient);
 
-  if (!!(payload)) {
+  if (payload) {
     provisioningClient.setProvisioningPayload(payload);
   }
 

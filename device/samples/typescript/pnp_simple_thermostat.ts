@@ -15,13 +15,13 @@ import { RegistrationClient } from 'azure-iot-provisioning-device/dist/interface
 
 // String containing Hostname, Device Id & Device Key in the following formats:
 //  'HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>'
-let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+let deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING || 'device connection string';
 
 // DPS connection information
 const provisioningHost = process.env.IOTHUB_DEVICE_DPS_ENDPOINT ||  'global.azure-devices-provisioning.net';
-const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE;
-const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID;
-const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY;
+const idScope = process.env.IOTHUB_DEVICE_DPS_ID_SCOPE || 'invalid scope';
+const registrationId = process.env.IOTHUB_DEVICE_DPS_DEVICE_ID || 'invalid registration id';
+const symmetricKey = process.env.IOTHUB_DEVICE_DPS_DEVICE_KEY || 'invalid key';
 const useDps = process.env.IOTHUB_DEVICE_SECURITY_TYPE || 'connectionString';
 
 const modelIdObject: { modelId: string } = { modelId: 'dtmi:com:example:Thermostat;1', };
@@ -45,7 +45,7 @@ class TemperatureSensor {
     this.numberOfTemperatureReadings = 1;
   }
 
-  getCurrentTemperatureObject(): { temperature: number; }  {
+  getCurrentTemperatureObject(): { temperature: number }  {
     return { temperature: this.currTemp };
   }
 
@@ -133,7 +133,7 @@ const commandHandler = async (
   }
 };
 
-const sendCommandResponse = async (request: { methodName: any; payload?: string; }, response: any, status: number, payload: any) => {
+const sendCommandResponse = async (request: { methodName: any; payload?: string }, response: any, status: number, payload: any) => {
   try {
     await response.send(status, payload);
     console.log(
@@ -210,7 +210,7 @@ async function sendTelemetry(deviceClient: Client, index: number): Promise<void>
 
 async function provisionDevice(payload: any): Promise<void> {
   const provSecurityClient: SymmetricKeySecurityClient = new SymmetricKeySecurityClient(
-    registrationId,
+    registrationId || '',
     symmetricKey
   );
   const provisioningClient: RegistrationClient = ProvisioningDeviceClient.create(
@@ -220,7 +220,7 @@ async function provisionDevice(payload: any): Promise<void> {
     provSecurityClient
   );
 
-  if (!!payload) {
+  if (payload) {
     provisioningClient.setProvisioningPayload(payload);
   }
 

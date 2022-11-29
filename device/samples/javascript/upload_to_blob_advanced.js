@@ -28,7 +28,7 @@ const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const Client = require('azure-iot-device').Client;
 const errors = require('azure-iot-common').errors;
 
-const {AnonymousCredential, BlockBlobClient, newPipeline } = require('@azure/storage-blob');
+const { AnonymousCredential, BlockBlobClient, newPipeline } = require('@azure/storage-blob');
 
 // make sure you set these environment variables prior to running the sample.
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
@@ -70,8 +70,7 @@ async function uploadToBlob(localFilePath, client) {
 
     // Notify IoT Hub of upload to blob status (success)
     console.log('notifyBlobUploadStatus success');
-  }
-  catch (err) {
+  } catch (err) {
     isSuccess = false;
     statusCode = err.code;
     statusDescription = err.message;

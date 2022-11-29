@@ -22,7 +22,7 @@ const url = require('url');
 const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 let sendInterval;
 
-function disconnectHandler () {
+function disconnectHandler() {
   clearInterval(sendInterval);
   sendInterval = null;
   client.removeAllListeners();
@@ -39,12 +39,12 @@ function disconnectHandler () {
 // When rejecting a message, the service that sent the C2D message is notified that the message won't be processed by the device. the method to use is client.reject(msg, callback).
 // When abandoning the message, IoT Hub will immediately try to resend it. The method to use is client.abandon(msg, callback).
 // MQTT is simpler: it accepts the message by default, and doesn't support rejecting or abandoning a message.
-function messageHandler (msg) {
+function messageHandler(msg) {
   console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
   client.complete(msg, printResultFor('completed'));
 }
 
-function generateMessage () {
+function generateMessage() {
   const windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
   const temperature = 20 + (Math.random() * 10); // range: [20, 30]
   const humidity = 60 + (Math.random() * 20); // range: [60, 80]
@@ -54,11 +54,11 @@ function generateMessage () {
   return message;
 }
 
-function errorHandler (err) {
+function errorHandler(err) {
   console.error(err.message);
 }
 
-function connectHandler () {
+function connectHandler() {
   console.log('Client connected');
   // Create a message and send it to the IoT Hub every two seconds
   if (!sendInterval) {
@@ -72,15 +72,15 @@ function connectHandler () {
 }
 
 // Create Proxy Agent
-// TODO: You need to change this to match the endpoint of your proxy server.
-const proxy = "http://localhost:8888/";
+// NOTE: You need to change this to match the endpoint of your proxy server.
+const proxy = "https://localhost:8888/";
 let options = url.parse(proxy);
-var agent = new HttpsProxyAgent(options);
+const agent = new HttpsProxyAgent(options);
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 let client = Client.fromConnectionString(deviceConnectionString, Protocol);
 // MQTTWS (MQTT over Websocket)
-client.setOptions({mqtt: {webSocketAgent: agent}});
+client.setOptions({ mqtt: { webSocketAgent: agent } });
 // AMQPWS (AMQP over Websocket)
 // client.setOptions({amqp: {agent: agent}});
 // HTTP
@@ -91,7 +91,7 @@ client.on('disconnect', disconnectHandler);
 client.on('message', messageHandler);
 
 client.open()
-.catch(err => {
+.catch((err) => {
   console.error('Could not connect: ' + err.message);
 });
 

@@ -4,24 +4,24 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-device').Message;
+const Client = require('azure-iot-device').Client;
+const Message = require('azure-iot-device').Message;
 
 // String SharedAccessSignature in the following formats:
 //  "SharedAccessSignature sr=<iothub_host_name>/devices/<device_id>&sig=<signature>&se=<expiry>"
-var sas = process.env.IOTHUB_SAS;
+const sas = process.env.IOTHUB_SAS;
 
 // fromSharedAccessSignature must specify a transport constructor, coming from any transport package.
-var client = Client.fromSharedAccessSignature(sas, Protocol);
+const client = Client.fromSharedAccessSignature(sas, Protocol);
 
-var sendInterval;
-var connectCallback = function (err) {
+let sendInterval;
+const connectCallback = function (err) {
   if (err) {
     console.error('Could not connect: ' + err);
   } else {
@@ -40,12 +40,12 @@ var connectCallback = function (err) {
     // Create a message and send it to the IoT Hub every second
     if (!sendInterval) {
       sendInterval = setInterval(function () {
-        var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-        var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-        var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-        var data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-        var message = new Message(data);
-        message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');      
+        let windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
+        let temperature = 20 + (Math.random() * 10); // range: [20, 30]
+        let humidity = 60 + (Math.random() * 20); // range: [60, 80]
+        let data = JSON.stringify({ deviceId: 'myFirstDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        let message = new Message(data);
+        message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
         console.log('Sending message: ' + message.getData());
         client.sendEvent(message, printResultFor('send'));
       }, 2000);
@@ -59,11 +59,13 @@ var connectCallback = function (err) {
       clearInterval(sendInterval);
       sendInterval = null;
       client.removeAllListeners();
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       client.open(connectCallback);
     });
   }
 };
 
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 client.open(connectCallback);
 
 // Helper function to print results in the console

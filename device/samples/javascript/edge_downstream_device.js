@@ -4,15 +4,15 @@
 'use strict';
 
 // Choose a protocol by uncommenting one of these transports.
-var Protocol = require('azure-iot-device-mqtt').Mqtt;
-// var Protocol = require('azure-iot-device-amqp').Amqp;
-// var Protocol = require('azure-iot-device-http').Http;
-// var Protocol = require('azure-iot-device-mqtt').MqttWs;
-// var Protocol = require('azure-iot-device-amqp').AmqpWs;
+const Protocol = require('azure-iot-device-mqtt').Mqtt;
+// const Protocol = require('azure-iot-device-amqp').Amqp;
+// const Protocol = require('azure-iot-device-http').Http;
+// const Protocol = require('azure-iot-device-mqtt').MqttWs;
+// const Protocol = require('azure-iot-device-amqp').AmqpWs;
 
-var Client = require('azure-iot-device').Client;
-var Message = require('azure-iot-device').Message;
-var fs = require('fs');
+const Client = require('azure-iot-device').Client;
+const Message = require('azure-iot-device').Message;
+const fs = require('fs');
 
 // 1) Obtain the connection string for your downstream device and to it
 //    append this string GatewayHostName=<edge device hostname>;
@@ -21,16 +21,16 @@ var fs = require('fs');
 //
 // The resulting string should look like the following
 //  "HostName=<iothub_host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>;GatewayHostName=<edge device hostname>"
-var deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
+const deviceConnectionString = process.env.IOTHUB_DEVICE_CONNECTION_STRING;
 
 // Path to the Edge "owner" root CA certificate
-var edge_ca_cert_path = process.env.PATH_TO_EDGE_CA_CERT;
+const edge_ca_cert_path = process.env.PATH_TO_EDGE_CA_CERT;
 
 // fromConnectionString must specify a transport constructor, coming from any transport package.
-var client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-var sendInterval;
-var connectCallback = function (err) {
+let sendInterval;
+const connectCallback = function (err) {
   if (err) {
     console.error('Could not connect: ' + err.message);
   } else {
@@ -49,11 +49,11 @@ var connectCallback = function (err) {
     // Create a message and send it to the IoT Hub every two seconds
     if (!sendInterval) {
       sendInterval = setInterval(function () {
-        var windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-        var temperature = 20 + (Math.random() * 10); // range: [20, 30]
-        var humidity = 60 + (Math.random() * 20); // range: [60, 80]
-        var data = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-        var message = new Message(data);
+        let windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
+        let temperature = 20 + (Math.random() * 10); // range: [20, 30]
+        let humidity = 60 + (Math.random() * 20); // range: [60, 80]
+        let data = JSON.stringify({ deviceId: 'myFirstDownstreamDevice', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
+        let message = new Message(data);
         message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
         console.log('Sending message: ' + message.getData());
         client.sendEvent(message, printResultFor('send'));
@@ -68,6 +68,7 @@ var connectCallback = function (err) {
       clearInterval(sendInterval);
       sendInterval = null;
       client.removeAllListeners();
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       client.open(connectCallback);
     });
   }
@@ -75,14 +76,16 @@ var connectCallback = function (err) {
 
 // Provide the Azure IoT device client via setOptions with the X509
 // Edge root CA certificate that was used to setup the Edge runtime
-var options = {
+const options = {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
   ca : fs.readFileSync(edge_ca_cert_path, 'utf-8'),
 };
 
-client.setOptions(options, function(err) {
+client.setOptions(options, function (err) {
   if (err) {
     console.log('SetOptions Error: ' + err);
   } else {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     client.open(connectCallback);
   }
 });
