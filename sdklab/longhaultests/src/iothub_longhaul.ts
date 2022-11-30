@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -104,7 +105,7 @@ createDevice((err, deviceConnectionString) => {
       });
     });
 
-    const endTimeout = setTimeout(() => {
+    const endTimeout = setTimeout(() => { //DevSkim: reviewed DS172411 on 2022-11-30
       debug('end timeout: test completed successfully');
       stopSender(() => {
         debug('sender stopped. deleting device');

@@ -5,8 +5,7 @@
   "main": "./lib/iothub_longhaul.js",
   "bin": "./lib/iothub_longhaul.js",
   "scripts": {
-    "npmlockrefresh": "npm i --package-lock-only",
-    "lint": "tslint --project . -c ../../tslint.json",
+    "lint": "eslint src --ext .ts -f visualstudio",
     "build": "tsc",
     "setup_links": "npm link azure-iot-common azure-iot-device azure-iot-device-amqp azure-iot-device-mqtt azure-iot-device-http azure-iothub",
     "start": "node dist/iothub_longhaul.js"
@@ -25,12 +24,20 @@
     "@types/node": "^16.10.2",
     "@types/uuid": "^3.4.5",
     "encoding": "^0.1.13",
-    "tslint": "^6.1.3",
+    "eslint": "^8.26.0",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "eslint-plugin-jsdoc": "^39.3.25",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security": "^1.5.0",
     "typescript": "4.4.4"
   },
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "azure-iot-common": "1.13.1",
     "azure-iot-device": "1.18.1",
     "azure-iot-device-amqp": "1.14.1",

@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -78,7 +79,7 @@ export class D2CSender extends EventEmitter {
 
   private _send(): void {
     const id = uuid.v4();
-    let msg = new Message(id);
+    const msg = new Message(id);
     msg.messageId = id;
     debug('sending message with id: ' + id);
     timeout(this._client.sendEvent.bind(this._client), this._sendTimeout)(msg, (err) => {
@@ -87,7 +88,7 @@ export class D2CSender extends EventEmitter {
         this.emit('error', err);
       } else {
         debug('sent message with id: ' + id);
-        this._timer = setTimeout(this._send.bind(this), this._sendInterval);
+        this._timer = setTimeout(this._send.bind(this), this._sendInterval); //DevSkim: reviewed DS172411 on 2022-11-30
         this.emit('sent', id);
       }
     });

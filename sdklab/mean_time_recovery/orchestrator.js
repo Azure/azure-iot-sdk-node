@@ -3,6 +3,7 @@
 
 "use strict";
 
+// eslint-disable-next-line security/detect-child-process
 const { fork } = require("child_process");
 const fs = require("fs");
 const debug = require("debug")("orchestrator");
@@ -15,7 +16,8 @@ function wait(ms) {
 }
 
 async function main() {
-  let childServer, childDevice;
+  let childServer;
+  let childDevice;
 
   function deviceReceiveMessage() {
     // This returns a promise to wait on the response by the device, by setting up a
@@ -29,7 +31,7 @@ async function main() {
         }
       };
       childDevice.on("message", callback);
-      setTimeout(() => {
+      setTimeout(() => { //DevSkim: reviewed DS172411 on 2022-11-30
         childDevice.removeListener("message", callback);
         rej();
       }, 5000);
@@ -50,7 +52,7 @@ async function main() {
       };
       childDevice.on("message", callback);
       childDevice.send({ sendPingMessage: true });
-      setTimeout(() => {
+      setTimeout(() => { //DevSkim: reviewed DS172411 on 2022-11-30
         childDevice.removeListener("message", callback);
         rej();
       }, 5000);
