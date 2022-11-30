@@ -62,7 +62,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
         activating: {
           _onEnter: (callback, _err) => {
             const newExpiry =  Math.floor(Date.now() / 1000) + this._tokenValidTimeInSeconds;
-            /*Codes_SRS_NODE_TPM_AUTH_PROVIDER_16_001: [`getDeviceCredentials` shall use the `SharedAccessSignature.createWithSigningFunction` method with the `signWithIdentity` method of the `TpmSecurityClient` given to the construtor to generate a SAS token.]*/
+            /*Codes_SRS_NODE_TPM_AUTH_PROVIDER_16_001: [`getDeviceCredentials` shall use the `SharedAccessSignature.createWithSigningFunction` method with the `signWithIdentity` method of the `TpmSecurityClient` given to the constructor to generate a SAS token.]*/
             SharedAccessSignature.createWithSigningFunction(this._credentials, newExpiry, this._tpmSecurityClient.signWithIdentity.bind(this._tpmSecurityClient), (err, newSas) => {
               if (err) {
                 debug('Unable to create a new SAS token! - ' + err);
@@ -72,7 +72,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
               } else {
                 this._credentials.sharedAccessSignature = newSas.toString();
                 /*Codes_SRS_NODE_TPM_AUTH_PROVIDER_16_004: [`getDeviceCredentials` shall start a timer to renew the SAS token after the time the token is valid minus the renewal margin (60 - 15 = 45 minutes by default).]*/
-                this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000);
+                this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000); //DevSkim: reviewed DS172411 on 2022-11-30
                 debug('Created a new sas token.');
                 this._fsm.transition('active', callback);
               }
@@ -135,7 +135,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
         this._fsm.handle('signingError', err);
       } else {
         this._credentials.sharedAccessSignature = newSas.toString();
-        this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000);
+        this._renewalTimeout = setTimeout(() => this._renewToken(), (this._tokenValidTimeInSeconds - this._tokenRenewalMarginInSeconds) * 1000); //DevSkim: reviewed DS172411 on 2022-11-30
         this._fsm.handle('signingSuccessful');
       }
     });

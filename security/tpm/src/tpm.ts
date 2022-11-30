@@ -18,7 +18,7 @@ const debug = dbg('azure-iot-security-tpm:TpmSecurityClient');
  */
 export class TpmSecurityClient  {
 
-  private static readonly _aes128SymDef: tss.TPMT_SYM_DEF_OBJECT = new tss.TPMT_SYM_DEF_OBJECT(TPM_ALG_ID.AES, 128, TPM_ALG_ID.CFB);
+  private static readonly _aes128SymDef: tss.TPMT_SYM_DEF_OBJECT = new tss.TPMT_SYM_DEF_OBJECT(TPM_ALG_ID.AES, 128, TPM_ALG_ID.CFB); //DevSkim: ignore DS187371
 
   private static readonly _ekPersistentHandle: TPM_HANDLE = new TPM_HANDLE(0x81010001);
   private static readonly _srkPersistentHandle: TPM_HANDLE = new TPM_HANDLE(0x81000001);
@@ -28,7 +28,7 @@ export class TpmSecurityClient  {
   private static readonly _ekTemplate: TPMT_PUBLIC = new TPMT_PUBLIC(TPM_ALG_ID.SHA256,
     TPMA_OBJECT.restricted | TPMA_OBJECT.decrypt | TPMA_OBJECT.fixedTPM | TPMA_OBJECT.fixedParent |
     TPMA_OBJECT.adminWithPolicy | TPMA_OBJECT.sensitiveDataOrigin,
-    Buffer.from('837197674484b3f81a90cc8d46a5d724fd52d76e06520b64f2a1da1b331469aa', 'hex'),
+    Buffer.from('837197674484b3f81a90cc8d46a5d724fd52d76e06520b64f2a1da1b331469aa', 'hex'), //DevSkim: ignore DS173237
     new tss.TPMS_RSA_PARMS(TpmSecurityClient._aes128SymDef, new tss.TPMS_NULL_ASYM_SCHEME(), 2048, 0),
     new tss.TPM2B_PUBLIC_KEY_RSA());
 
@@ -381,9 +381,9 @@ export class TpmSecurityClient  {
           let curPos: number = 0;
           let bytesLeft: number = dataToSign.length;
           let hSequence: TPM_HANDLE = null;
-          let loopFn = () => {
+          const loopFn = () => {
             if (bytesLeft > maxInputBuffer) {
-              let sliceCurPos = curPos;
+              const sliceCurPos = curPos;
               bytesLeft -= maxInputBuffer;
               curPos += maxInputBuffer;
               this._tpm.withSession(tss.NullPwSession).SequenceUpdate(hSequence, dataToSign.slice(sliceCurPos, sliceCurPos + maxInputBuffer), loopFn);
@@ -418,20 +418,17 @@ export class TpmSecurityClient  {
 
   private _activateIdentityKey(activationBlob: Buffer, activateCallback: (err: Error) => void): void {
 
-    let credentialBlob: tss.TPMS_ID_OBJECT;
-    let encodedSecret: tss.TPM2B_ENCRYPTED_SECRET;
-    let idKeyDupBlob: tss.TPM2B_PRIVATE;
-    let encWrapKey: tss.TPM2B_ENCRYPTED_SECRET;
+
 
     //
     // Un-marshal components of the activation blob received from the provisioning service.
     //
-    let buf: tss.TpmBuffer = activationBlob instanceof Buffer ? new tss.TpmBuffer(activationBlob) : activationBlob;
+    const buf: tss.TpmBuffer = activationBlob instanceof Buffer ? new tss.TpmBuffer(activationBlob) : activationBlob;
 
-    credentialBlob = buf.createSizedObj(tss.TPMS_ID_OBJECT);
-    encodedSecret = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);
-    idKeyDupBlob = buf.createObj(tss.TPM2B_PRIVATE);
-    encWrapKey = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);
+    const credentialBlob: tss.TPMS_ID_OBJECT = buf.createSizedObj(tss.TPMS_ID_OBJECT);
+    const encodedSecret: tss.TPM2B_ENCRYPTED_SECRET = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);
+    const idKeyDupBlob: tss.TPM2B_PRIVATE = buf.createObj(tss.TPM2B_PRIVATE);
+    const encWrapKey: tss.TPM2B_ENCRYPTED_SECRET = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);
     this._idKeyPub = buf.createSizedObj(TPMT_PUBLIC);
     this._encUriData = buf.createObj(tss.TPM2B_DATA);
     debug('The value of the encUriData: ' + this._encUriData.toString());
@@ -458,7 +455,7 @@ export class TpmSecurityClient  {
             /*Codes_SRS_NODE_TPM_SECURITY_CLIENT_06_016: [If an error is encountered activating the identity key, the callback with be invoked with an `Error` of `SecurityDeviceError`.] */
             activateCallback(new errors.SecurityDeviceError('Authorization session unable to be created.  RC value: ' + TPM_RC[rc].toString()));
           } else {
-            let policySession = new tss.Session(resp.handle, resp.nonceTPM);
+            const policySession = new tss.Session(resp.handle, resp.nonceTPM);
 
             //
             // Apply the policy necessary to authorize an EK on Windows
@@ -491,7 +488,7 @@ export class TpmSecurityClient  {
                     // Initialize parameters of the symmetric key used by DRS
                     // Note that the client uses the key size chosen by DRS, but other parameters are fixed (an AES key in CFB mode).
                     //
-                    let symDef = new tss.TPMT_SYM_DEF_OBJECT(TPM_ALG_ID.AES, innerWrapKey.length * 8, TPM_ALG_ID.CFB);
+                    const symDef = new tss.TPMT_SYM_DEF_OBJECT(TPM_ALG_ID.AES, innerWrapKey.length * 8, TPM_ALG_ID.CFB); //DevSkim: ignore DS187371
 
                     //
                     // Import the new Device ID key issued by DRS to the device's TPM
