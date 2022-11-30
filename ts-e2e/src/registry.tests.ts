@@ -2,10 +2,10 @@ import { Registry } from 'azure-iothub';
 import * as uuid from 'uuid';
 import { assert } from 'chai';
 
-describe('Registry', () => {
-  // tslint:disable:no-invalid-this
+describe('Registry', function () {
+  // eslint-disable-next-line no-invalid-this
   (this as any).timeout(60000);
-  it('creates a device -> gets it -> updates it -> deletes it', (testCallback) => {
+  it('creates a device -> gets it -> updates it -> deletes it', function (testCallback: (err?: Error) => void) {
     const testDeviceId = uuid.v4();
     const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
     registry.create({ deviceId: testDeviceId }, (err, createDevDesc) => {

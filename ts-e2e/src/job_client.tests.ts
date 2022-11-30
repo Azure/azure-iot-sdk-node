@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 import { Client as DeviceClient } from 'azure-iot-device';
 import { Mqtt as DeviceMqtt } from 'azure-iot-device-mqtt';
 import { ConnectionString, JobClient, Registry } from 'azure-iothub';
@@ -6,8 +7,8 @@ import { assert } from 'chai';
 import * as dbg from 'debug';
 const debug = dbg('ts-e2e-jobclient');
 
- describe('JobClient', () => {
-  // tslint:disable:no-invalid-this
+ describe('JobClient', function () {
+  // eslint-disable-next-line no-invalid-this
   (this as any).timeout(120000);
 
   const testDeviceId = '0000node-e2etests-JobClient-' + uuid.v4();
@@ -21,7 +22,7 @@ const debug = dbg('ts-e2e-jobclient');
     };
   };
 
-  before((beforeCallback) => {
+  before(function (beforeCallback: (err?: Error) => void) {
     const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
     registry.create({ deviceId: testDeviceId }, continueWith((result) => {
       testDevice = result;
@@ -32,7 +33,7 @@ const debug = dbg('ts-e2e-jobclient');
     }));
   });
 
-  after((afterCallback) => {
+  after(function (afterCallback: (err?: Error) => void) {
     if (testDevice) {
       const registry = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       registry.delete(testDeviceId, (err) => {
@@ -63,8 +64,8 @@ const debug = dbg('ts-e2e-jobclient');
     setTimeout(waitFunction, intervalInMs);
   };
 
-  describe('scheduleTwinUpdate', () => {
-    it('schedules a twin update job with a sql query and succeeds', (testCallback) => {
+  describe('scheduleTwinUpdate', function () {
+    it('schedules a twin update job with a sql query and succeeds', function (testCallback: (err?: Error) => void) {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       const testTwinPatch = {
@@ -88,7 +89,7 @@ const debug = dbg('ts-e2e-jobclient');
       }));
     });
 
-    it('schedules a twin update job and cancels it', (testCallback) => {
+    it('schedules a twin update job and cancels it', function (testCallback: (err?: Error) => void) {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       const fakePatch = {
@@ -112,14 +113,14 @@ const debug = dbg('ts-e2e-jobclient');
     });
   });
 
-  describe('scheduleDeviceMethod', () => {
+  describe('scheduleDeviceMethod', function () {
     const testDeviceMethod = {
       methodName: 'testMethod',
       payload: null,
       timeoutInSeconds: 30
     };
 
-    it('schedules a device method job with a sql query and succeeds', (testCallback) => {
+    it('schedules a device method job with a sql query and succeeds', function (testCallback: (err?: Error) => void) {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       let methodResponseWasSent = false;
@@ -145,7 +146,7 @@ const debug = dbg('ts-e2e-jobclient');
       }));
     });
 
-    it('schedules a device method job and cancels it', (testCallback) => {
+    it('schedules a device method job and cancels it', function (testCallback: (err?: Error) => void) {
       const jobClient = JobClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const testJobId = uuid.v4();
       jobClient.scheduleDeviceMethod(testJobId, 'deviceId = \'' + testDeviceId + '\'', testDeviceMethod, new Date(Date.now() + 3600000), 120, continueWith((job) => {
