@@ -11,6 +11,7 @@ const debug = require('debug')('stresstests:StressMeasurementsRecorder');
 class StressMeasurementsRecorder {
   /**
    * Construct a StressMeasurementsRecorder instance
+   *
    * @public
    */
   constructor() {
@@ -30,6 +31,7 @@ class StressMeasurementsRecorder {
   /**
    * This should be called when a message is sent from the device side to keep
    * track of the number of messages in the queue.
+   *
    * @public
    */
   messageEnqueued() {
@@ -42,6 +44,7 @@ class StressMeasurementsRecorder {
   /**
    * This should be called when a message is received from the service side to
    * keep track of the messages in the queue and the peak telemetry arrival time.
+   *
    * @param {number} arrivalTimeInMs - The amount of time from when the message
    *   was sent on the device side to when it was seen on the service side.
    * @public
@@ -62,6 +65,7 @@ class StressMeasurementsRecorder {
 
   /**
    * This function should be called at the beginning of every test.
+   *
    * @param {object} client - A Client or ModuleClient instance. Used to keep
    *   track of connects and disconnects
    * @param {number} memorySamplingIntervalInMs - The time interval to sample
@@ -107,6 +111,7 @@ class StressMeasurementsRecorder {
    * This should be called at the end of a test to clean up listeners and
    * intervals, finalize measurements, and reset the state for the recorder
    * to be started again by the next test.
+   *
    * @public
    */
   done() {
@@ -139,7 +144,7 @@ class StressMeasurementsRecorder {
     if (!this._disconnectedTime) {
       this._disconnectedTime = Date.now();
     }
-  };
+  }
 }
 
 module.exports = StressMeasurementsRecorder;

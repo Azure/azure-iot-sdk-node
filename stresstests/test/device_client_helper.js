@@ -20,6 +20,7 @@ const debug = require('debug')('stresstests:DeviceClientHelper');
 class DeviceClientHelper {
   /**
    * Construct a DeviceClientHelper instance.
+   *
    * @param {string} [iotHubConnectionString] - The connection string to the IoT Hub.
    *   If not provided, the environment variable IOTHUB_CONNECTION_STRING will be used.
    * @public
@@ -36,6 +37,7 @@ class DeviceClientHelper {
 
   /**
    * Closes the client, disposes of the client, and removes the device from the IoT Hub.
+   *
    * @public
    */
   async disposeClient() {
@@ -55,6 +57,7 @@ class DeviceClientHelper {
   /**
    * Registers a device with the IoT Hub and then creates a corresponding device
    * client (Client) that authenticates using a shared access signature.
+   *
    * @param {function} transportCtor - The constructor of the device transport to use.
    * @public
    */
@@ -79,6 +82,7 @@ class DeviceClientHelper {
   /**
    * Registers a device with the IoT Hub and then creates a corresponding device
    * client (Client) that authenticates using a symmetric key.
+   *
    * @param {function} transportCtor - The constructor of the device transport to use.
    * @public
    */
@@ -98,11 +102,11 @@ class DeviceClientHelper {
     }
   }
 
-  async createDeviceClientX509SelfSigned(transportCtor) {
+  async createDeviceClientX509SelfSigned(_transportCtor) {
     throw new Error('createDeviceClientX509SelfSigned() is not implemented yet');
   }
 
-  async createDeviceClientX509CaSigned(transportCtor) {
+  async createDeviceClientX509CaSigned(_transportCtor) {
     throw new Error('createDeviceX509CaSigned() is not implemented yet');
   }
 
@@ -110,6 +114,7 @@ class DeviceClientHelper {
    * Registers a device, registers a module under that device, and then creates
    * a corresponding module client (ModuleClient) that authenticates using a
    * shared access signature.
+   *
    * @param {function} transportCtor - The constructor of the device transport to use.
    * @public
    */
@@ -143,6 +148,7 @@ class DeviceClientHelper {
    * Registers a device, registers a module under that device, and then creates
    * a corresponding module client (ModuleClient) that authenticates using a
    * symmetric key.
+   *
    * @param {function} transportCtor - The constructor of the device transport to use.
    * @public
    */
@@ -171,6 +177,7 @@ class DeviceClientHelper {
    * Sets the token valid time in seconds and token renewal margin in seconds
    * for the device client. Only supported for clients with symmetric key
    * authentication.
+   *
    * @param {number} tokenValidTimeInSeconds - The time in seconds that the
    *   token is valid for.
    * @param {number} tokenRenewalMarginInSeconds - The time in seconds before
@@ -185,7 +192,7 @@ class DeviceClientHelper {
     this._checkType(tokenRenewalMarginInSeconds, 'tokenRenewalMarginInSeconds', 'number');
     await this.client.setOptions({ tokenRenewal: { tokenValidTimeInSeconds, tokenRenewalMarginInSeconds } });
   }
-  
+
   // NOTE: ModuleClient does not support X509
 
   /**

@@ -3,9 +3,9 @@
 
 'use strict';
 
-const deviceHttp = require('azure-iot-device-http');
-const deviceAmqp = require('azure-iot-device-amqp');
-const deviceMqtt = require('azure-iot-device-mqtt'); 
+// const deviceHttp = require('azure-iot-device-http');
+// const deviceAmqp = require('azure-iot-device-amqp');
+const deviceMqtt = require('azure-iot-device-mqtt');
 
 module.exports = {
   d2c: {
@@ -38,4 +38,5 @@ module.exports = {
       elapsedTimeFailureTriggerInMs: 5 * 60 * 1000,
     },
   },
+
 }
