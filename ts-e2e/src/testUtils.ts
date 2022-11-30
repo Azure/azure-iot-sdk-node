@@ -28,7 +28,7 @@ export function createTestDevice(): TestDevice {
 }
 
 export function addTestDeviceToRegistry(testDevice: TestDevice, addCallback: (err?: Error) => void): void {
-  const reg = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
+  const reg = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING || '');
   debug('creating device ' + testDevice.deviceId);
   reg.create(testDevice, (err, _createdDev) => {
     if (err) debug('failed to create device ' + testDevice.deviceId + ': ' + err.toString());
@@ -38,7 +38,7 @@ export function addTestDeviceToRegistry(testDevice: TestDevice, addCallback: (er
 
 
 export function removeTestDeviceFromRegistry(testDevice: TestDevice, removeCallback: (err?: Error) => void): void {
-  const reg = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
+  const reg = Registry.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING || '');
   debug('deleting device ' + testDevice.deviceId);
   reg.delete(testDevice.deviceId, (err) => {
     if (err) debug('failed to delete device ' + testDevice.deviceId + ': ' + err.toString());

@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 import { Client as DeviceClient, ConnectionString as DeviceConnectionString } from 'azure-iot-device';
 import { Mqtt as DeviceMqtt, MqttWs as DeviceMqttWs } from 'azure-iot-device-mqtt';
 import { Amqp as DeviceAmqp, AmqpWs as DeviceAmqpWs } from 'azure-iot-device-amqp';
@@ -14,26 +15,26 @@ import * as dbg from 'debug';
 const debug = dbg('ts-e2e-methods');
 
 
-describe('Device Methods', () => {
+describe('Device Methods', function () {
   [DeviceMqtt, DeviceMqttWs, DeviceAmqp, DeviceAmqpWs].forEach((transportCtor: any) => {
-    describe('Over ' + transportCtor.name, () => {
-      // tslint:disable:no-invalid-this
+    describe('Over ' + transportCtor.name, function () {
+      // eslint-disable-next-line no-invalid-this
       (this as any).timeout(60000);
 
       const testDevice = testUtils.createTestDevice();
       const scs = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING);
       const testDeviceCS = DeviceConnectionString.createWithSharedAccessKey(scs.HostName, testDevice.deviceId, testDevice.authentication.symmetricKey.primaryKey);
 
-      beforeEach((beforeEachCallback) => {
+      beforeEach(function (beforeEachCallback: (err?: Error) => void) {
         testUtils.addTestDeviceToRegistry(testDevice, beforeEachCallback);
       });
 
-      afterEach((afterEachCallback) => {
+      afterEach(function (afterEachCallback: (err?: Error) => void) {
         testUtils.removeTestDeviceFromRegistry(testDevice, afterEachCallback);
       });
 
       [null, '', 'foo', { k1: 'v1' }, {}].forEach((testPayload) => {
-      it('device can receive a method call with a payload of ' + JSON.stringify(testPayload) + ' and send a response', (testCallback) => {
+      it('device can receive a method call with a payload of ' + JSON.stringify(testPayload) + ' and send a response', function (testCallback: (err?: Error) => void) {
         const methodName = 'testMethod';
         const requestPayload = testPayload;
         const responsePayload = { responseKey: uuid.v4() };
@@ -62,7 +63,7 @@ describe('Device Methods', () => {
           });
           });
 
-          setTimeout(() => {
+          setTimeout(() => { //DevSkim: reviewed DS172411 on 2022-11-30
             const serviceClient = ServiceClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
             const methodParams: DeviceMethodParams = {
               methodName: methodName,

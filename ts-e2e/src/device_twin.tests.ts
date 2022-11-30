@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 import { Client as DeviceClient, ConnectionString as DeviceConnectionString } from 'azure-iot-device';
 import { Mqtt as DeviceMqtt, MqttWs as DeviceMqttWs } from 'azure-iot-device-mqtt';
 import {
@@ -11,25 +12,25 @@ import * as dbg from 'debug';
 const debug = dbg('ts-e2e-twin');
 
 
-describe('Device Twin', () => {
+describe('Device Twin', function () {
   [DeviceMqtt, DeviceMqttWs].forEach((transportCtor: any) => {
-    describe('Over ' + transportCtor.name, () => {
-      // tslint:disable:no-invalid-this
+    describe('Over ' + transportCtor.name, function () {
+      // eslint-disable-next-line no-invalid-this
       (this as any).timeout(60000);
 
       const testDevice = testUtils.createTestDevice();
       const scs = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING);
       const testDeviceCS = DeviceConnectionString.createWithSharedAccessKey(scs.HostName, testDevice.deviceId, testDevice.authentication.symmetricKey.primaryKey);
 
-      beforeEach((beforeEachCallback) => {
+      beforeEach(function (beforeEachCallback: (err?: Error) => void) {
         testUtils.addTestDeviceToRegistry(testDevice, beforeEachCallback);
       });
 
-      afterEach((afterEachCallback) => {
+      afterEach(function (afterEachCallback: (err?: Error) => void) {
         testUtils.removeTestDeviceFromRegistry(testDevice, afterEachCallback);
       });
 
-      it('device can get its device twin and modify reported properties', (testCallback) => {
+      it('device can get its device twin and modify reported properties', function (testCallback: (err?: Error) => void) {
         const deviceClient = DeviceClient.fromConnectionString(testDeviceCS, transportCtor);
         const twinPatch = { twinKey: 'twinValue' };
 
@@ -52,7 +53,7 @@ describe('Device Twin', () => {
         });
       });
 
-      it('service can modify desired properties and the device gets a notification', (testCallback) => {
+      it('service can modify desired properties and the device gets a notification', function (testCallback: (err?: Error) => void) {
         let sendOK = false;
         let receiveOK = false;
         const twinPatch = {

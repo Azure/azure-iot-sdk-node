@@ -13,26 +13,26 @@ import * as uuidBuffer from 'uuid-buffer';
 const debug = dbg('ts-e2e-d2c');
 
 
-describe('D2C', () => {
-  // tslint:disable:no-invalid-this
+describe('D2C', function () {
+  // eslint-disable-next-line no-invalid-this
   (this as any).timeout(60000);
   const testDevice = testUtils.createTestDevice();
 
   const hostName = ServiceConnectionString.parse(process.env.IOTHUB_CONNECTION_STRING).HostName;
   const testDeviceCS = DeviceConnectionString.createWithSharedAccessKey(hostName, testDevice.deviceId, testDevice.authentication.symmetricKey.primaryKey);
 
-  before((beforeCallback) => {
+  before(function (beforeCallback: (err?: Error) => void) {
     testUtils.addTestDeviceToRegistry(testDevice, beforeCallback);
   });
 
-  after((afterCallback) => {
+  after(function (afterCallback: (err?: Error) => void) {
     testUtils.removeTestDeviceFromRegistry(testDevice, afterCallback);
   });
 
   [DeviceAmqp, DeviceAmqpWs, DeviceMqtt, DeviceMqttWs, DeviceHttp].forEach((transportCtor: any) => {
-    describe('Over ' + transportCtor.name, () => {
-      it('can send a D2C message', (testCallback) => {
-        let testMessage = new Message('testMessage');
+    describe('Over ' + transportCtor.name, function () {
+      it('can send a D2C message', function (testCallback: (err?: Error) => void) {
+        const testMessage = new Message('testMessage');
         testMessage.messageId = uuid.v4();
         let sendOK = false;
         let receiveOK = false;
@@ -61,7 +61,7 @@ describe('D2C', () => {
           partitionIds.forEach((partitionId) => {
             ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
           });
-          return new Promise<void>((resolve) => setTimeout(() => resolve(), 3000));
+          return new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)); //DevSkim: reviewed DS172411 on 2022-11-30
         }).then(() => {
           debug('EH Client: Receivers created');
           const deviceClient = DeviceClient.fromConnectionString(testDeviceCS, transportCtor);

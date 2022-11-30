@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 import { Client as DeviceClient, ConnectionString as DeviceConnectionString } from 'azure-iot-device';
 import { Http as DeviceHttp } from 'azure-iot-device-http';
 import { ConnectionString as ServiceConnectionString, Client as ServiceClient } from 'azure-iothub';
@@ -7,8 +8,8 @@ import * as testUtils from './testUtils';
 import { assert } from 'chai';
 
 
-describe('File upload', () => {
-  // tslint:disable:no-invalid-this
+describe('File upload', function () {
+  // eslint-disable-next-line no-invalid-this
   (this as any).timeout(60000);
   const testDevice = testUtils.createTestDevice();
 
@@ -20,20 +21,20 @@ describe('File upload', () => {
     fileSizeInKb: 10,
   };
 
-  before((beforeCallback) => {
-    let fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
+  before(function (beforeCallback: (err?: Error) => void) {
+    const fileContent = Buffer.alloc(fileConfig.fileSizeInKb * 1024);
     fileContent.fill(uuid.v4());
     fs.writeFileSync(fileConfig.fileName, fileContent);
     testUtils.addTestDeviceToRegistry(testDevice, beforeCallback);
   });
 
-  after((afterCallback) => {
+  after(function (afterCallback: (err?: Error) => void) {
     fs.unlinkSync(fileConfig.fileName);
     testUtils.removeTestDeviceFromRegistry(testDevice, afterCallback);
   });
 
-  describe('Over Http', () => {
-    it('can upload a file', (testCallback) => {
+  describe('Over Http', function () {
+    it('can upload a file', function (testCallback: (err?: Error) => void) {
       const testBlobName = 'e2eblob';
       const serviceClient = ServiceClient.fromConnectionString(process.env.IOTHUB_CONNECTION_STRING);
       const deviceClient = DeviceClient.fromConnectionString(testDeviceCS, DeviceHttp);
