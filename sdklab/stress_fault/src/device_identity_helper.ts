@@ -7,7 +7,7 @@ import { ConnectionString, Registry } from 'azure-iothub';
 import { SharedAccessSignature as deviceSas } from 'azure-iot-device';
 import { anHourFromNow, callbackToPromise } from 'azure-iot-common';
 
-// tslint:disable-next-line
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const settings = require('../_settings.json');
 
 import * as uuid from 'uuid';
@@ -21,7 +21,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
 const caRootCert = null; // TODO: Buffer.from(process.env.IOTHUB_CA_ROOT_CERT, 'base64').toString('ascii');
 const caRootCertKey = null; // TODO: Buffer.from(process.env.IOTHUB_CA_ROOT_CERT_KEY, 'base64').toString('ascii');
 
-let host = ConnectionString.parse(hubConnectionString).HostName;
+const host = ConnectionString.parse(hubConnectionString).HostName;
 
 interface ProvisionedDeviceDescription {
   deviceId: string;

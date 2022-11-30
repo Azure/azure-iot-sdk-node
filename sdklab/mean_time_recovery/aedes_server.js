@@ -7,7 +7,7 @@
 
 const fs = require("fs");
 const aedes = require("aedes")();
-var debug = require("debug")("aedes_server");
+const debug = require("debug")("aedes_server");
 
 const port = 8883;
 

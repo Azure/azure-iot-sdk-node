@@ -4,24 +4,30 @@
   "description": "metric analysis of mean time to recovery for device code",
   "main": "ochestrator.js",
   "scripts": {
-    "npmlockrefresh": "npm i --package-lock-only",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint \"*.js\" --ignore-pattern node_modules/"
+    "lint": "eslint . --ext .js -f visualstudio"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "aedes": "^0.46.3",
     "azure-iot-common": "1.13.1",
     "azure-iot-device": "1.18.1",
     "azure-iot-device-mqtt": "1.16.1",
-    "@colors/colors": "^1.5.0",
-    "eslint": "^8.26.0",
-    "tslint": "^6.1.3"
+    "@colors/colors": "^1.5.0"
   },
   "devDependencies": {
+    "eslint": "^8.26.0",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "eslint-plugin-jsdoc": "^39.3.25",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security": "^1.5.0",
     "encoding": "^0.1.13"
   }
 }

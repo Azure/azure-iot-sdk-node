@@ -38,10 +38,10 @@ const FAULT_INTERVAL_MAX = 10 * SECONDS;
 const FAULT_DELAY_SECONDS = 1;
 
 // Transport to use
-let protocol = utils.getTransport('amqp');
+const protocol = utils.getTransport('amqp');
 
 // Which faults to inject
-let faults = amqpFaults;
+const faults = amqpFaults;
 
 // Awaitable sleep helper
 function sleep(interval: number): Promise<void> {
@@ -75,8 +75,8 @@ class Device implements TopLevelTask {
 
   // Main loop for the top-level task
   public async run(): Promise<void> {
-    // Create a device instane
-    let description = await deviceIdentityHelper.createDeviceWithSymmetricKey();
+    // Create a device instance
+    const description = await deviceIdentityHelper.createDeviceWithSymmetricKey();
     this.deviceId = description.deviceId;
     this.objectName = description.deviceId;
 
@@ -98,7 +98,7 @@ class Device implements TopLevelTask {
       debugErrors(`Exception: ${e}`);
       throw e;
     } finally {
-      debug('One device task exited.  Stoping device');
+      debug('One device task exited.  Stopping device');
       this.done = true;
       try {
         if (tasks) {
@@ -114,7 +114,7 @@ class Device implements TopLevelTask {
   }
 
   // Helper function run run an async function at a regular interval.
-  private async _runAtInterval(func: Function, interval: number): Promise<void> {
+  private async _runAtInterval(func: () => void, interval: number): Promise<void> {
     while (!this.done) {
       await func();
       await sleep(interval);
@@ -123,7 +123,7 @@ class Device implements TopLevelTask {
 
   // Helper function to run an async function at a random interval.
   private async _runAtRandomInterval(
-    func: Function,
+    func: () => void,
     minInterval: number,
     maxInterval: number
   ): Promise<void> {
@@ -134,10 +134,10 @@ class Device implements TopLevelTask {
     }
   }
 
-  // Send a single D2C nmessage.
+  // Send a single D2C message.
   private async _send(): Promise<void> {
     const body = JSON.stringify({ msg: `message index ${this._sendIndex}, ${globalSendCount}` });
-    let msg = new Message(body);
+    const msg = new Message(body);
     msg.messageId = this._sendIndex.toString();
     this._sendIndex += 1;
     globalSendCount += 1;
@@ -153,8 +153,8 @@ class Device implements TopLevelTask {
     const fault = faults[this._faultCount % faults.length];
     this._faultCount++;
 
-    // Make a message to send the fault comand to iothub
-    let faultMessage = new Message('');
+    // Make a message to send the fault command to iothub
+    const faultMessage = new Message('');
     faultMessage.properties.add('AzIoTHub_FaultOperationType', fault.operationType);
     faultMessage.properties.add('AzIoTHub_FaultOperationCloseReason', fault.closeReason);
     faultMessage.properties.add(
@@ -212,11 +212,11 @@ class TimeLimit implements TopLevelTask {
 
 async function main(): Promise<void> {
   // Create an array of tasks to run for the duration of the test
-  let topLevelTaskObjects: Array<TopLevelTask> = [new TimeLimit(MAX_EXECUTION_TIME)];
+  const topLevelTaskObjects: Array<TopLevelTask> = [new TimeLimit(MAX_EXECUTION_TIME)];
   for (let i = 0; i < NUMBER_OF_DEVICES; i++) {
     topLevelTaskObjects.push(new Device());
   }
-  let tasks = topLevelTaskObjects.map((d) => d.run());
+  const tasks = topLevelTaskObjects.map((d) => d.run());
 
   // Wait for one of the tasks to complete or fail.
   try {
@@ -232,7 +232,7 @@ async function main(): Promise<void> {
     debug('----------------------------------------------------------------');
 
     // Collect stats from all the top-level tasks and report them
-    let stats: object = {};
+    const stats: object = {};
     topLevelTaskObjects.forEach((d) => {
       stats[d.objectName] = d.stats;
     });
