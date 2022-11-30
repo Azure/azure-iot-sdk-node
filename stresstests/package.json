@@ -7,7 +7,6 @@
   "license": "MIT",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "azure-iot-common": "1.13.1",
     "azure-iot-device": "1.18.1",
     "azure-iot-device-amqp": "1.14.1",
@@ -24,8 +23,8 @@
     "mocha": "^9.2.1"
   },
   "scripts": {
-    "npmlockrefresh": "npm i --package-lock-only",
-    "test": "mocha"
+    "lint": "eslint test --ext .js -f visualstudio",
+    "test": "../node_modules/mocha/bin/_mocha --reporter dot ./test/**/*.js"
   },
   "engines": {
     "node": ">=14.0.0"

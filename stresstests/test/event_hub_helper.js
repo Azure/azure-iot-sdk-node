@@ -16,11 +16,11 @@ class Deferred {
     this.startTime = Date.now();
     this.timeToSettle = null;
     const promise = new Promise((resolve, reject) => {
-      this.resolve = val => {
+      this.resolve = (val) => {
         this.timeToSettle = Date.now() - this.startTime;
         resolve(val);
       };
-      this.reject = val => {
+      this.reject = (val) => {
         this.timeToSettle = Date.now() - this.startTime;
         reject(val);
       };
@@ -36,6 +36,7 @@ class Deferred {
 class EventHubHelper {
   /**
    * Construct an EventHubHelper instance.
+   *
    * @param {string} [iotHubConnectionString] - The connection string to the IoT
    *   Hub. If not provided, the environment variable IOTHUB_CONNECTION_STRING
    *   will be used.
@@ -58,6 +59,7 @@ class EventHubHelper {
 
   /**
    * Registers a message to be waited for.
+   *
    * @param {string} messageId - The messageId of the message to wait for.
    * @public
    */
@@ -73,6 +75,7 @@ class EventHubHelper {
   /**
    * Creates an EventHubClient to listen to D2C messages and manage messages
    * being waited for.
+   *
    * @public
    */
   async open() {
@@ -88,7 +91,7 @@ class EventHubHelper {
       for (const partitionId of await this._client.getPartitionIds()) {
         this._client.receive(
           partitionId,
-          event => {
+          (event) => {
             const messageId = event.properties && event.properties.message_id;
             const body = JSON.stringify(event.body);
             if (!messageId && this._warnNoMessageId) {
@@ -113,7 +116,7 @@ class EventHubHelper {
               this._warnUnexpectedMessage = false;
             }
           },
-          err => {
+          (err) => {
             debug(`Event Hubs client threw an error: ${err}.`);
             this.close(err);
           },
@@ -128,6 +131,7 @@ class EventHubHelper {
 
   /**
    * Stops listening for D2C messages and closes the EventHubClient.
+   *
    * @public
    */
   async close(reason) {

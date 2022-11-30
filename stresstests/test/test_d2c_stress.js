@@ -15,25 +15,26 @@ const debug = require('debug')('stresstests:d2c');
 
 /* NOTE: This test relies on the IOTHUB_CONNECTION_STRING environment variable */
 
-config.transportsToTest.forEach(transportToTest => {
-  config.deviceClientHelperMethodsToUse.forEach(deviceClientHelperMethodToUse => {
+config.transportsToTest.forEach((transportToTest) => {
+  config.deviceClientHelperMethodsToUse.forEach((deviceClientHelperMethodToUse) => {
     d2cStressTests(transportToTest, deviceClientHelperMethodToUse);
   });
 });
 
 function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
-  describe(`D2C stress tests on client created with ${deviceClientHelperMethodToUse} over transport ${transportToTest.name}`, function() {
+  describe(`D2C stress tests on client created with ${deviceClientHelperMethodToUse} over transport ${transportToTest.name}`, function () {
     let deviceClientHelper = null;
     let eventHubHelper = null;
     let stressMeasurementsRecorder = null;
 
-    before(function() {
-      // TODO: Remove test skipping when appropriate. 
+    before(function () {
+      // TODO: Remove test skipping when appropriate.
       if (['Amqp', 'AmqpWs'].includes(transportToTest.name)) {
         debug(
           'Tests over AMQP failing because of an issue with messageIds not '
           + 'matching up on the service side. Skipping.'
         );
+        // eslint-disable-next-line no-invalid-this
         this.skip();
       }
       if ([
@@ -44,6 +45,7 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
           'DeviceClientHelper has not implemented '
           + `${deviceClientHelperMethodToUse}. Skipping.`
         );
+        // eslint-disable-next-line no-invalid-this
         this.skip();
       }
 
@@ -52,7 +54,7 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       stressMeasurementsRecorder = new StressMeasurementsRecorder();
     });
 
-    beforeEach(async function() {
+    beforeEach(async function () {
       await eventHubHelper.open();
       await deviceClientHelper[deviceClientHelperMethodToUse](transportToTest);
       stressMeasurementsRecorder.start(
@@ -61,7 +63,8 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       );
     })
 
-    afterEach(async function() {
+    afterEach(async function () {
+      // eslint-disable-next-line no-invalid-this
       this.timeout(30 * 1000);
       /*  done() should have been called within the test, but we call it here in
           case the test failed and done() didn't get called. */
@@ -77,7 +80,7 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
     async function sendSingleMessage() {
       const messageId = uuid.v4();
       /* Function creates a string of random ASCII values between 32 and 126 */
-      const randomString = length => Array.from(
+      const randomString = (length) => Array.from(
         { length },
         () => String.fromCharCode(Math.floor(95 * Math.random() + 32))
       ).join('');
@@ -85,7 +88,7 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       const payloadSize = Math.max(config.telemetryPayloadSizeInBytes, 7);
       const keyLength = Math.ceil((payloadSize - 7) / 2);
       const valLength = payloadSize - keyLength - 7;
-      const message = new Message(JSON.stringify({[randomString(keyLength)]: randomString(valLength)}));
+      const message = new Message(JSON.stringify({ [randomString(keyLength)]: randomString(valLength) }));
       message.messageId = messageId;
       const deferred = eventHubHelper.awaitMessage(messageId);
       stressMeasurementsRecorder.messageEnqueued();
@@ -108,13 +111,14 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       const promises = [];
       do {
         promises.push(sendSingleMessage());
-        await new Promise(resolve => setTimeout(resolve, (1 / messagesPerSecond) * 1000));
+        await new Promise((resolve) => setTimeout(resolve, (1 / messagesPerSecond) * 1000));
       } while (Date.now() < endTime);
       await Promise.all(promises);
     }
 
     async function doSendingAllAtOnce(messageCount) {
-      await Promise.all(Array.from({length: messageCount}, sendSingleMessage, this));
+      // eslint-disable-next-line no-invalid-this
+      await Promise.all(Array.from({ length: messageCount }, sendSingleMessage, this));
     }
 
     function doMeasurementAssertions() {
@@ -139,6 +143,7 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
     }
 
     it(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms`, async function () {
+      // eslint-disable-next-line no-invalid-this
       this.timeout(2 * config.continuousTest.testDurationInMs);
       await doContinuousSending(
         config.continuousTest.testDurationInMs,
@@ -148,18 +153,21 @@ function d2cStressTests(transportToTest, deviceClientHelperMethodToUse) {
       doMeasurementAssertions();
     });
 
-    it(`can send ${config.allAtOnceTest.messageCount} messages at once`, async function() {
+    it(`can send ${config.allAtOnceTest.messageCount} messages at once`, async function () {
+      // eslint-disable-next-line no-invalid-this
       this.timeout(config.allAtOnceTest.elapsedTimeFailureTriggerInMs);
       await doSendingAllAtOnce(config.allAtOnceTest.messageCount);
       stressMeasurementsRecorder.done();
       doMeasurementAssertions();
     });
 
-    it.skip(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms with a flaky network`, async function() {
+    // eslint-disable-next-line mocha/no-skipped-tests
+    it.skip(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms with a flaky network`, async function () {
       // TODO
     });
 
-    it.skip(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms with faults injected`, async function() {
+    // eslint-disable-next-line mocha/no-skipped-tests
+    it.skip(`can send ${config.continuousTest.messagesPerSecond} messages per second for ${config.continuousTest.testDurationInMs} ms with faults injected`, async function () {
       // TODO
     });
 
