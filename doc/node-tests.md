@@ -30,7 +30,7 @@ The end-to-end tests can be found in the `/e2etests` folder.
 
 # Building and running tests
 ## Prerequisites
-- Node.js v0.10 or higher
+- [Active LTS, maintainence LTS, or current release of the Node.js runtime](https://nodejs.dev/en/about/releases/)
 - OpenSSL
 
 In most cases on Windows you will also need to define the OPENSSL_CONF environment variable and set it to point to your openssl.cnf file (should be in the OpenSSL folder). If it's not defined, the test setup script will let you know. 
