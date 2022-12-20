@@ -14,7 +14,7 @@ Instructions for using the npm packages can be found here:
 - [**OpenSSL**][openssl]
 
 
-If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports [active LTS, maintainence LTS, and current releases of the Node.js runtime](https://nodejs.dev/en/about/releases/)
+If you're running linux and want to install Node.js using a package manager, please refer to [these instructions][node-linux]. The Azure IoT SDK for Node.js supports [active LTS, maintainence LTS, and current releases of the Node.js runtime](https://nodejs.dev/en/about/releases/).
 
 The [Node Version Switcher][nvs] can be used if you would like to be able to switch from one Node.js version to another.
 

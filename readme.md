@@ -88,7 +88,7 @@ If you encounter any bugs, have suggestions for new features or if you would lik
 
 # Platform Compatibility
 
-The Azure IoT SDK for Node.js supports [active LTS, maintainence LTS, and current releases of the Node.js runtime](https://nodejs.dev/en/about/releases/)
+The Azure IoT SDK for Node.js supports [active LTS, maintainence LTS, and current releases of the Node.js runtime](https://nodejs.dev/en/about/releases/).
 
 # Releases
 
