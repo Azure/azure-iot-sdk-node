@@ -111,14 +111,14 @@ Run the sample application using the following commands:
 JavaScript
 
 ```bash
-node sample_sample_device.js
+node simple_sample_device.js
 ```
 
 TypeScript
 
 ```bash
 cd dist
-node sample_sample_device.js
+node simple_sample_device.js
 ```
 
 ## List of available samples
