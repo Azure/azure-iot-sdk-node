@@ -5,7 +5,7 @@
 
 import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-common';
 import { Http as HttpBase, HttpRequestOptions } from './http';
-import { AccessToken, TokenCredential } from '@azure/core-http';
+import { AccessToken, TokenCredential } from '@azure/core-auth';
 import  * as uuid from 'uuid';
 import { ClientRequest } from 'http';
 import dbg = require('debug');
