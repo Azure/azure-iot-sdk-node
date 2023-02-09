@@ -5,7 +5,6 @@
 
 let debug = require('debug')('e2etests:d2cdisconnect');
 let uuid = require('uuid');
-let uuidBuffer = require('uuid-buffer');
 let deviceAmqp = require('azure-iot-device-amqp');
 let deviceMqtt = require('azure-iot-device-mqtt');
 let Message = require('azure-iot-common').Message;
@@ -165,8 +164,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
           let received_message_uuid = eventData.properties && eventData.properties.message_id;
-          if (received_message_uuid && typeof received_message_uuid !== 'string') {
-            received_message_uuid = uuidBuffer.toString(received_message_uuid);
+          if (Buffer.isBuffer(received_message_uuid)) {
+            const str = received_message_uuid.toString('hex');
+            received_message_uuid = `${str.slice(0, 8)}-${str.slice(8, 12)}-${str.slice(12, 16)}-${str.slice(16, 20)}-${str.slice(20)}`;
           }
           if (received_message_uuid && received_message_uuid === originalMessage.messageId) {
             rdv.imDone('ehClient');
