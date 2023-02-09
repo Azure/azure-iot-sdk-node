@@ -6,7 +6,6 @@
 let assert = require('chai').assert;
 let debug = require('debug')('e2etests:emptyd2cc2d');
 let uuid = require('uuid');
-let uuidBuffer = require('uuid-buffer');
 
 let serviceSdk = require('azure-iothub');
 let Message = require('azure-iot-common').Message;
@@ -176,7 +175,11 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
 
       let onEventHubMessage = function (eventData) {
         if ((eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId)) {
-          let receivedMsgId = typeof eventData.properties.message_id === 'string' ? eventData.properties.message_id : uuidBuffer.toString(eventData.properties.message_id);
+          let receivedMsgId = eventData.properties && eventData.properties.message_id;
+          if (Buffer.isBuffer(receivedMsgId)) {
+            const str = receivedMsgId.toString('hex');
+            receivedMsgId = `${str.slice(0, 8)}-${str.slice(8, 12)}-${str.slice(12, 16)}-${str.slice(16, 20)}-${str.slice(20)}`;
+          }
           if (receivedMsgId === uuidData) {
             if(!eventData.body || (eventData.body.length === 0)) {
               debug('received correct empty message');
