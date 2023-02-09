@@ -164,6 +164,13 @@ protocolAndTermination.forEach( function (testConfiguration) {
       let onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
+          /* begin sanity check */
+          const message_id = eventData?.properties?.message_id;
+          if (message_id && message_id.length !== 16) {
+            testCallback(new Error(`typof: ${typeof message_id}. content: ${message_id.toString('hex')}, original: ${originalMessage.messageId}`));
+            return;
+          }
+          /* end sanity check */
           let received_message_uuid = eventData.properties && eventData.properties.message_id && uuidBuffer.toString(eventData.properties.message_id);
           if (received_message_uuid && received_message_uuid === originalMessage.messageId) {
             rdv.imDone('ehClient');
