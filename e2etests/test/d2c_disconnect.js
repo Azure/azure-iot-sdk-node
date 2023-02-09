@@ -164,7 +164,10 @@ protocolAndTermination.forEach( function (testConfiguration) {
       let onEventHubMessage = function (eventData) {
         if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
-          let received_message_uuid = eventData.properties && eventData.properties.message_id && uuidBuffer.toString(eventData.properties.message_id);
+          let received_message_uuid = eventData.properties && eventData.properties.message_id;
+          if (received_message_uuid && typeof received_message_uuid !== 'string') {
+            received_message_uuid = uuidBuffer.toString(received_message_uuid);
+          }
           if (received_message_uuid && received_message_uuid === originalMessage.messageId) {
             rdv.imDone('ehClient');
             debug('eventhubs client: received the sent message');
