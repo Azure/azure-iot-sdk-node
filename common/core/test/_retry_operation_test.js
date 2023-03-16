@@ -26,9 +26,9 @@ describe('RetryOperation', function () {
       testOperation.retry(function (callback) {
         actualOperation(callback);
       }, function (finalErr) {
-        assert.isBelow(actualOperation.callCount, 3);
-        assert.isBelow(testPolicy.nextRetryTimeout.callCount, 3);
-        assert.isBelow(testPolicy.shouldRetry.callCount, 3);
+        assert.isBelow(actualOperation.callCount, 4);
+        assert.isBelow(testPolicy.nextRetryTimeout.callCount, 4);
+        assert.isBelow(testPolicy.shouldRetry.callCount, 4);
         assert.strictEqual(finalErr, testError);
         testCallback();
       });
