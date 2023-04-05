@@ -277,6 +277,12 @@ export class Mqtt extends EventEmitter implements DeviceTransport {
               topic += '/';
             }
 
+            // This will not catch all messages that exceed IoT Hub limits because properties contribute the size as well.
+            if ((message?.data?.length ?? 0) > 256 * 1024) {
+              sendEventCallback(new errors.MessageTooLargeError('Message size is greater than 256KiB'));
+              return;
+            }
+
             /*Codes_SRS_NODE_COMMON_MQTT_BASE_16_010: [** The `sendEvent` method shall use QoS level of 1.]*/
             this._mqtt.publish(topic, message.data, { qos: 1, retain: false }, (err, result) => {
               if (err) {
