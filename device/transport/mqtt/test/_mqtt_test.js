@@ -369,6 +369,30 @@ describe('Mqtt', function () {
     });
   });
 
+  describe('#sendEvent', function () {
+    it('calls the callback without an error if the message body goes right up to 256KiB in size', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.connect(function () {
+        const message = new Message('a'.repeat(1024 * 256));
+        mqtt.sendEvent(message, function (err) {
+          assert.isNull(err);
+          testCallback();
+        });
+      });
+    });
+
+    it('calls the callback with an error if the message body goes past 256KiB in size', function (testCallback) {
+      const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
+      mqtt.connect(function () {
+        const message = new Message('a'.repeat((1024 * 256) + 1));
+        mqtt.sendEvent(message, function (err) {
+          assert.instanceOf(err, errors.MessageTooLargeError);
+          testCallback();
+        });
+      });
+    });
+  });
+
   describe('#onDeviceMethod', function () {
     it('calls the registered callback when a method is received', function (testCallback) {
       const mqtt = new Mqtt(fakeAuthenticationProvider, fakeMqttBase);
