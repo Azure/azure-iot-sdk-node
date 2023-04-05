@@ -388,6 +388,13 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._fsm.transition('detached', undefined, err);
           },
           send: () => {
+            if ((this._unsentMessageQueue.length > 0) && !this._rheaSender.sendable() && this._rheaSender.has_credit()) {
+                // Our sending link has credit, but it isn't sendable. This means the sender link circular buffer is full.
+                // This can happen if a disposition gets lost, which is very rare, but possible.
+                // For now, log this condition. If this becomes common, disconnecting and reconnecting the sender here might repair the link.
+                // (ie. literally call `this._rheaSender.detach(); this._rheaSender.attach();` here.
+               debugErrors(this.toString() + ': sender link not accepting outgoing messages. It may be stuck because of lost disposition.');
+            }
             while ((this._unsentMessageQueue.length > 0) && this._rheaSender.sendable()) {
               debug(this.toString() + ': Unsent message queue length is: ' + this._unsentMessageQueue.length);
               /*Codes_SRS_NODE_AMQP_SENDER_LINK_16_020: [When the link gets attached, the messages shall be sent in the order they were queued.] */
