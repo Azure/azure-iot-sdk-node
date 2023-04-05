@@ -75,6 +75,7 @@ describe('SenderLink', function () {
       fakeRheaLink.sendable = sinon.stub();
       fakeRheaLink.sendable.onSecondCall().returns(true);
       fakeRheaLink.sendable.returns(false);
+      fakeRheaLink.has_credit = sinon.stub().returns(true)
       fakeRheaLink.send = sinon.stub().returns({ id: 1 });
       const fakeRheaSession = new EventEmitter();
       fakeRheaSession.open_sender = () => {};
