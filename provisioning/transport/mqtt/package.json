@@ -9,8 +9,8 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iot-common": "1.13.1",
-    "azure-iot-mqtt-base": "1.13.1",
+    "azure-iot-common": "1.13.2",
+    "azure-iot-mqtt-base": "1.13.2",
     "azure-iot-provisioning-device": "1.9.1",
     "debug": "^4.3.1",
     "machina": "^4.0.2",

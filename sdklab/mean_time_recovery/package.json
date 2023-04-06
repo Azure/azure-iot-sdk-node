@@ -12,9 +12,9 @@
   "dependencies": {
     "async": "^3.2.3",
     "aedes": "^0.46.3",
-    "azure-iot-common": "1.13.1",
-    "azure-iot-device": "1.18.1",
-    "azure-iot-device-mqtt": "1.16.1",
+    "azure-iot-common": "1.13.2",
+    "azure-iot-device": "1.18.2",
+    "azure-iot-device-mqtt": "1.16.2",
     "@colors/colors": "^1.5.0"
   },
   "devDependencies": {
