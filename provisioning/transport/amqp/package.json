@@ -9,8 +9,8 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iot-amqp-base": "2.5.1",
-    "azure-iot-common": "1.13.1",
+    "azure-iot-amqp-base": "2.5.2",
+    "azure-iot-common": "1.13.2",
     "azure-iot-provisioning-device": "1.9.1",
     "buffer-builder": "^0.2.0",
     "debug": "^4.3.1",
