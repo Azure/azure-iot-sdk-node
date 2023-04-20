@@ -21,30 +21,13 @@ To prepare for this change, make sure your device's certificate store has both o
 For a more in depth explanation as to why the IoT services are doing this, please see
 [this article](https://techcommunity.microsoft.com/t5/internet-of-things/azure-iot-tls-critical-changes-are-almost-here-and-why-you/ba-p/2393169).
 
-# Getting Started
-
-### Why Azure IoT?
-
-**[Click here][iot-dev-center]** to learn how Azure IoT can empower the digital transformation of your organization.
-
-### New to Azure IoT Hub?
-
-**[Introduction to Azure IoT Hub:][iot-device-ecosystem]** Follow this guide to learn how to set up an IoT Hub and IoT Hub devices.
-
-### New to the Azure IoT Node.JS SDK?
-
-**[Try a Device Sample:](./device/samples/)** Create a basic Node.js application following one of the device client library samples provided.
-
-
 # Components
 
 The Azure IoT Node.js SDK enables developers to create IoT solutions written in Node.js for the Azure IoT platform. It is composed of the following client libraries:
 
 * **Device Client Library**: to connect devices and IoT Edge modules to Azure IoT Hub. [API Reference][node-api-device-reference] | [README](https://github.com/Azure/azure-iot-sdk-node/tree/main/device) | [Configuration Options](https://github.com/Azure/azure-iot-sdk-node/blob/main/doc/device-client.md)
   * **Note:** IoT Edge for Node.js is scoped to Linux containers & devices only. [Learn more](https://techcommunity.microsoft.com/t5/internet-of-things/linux-modules-with-azure-iot-edge-on-windows-10-iot-enterprise/ba-p/1407066) about using Linux containers for IoT edge on Windows devices.
-* **Service Client Library**: enables developing back-end applications making use of Azure IoT Hub. [API Reference][node-api-service-reference]
 * **Provisioning Device Client Library**: to connect devices to the Azure IoT Provisioning Service. [API Reference][node-api-prov-device-reference]
-* **Provisioning Service Client Library**: enables developing back-end applications making use of the Azure IoT Provisioning Service. [API Reference][node-api-prov-service-reference]
 
 # Samples
 
@@ -81,29 +64,29 @@ If you want to modify or contribute changes to the SDK, then you can build the l
 # How to Contribute
 
 If you encounter any bugs, have suggestions for new features or if you would like to become an active contributor to this project please follow the instructions provided in the [contribution guidelines](.github/CONTRIBUTING.md).
-- **Have a feature request for SDKs?** Please post it on [User Voice](https://feedback.azure.com/forums/321918-azure-iot) to help us prioritize
 - **Have a technical question?** Ask on [Stack Overflow with tag "azure-iot-hub"](https://stackoverflow.com/questions/tagged/azure-iot-hub)
-- **Need Support?** Every customer with an active Azure subscription has access to [support](https://docs.microsoft.com/en-us/azure/azure-supportability/how-to-create-azure-support-request) with guaranteed response time.  Consider submitting a ticket and get assistance from Microsoft support team
+- **Need Support?** Every customer with an active Azure subscription has access to [support](https://docs.microsoft.com/azure/azure-supportability/how-to-create-azure-support-request) with guaranteed response time.  Consider submitting a ticket and get assistance from Microsoft support team
 - **Found a bug?** Please help us fix it by thoroughly documenting it and [filing an issue](https://github.com/Azure/azure-iot-sdk-node/issues/new).
 
 # Platform Compatibility
 
 The Azure IoT SDK for Node.js supports [active LTS, maintainence LTS, and current releases of the Node.js runtime](https://nodejs.dev/en/about/releases/).
 
-# Releases
+# Support
 
-The Node SDK offers releases for new features, critical bug fixes, and Long Term Support (LTS). NPM package versioning follows [semantic versioning](https://semver.org/), `x.y.z.` or `major.minor.patch`. Any time the version is updated, it will be tagged `x.y.z`.
+The Azure IoT Hub Device Client supported releases is outlined in the following table.
 
-## New Features and Critical Bug Fixes
+Refer to the [Azure IoT Device SDK lifecycle and support](https://learn.microsoft.com/azure/iot/iot-device-sdks-lifecycle-and-support) for details on the different supported stages.
 
-New features and critical bug fixes (including security updates) will be released on the main branch. These releases will be tagged using the date formatted `yyyy-mm-dd`. A feature release will bump the `minor` version and reset the `patch` version to 0. A critical bug fix will bump the `patch` version only.
+| Release | Category | End-of-life |
+|-|-|-|
+| 1.18.2 | Active | - |
 
 # Read More
 
 * [Azure IoT Hub documentation][iot-hub-documentation]
 * [Prepare your development environment to use the Azure IoT device SDK for Node.js][devbox-setup]
 * [Setup IoT Hub][setup-iothub]
-* [Node.js API reference: Service SDK][node-api-service-reference]
 * [Node.js API reference: Device SDK][node-api-device-reference]
 
 ---
@@ -115,11 +98,9 @@ Microsoft collects performance and usage information which may be used to provid
 
 [iot-device-ecosystem]: https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md
 [iot-dev-center]: http://azure.com/iotdev
-[iot-hub-documentation]: https://docs.microsoft.com/en-us/azure/iot-hub/
+[iot-hub-documentation]: https://docs.microsoft.com/azure/iot-hub/
 [azure-iot-sdks]: http://github.com/azure/azure-iot-sdks
-[node-api-service-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iothub/
-[node-api-device-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-device/
-[node-api-prov-service-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-provisioning-service
-[node-api-prov-device-reference]: https://docs.microsoft.com/en-us/javascript/api/azure-iot-provisioning-device/
+[node-api-device-reference]: https://docs.microsoft.com/javascript/api/azure-iot-device/
+[node-api-prov-device-reference]: https://docs.microsoft.com/javascript/api/azure-iot-provisioning-device/
 [devbox-setup]: doc/node-devbox-setup.md
 [setup-iothub]: https://aka.ms/howtocreateazureiothub
