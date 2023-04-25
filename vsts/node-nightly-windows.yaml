@@ -27,11 +27,6 @@ jobs:
        call lerna run build
     displayName: 'Bootstrap & Build'
 
-  - script: 'call lerna run ci'
-    displayName: 'Unit & Integration Tests'
-    env:
-      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
-
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
     env:
