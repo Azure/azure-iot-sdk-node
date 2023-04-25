@@ -36,7 +36,7 @@
     "provisioning_e2e": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _provisioning_e2e.js",
     "lint": "jshint --show-non-errors .",
     "alltest": "mocha -- _*.js",
-    "e2e": "npm -s run lint && npm -s run alltest"
+    "_e2e": "npm -s run lint && npm -s run alltest"
   },
   "engines": {
     "node": ">= 14.0.0"
