@@ -71,6 +71,7 @@ export class BlobUploadClient implements BlobUpload {
             /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_001: [`uploadToBlob` shall notify the result of a blob upload to the IoT Hub service using the file upload API endpoint.]*/
             this._fileUploadApi.notifyUploadComplete(uploadParams.correlationId, uploadResult, (err) => {
               if (err) {
+                  console.dir(uploadResult);
                 if (!uploadResult.isSuccess) {
                   /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_CLIENT_41_002: [`uploadToBlob` shall call the `_callback` callback with a `BlobUploadNotificationError` if the blob upload failed.]*/
                   const error = new errors.BlobUploadNotificationError('UploadToBlob failed, and could not notify the IoT Hub about the file upload status.');
