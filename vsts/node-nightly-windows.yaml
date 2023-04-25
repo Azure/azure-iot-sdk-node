@@ -30,6 +30,7 @@ jobs:
   - script: 'lerna run e2e'
     displayName: 'E2E Tests'
     env:
+      DEBUG: azure*
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
       IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
       IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
