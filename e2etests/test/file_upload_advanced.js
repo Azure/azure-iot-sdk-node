@@ -134,19 +134,27 @@ describe('File upload - HTTP transport', function () {
 
           // eslint-disable-next-line security/detect-non-literal-fs-filename
           serviceClient.open(function (err) {
+            console.log("sc.open()");
+            console.dir(err);
             if (err) {
               done(err);
             } else {
               serviceClient.getFileNotificationReceiver(function (err, fileNotificationReceiver) {
+                console.log("sc.getfnr()");
+                console.dir(err);
                 if (err) {
                   done(err);
                 } else {
                   fileNotificationReceiver.on('message', function (msg) {
+                    console.log("fileNotificationReceiver.on(message)");
+                    console.dir(msg);
                     let notification = JSON.parse(msg.data.toString());
                     if (notification.deviceId === provisionedDevice.deviceId && notification.blobName === provisionedDevice.deviceId + '/' + testBlobName) {
                       assert.isString(notification.blobUri);
                       assert.equal(notification.blobSizeInBytes, testFileSize);
                       fileNotificationReceiver.complete(msg, function (err) {
+                        console.log("fileNotificationReceiver.complete()");
+                        console.dir(err);
                         done(err);
                       });
                     }
@@ -154,10 +162,14 @@ describe('File upload - HTTP transport', function () {
 
                   // eslint-disable-next-line security/detect-non-literal-fs-filename
                   deviceClient.open(function (err) {
+                    console.log("dc.open()");
+                    console.dir(err);
                     if (err) {
                       done(err);
                     } else {
                       uploadToBlob(testBlobName, fileStream, fileStats.size, function (err) {
+                        console.log("uploadToBlob()");
+                        console.dir(err);
                         if(err) {
                           done(err);
                         }
