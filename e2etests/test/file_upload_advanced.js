@@ -25,7 +25,9 @@ let closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClie
 let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 async function uploadToBlob(blobName, fileStream, client, callback) {
+  console.log("inside Upload to blob");
   let blobInfo = await client.getBlobSharedAccessSignature(blobName);
+  console.dir(blobInfo);
   if (!blobInfo) {
     callback(Error('Failed to retrieve Blob SAS'));
   }
@@ -36,18 +38,20 @@ async function uploadToBlob(blobName, fileStream, client, callback) {
       enable: false
     }
   });
+  console.log("Got pipeline");
+  console.dir(pipeline);
 
   const serviceURL = new ServiceURL(
     `https://${blobInfo.hostName}/${blobInfo.sasToken}`,
     pipeline
   );
+  console.log("URLS");
+  console.log(serviceURL);
 
   // initialize the blockBlobURL to a new blob
   const containerURL = ContainerURL.fromServiceURL(serviceURL, blobInfo.containerName);
   const blobURL = BlobURL.fromContainerURL(containerURL, blobInfo.blobName);
   const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
-  console.dir(blobInfo);
-  console.log(serviceURL);
   console.log(containerURL);
   console.log(blobURL);
   console.log(blockBlobURL);
@@ -88,7 +92,7 @@ async function uploadToBlob(blobName, fileStream, client, callback) {
 
 describe('File upload - HTTP transport', function () {
   // eslint-disable-next-line no-invalid-this
-  this.timeout(600000);
+  this.timeout(120000);
   let serviceClient;
   let deviceClient;
   let provisionedDevice;
