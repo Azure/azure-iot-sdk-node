@@ -46,12 +46,18 @@ async function uploadToBlob(blobName, fileStream, client, callback) {
   const containerURL = ContainerURL.fromServiceURL(serviceURL, blobInfo.containerName);
   const blobURL = BlobURL.fromContainerURL(containerURL, blobInfo.blobName);
   const blockBlobURL = BlockBlobURL.fromBlobURL(blobURL);
+  console.dir(blobInfo);
+  console.log(serviceURL);
+  console.log(containerURL);
+  console.log(blobURL);
+  console.log(blockBlobURL);
   let isSuccess;
   let statusCode;
   let statusDescription;
   let errorCode;
     // parallel uploading
   try {
+    console.log("Uploading")
     let uploadStatus = await uploadStreamToBlockBlob(
       Aborter.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
       fileStream,
@@ -59,17 +65,23 @@ async function uploadToBlob(blobName, fileStream, client, callback) {
       4 * 1024 * 1024, // 4MB block size
     20 // 20 concurrency
     );
+    console.log("Done");
+    console.dir(uploadStatus);
     isSuccess = true;
     statusCode = uploadStatus._response.status;
     statusDescription = uploadStatus._response.bodyAsText;
     // notify IoT Hub of upload to blob status (success)
   } catch (err) {
+    console.log("Error");
+    console.dir(err);
     isSuccess = false;
     statusCode = err.response.headers.get("x-ms-error-code");
     statusDescription = '';
     errorCode = err;
   }
+  console.log("notifying")
   await client.notifyBlobUploadStatus(isSuccess, statusCode, statusDescription);
+  console.log("done notifying");
   return callback(errorCode);
 }
 
