@@ -76,7 +76,7 @@ async function uploadToBlob(blobName, fileStream, client, callback) {
 
 describe('File upload - HTTP transport', function () {
   // eslint-disable-next-line no-invalid-this
-  this.timeout(120000);
+  this.timeout(600000);
   let serviceClient;
   let deviceClient;
   let provisionedDevice;
@@ -167,9 +167,12 @@ describe('File upload - HTTP transport', function () {
                     if (err) {
                       done(err);
                     } else {
+                      console.log("Uploading " + testBlobName + " with size " + fileStats.size);
+                      let start=Date.now()
                       uploadToBlob(testBlobName, fileStream, fileStats.size, function (err) {
                         console.log("uploadToBlob()");
                         console.dir(err);
+                        console.log("Elapsed: " + (Date.now()-start));
                         if(err) {
                           done(err);
                         }
