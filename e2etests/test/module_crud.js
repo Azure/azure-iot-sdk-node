@@ -87,6 +87,11 @@ describe('modules', function () {
           callback(err);
         });
       },
+      function waitForEventualConsistency(callback) {
+        // This test occasionally fails, presumably because the registry doesn't update quickly
+        // enough. Sleep for an arbitrary 5 seconds to account for this.
+        setTimeout(() => callback(), 5000);
+      },
       function findModule(callback) {
         debug('getting all modules on device ' + module.deviceId);
         registry.getModulesOnDevice(module.deviceId, function (err, foundModules) {
