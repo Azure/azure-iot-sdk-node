@@ -13,6 +13,13 @@ const getErrorDetailString = require('./testUtils').getErrorDetailString;
 const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 const registry = Registry.fromConnectionString(hubConnectionString);
 
+
+function waitForEventualConsistency(callback) {
+  // Some of these tests occasionally fails, presumably because the registry doesn't update quickly
+  // enough. Sleep for an arbitrary 2 seconds to account for this.
+  setTimeout(() => callback(), 2000);
+}
+
 // MISSING SCENARIOS
 //
 // The following scenarios are missing:
@@ -65,6 +72,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function findConfig(callback) {
           debug('getting configuration with id ' + config.id);
           registry.getConfiguration(config.id, function (err, foundConfig) {
@@ -90,6 +98,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function findConfig(callback) {
           debug('getting all configurations');
           registry.getConfigurations(function (err, foundConfigs) {
@@ -125,6 +134,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function updateConfig(callback) {
           debug('Preparing for update.  Getting configuration with id ' + config.id);
           registry.getConfiguration(config.id, function (err, foundConfig) {
@@ -141,6 +151,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             }
           });
         },
+        waitForEventualConsistency,
         function verifyUpdate(callback) {
           debug('Verifying update.  Getting configuration with id ' + config.id);
           registry.getConfiguration(config.id, function (err, foundConfig) {
@@ -166,6 +177,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function updateConfig(callback) {
           config.priority = newPriority;
           debug('Updating configuration with id ' + config.id + ' to priority ' + newPriority);
@@ -174,6 +186,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function verifyUpdate(callback) {
           debug('Verifying update.  Getting configuration with id ' + config.id);
           registry.getConfiguration(config.id, function (err, foundConfig) {
@@ -198,6 +211,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function verifyConfigWasAdded(callback) {
           debug('verifying existence of config with id ' + config.id);
           registry.getConfiguration(config.id, function (err) {
@@ -205,6 +219,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function removeConfig(callback) {
           debug('removing configuration with id ' + config.id);
           registry.removeConfiguration(config.id, function (err) {
@@ -212,6 +227,7 @@ const registry = Registry.fromConnectionString(hubConnectionString);
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function verifyConfigWasRemoved(callback) {
           debug('verifying removal of configuration with id ' + config.id);
           registry.getConfiguration(config.id, function (err) {

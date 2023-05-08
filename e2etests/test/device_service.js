@@ -54,7 +54,11 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     before(function (beforeCallback) {
       createDeviceMethod(function (err, testDeviceInfo) {
         provisionedDevice = testDeviceInfo;
-        beforeCallback(err);
+        // Wait a second for the registry to finish creating the device before we try to use it.
+        // We may get occasional E2E failures if we don't do this.
+        setTimeout(function () {
+          beforeCallback(err);
+        }, 1000);
       });
     });
 
