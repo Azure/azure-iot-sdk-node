@@ -45,7 +45,7 @@
     "azure-iot-device-amqp": "1.14.2",
     "azure-iot-device-http": "1.14.2",
     "azure-iot-device-mqtt": "1.16.2",
-    "azure-iothub": "1.15.1",
+    "azure-iothub": "https://github.com/BertKleewein/azure-iot-hub-node#integrate-common",  
     "debug": "^4.3.1",
     "pem": "^1.14.2",
     "uuid": "^8.3.2"

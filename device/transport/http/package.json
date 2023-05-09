@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@types/node": "^16.10.2",
-    "azure-iothub": "1.15.1",
+    "azure-iothub": "https://github.com/BertKleewein/azure-iot-hub-node#integrate-common",  
     "eslint": "^8.26.0",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",

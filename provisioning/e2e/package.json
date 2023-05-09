@@ -16,7 +16,7 @@
     "azure-iot-security-symmetric-key": "1.8.2",
     "azure-iot-security-tpm": "1.9.2",
     "azure-iot-security-x509": "1.8.2",
-    "azure-iothub": "1.15.1",
+    "azure-iothub": "https://github.com/BertKleewein/azure-iot-hub-node#integrate-common",
     "chai": "^4.3.3",
     "debug": "^4.3.1",
     "jshint": "^2.13.4",
