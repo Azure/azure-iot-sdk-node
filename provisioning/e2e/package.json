@@ -12,7 +12,7 @@
     "azure-iot-provisioning-device-amqp": "1.9.1",
     "azure-iot-provisioning-device-http": "1.9.1",
     "azure-iot-provisioning-device-mqtt": "1.8.1",
-    "azure-iot-provisioning-service": "1.10.1",
+    "azure-iot-provisioning-service": "https://github.com/BertKleewein/azure-iot-dps-node#integrate-common", 
     "azure-iot-security-symmetric-key": "1.8.2",
     "azure-iot-security-tpm": "1.9.2",
     "azure-iot-security-x509": "1.8.2",
