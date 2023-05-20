@@ -1,5 +1,5 @@
 import * as machina from 'machina';
-import * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import * as async from 'async';
 import { EventEmitter } from 'events';
 import * as dbg from 'debug';
@@ -238,7 +238,7 @@ export class ClaimsBasedSecurityAgent extends EventEmitter {
             //
             // For CBS, the message id and correlation id are encoded as string
             //
-            amqpMessage.message_id = uuid.v4();
+            amqpMessage.message_id = randomUUID();
             amqpMessage.reply_to = 'cbs';
 
             const outstandingPutToken: PutTokenOperation = {

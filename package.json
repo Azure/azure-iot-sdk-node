@@ -4,7 +4,7 @@
 		"codespaceinstall": "(cd device/samples/javascript && npm install & cd ../../../) && (cd device/samples/javascript/pnp && npm install & cd ../../../../) && (cd device/samples/typescript && npm install && npm run build)"
 	},
 	"devDependencies": {
-		"lerna": "^5.0.0",
+		"lerna": "^5.6.2",
 		"mocha": "^9.2.1"
 	},
 	"engines": {
@@ -35,6 +35,7 @@
 	"dependencies": {
 		"eslint-plugin-security": "^1.5.0",
 		"node-gyp": "^9.0.0",
+		"nodejs": "^0.0.0",
 		"typescript": "4.4.4"
 	}
 }

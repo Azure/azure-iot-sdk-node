@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import * as machina  from 'machina';
 import * as async from 'async';
 import * as dbg from 'debug';
@@ -102,7 +102,7 @@ export class AmqpDeviceMethodClient extends EventEmitter {
                 const linkOptions: LinkOption = {
                   properties: {
                     'com.microsoft:api-version': endpoint.apiVersion,
-                    'com.microsoft:channel-correlation-id': 'methods:' + uuid.v4()
+                    'com.microsoft:channel-correlation-id': 'methods:' + randomUUID()
                   },
                   rcv_settle_mode: 0
                 };
