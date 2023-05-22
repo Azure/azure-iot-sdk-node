@@ -13,6 +13,12 @@ let debug = require('debug')('e2etests:module_crud');
 let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 let registry = Registry.fromConnectionString(hubConnectionString);
 
+function waitForEventualConsistency(callback) {
+  // Some of these tests occasionally fails, presumably because the registry doesn't update quickly
+  // enough. Sleep for an arbitrary 2 seconds to account for this.
+  setTimeout(() => callback(), 2000);
+}
+
 describe('modules', function () {
   // eslint-disable-next-line no-invalid-this
   this.timeout(46000);
@@ -62,6 +68,7 @@ describe('modules', function () {
           callback(err);
         });
       },
+      waitForEventualConsistency,
       function findModule(callback) {
         debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
@@ -87,6 +94,7 @@ describe('modules', function () {
           callback(err);
         });
       },
+      waitForEventualConsistency,
       function findModule(callback) {
         debug('getting all modules on device ' + module.deviceId);
         registry.getModulesOnDevice(module.deviceId, function (err, foundModules) {
@@ -125,6 +133,7 @@ describe('modules', function () {
             callback(err);
           });
         },
+        waitForEventualConsistency,
         function updateModule(callback) {
           debug('Preparing to update. getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
           registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
@@ -152,6 +161,7 @@ describe('modules', function () {
             }
           });
         },
+        waitForEventualConsistency,
         function verifyUpdate(callback) {
           debug('verify the update');
           debug('getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
@@ -180,6 +190,7 @@ describe('modules', function () {
           callback(err);
         });
       },
+      waitForEventualConsistency,
       function removeModule(callback) {
         debug('removing module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.removeModule(module.deviceId, module.moduleId, function (err) {
@@ -187,6 +198,7 @@ describe('modules', function () {
           callback(err);
         });
       },
+      waitForEventualConsistency,
       function verifyRemoval(callback) {
         debug('Verifying removal.  Getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.getModule(module.deviceId, module.moduleId, function (err) {
@@ -207,6 +219,7 @@ describe('modules', function () {
           callback(err);
         });
       },
+      waitForEventualConsistency,
       function removeModule(callback) {
         debug('getting module');
         registry.getModule(module.deviceId, module.moduleId, function (err, foundModule) {
@@ -219,6 +232,7 @@ describe('modules', function () {
           });
         });
       },
+      waitForEventualConsistency,
       function verifyRemoval(callback) {
         debug('Verifying removal.  Getting module with deviceId = ' + module.deviceId + ' and moduleId ' + module.moduleId);
         registry.getModule(module.deviceId, module.moduleId, function (err) {
