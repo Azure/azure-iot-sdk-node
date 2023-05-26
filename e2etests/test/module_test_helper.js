@@ -48,17 +48,20 @@ module.exports.createModule = function (testModule, Transport, done)  {
         if (err) {
           done(err);
         } else {
-          debug('getting module with deviceId = ' + testModule.deviceId + ' and moduleId ' + testModule.moduleId);
-          registry.getModule(testModule.deviceId, testModule.moduleId, function (err, foundModule) {
-            debug('getModule returned ' + (err ? err : 'success'));
-            if (err) {
-              done(err);
-            } else {
-              let hubName = ConnectionString.parse(hubConnectionString).HostName;
-              testModule.moduleConnectionString = 'HostName=' + hubName + ';DeviceId=' + foundModule.deviceId + ';ModuleId='+foundModule.moduleId+';SharedAccessKey=' + foundModule.authentication.symmetricKey.primaryKey;
-              done();
-            }
-          });
+          // Added setTimeout because getModule doesn't always succeed if you call it immediately after addModule.
+          setTimeout(function () {
+            debug('getting module with deviceId = ' + testModule.deviceId + ' and moduleId ' + testModule.moduleId);
+            registry.getModule(testModule.deviceId, testModule.moduleId, function (err, foundModule) {
+              debug('getModule returned ' + (err ? err : 'success'));
+              if (err) {
+                done(err);
+              } else {
+                let hubName = ConnectionString.parse(hubConnectionString).HostName;
+                testModule.moduleConnectionString = 'HostName=' + hubName + ';DeviceId=' + foundModule.deviceId + ';ModuleId='+foundModule.moduleId+';SharedAccessKey=' + foundModule.authentication.symmetricKey.primaryKey;
+                done();
+              }
+            });
+          }, 2000);
         }
       });
     },

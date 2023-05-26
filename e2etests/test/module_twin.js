@@ -28,11 +28,14 @@ describe('module twin', function () {
           if (err) {
             done(err);
           } else {
-            debug('using ModuleTestHelper to get twin objects');
-            ModuleTestHelper.getTwinObjects(testModule, function (err) {
-              debug('ModuleTestHelper.getTwinObjects returned ' + (err ? err : 'success'));
-              done(err);
-            });
+            // Wait a second before getting the twin. Otherwies, we might get a "not found" back from iothub
+            setTimeout(function () {
+              debug('using ModuleTestHelper to get twin objects');
+              ModuleTestHelper.getTwinObjects(testModule, function (err) {
+                debug('ModuleTestHelper.getTwinObjects returned ' + (err ? err : 'success'));
+                done(err);
+              });
+            }, 1000);
           }
         });
       });
@@ -70,7 +73,7 @@ describe('module twin', function () {
             debug('twin.update returned ' + (err ? err : 'success'));
             assert(!err);
           });
-        }, 10000);
+        }, 1000);
       });
 
       it('can send reported properties', function (done) {
