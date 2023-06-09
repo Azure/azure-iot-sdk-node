@@ -18,7 +18,7 @@ jobs:
 
   - script: |
        npm install --global node-gyp
-       npm install --global lerna
+       npm install --global lerna@^6.6.2
        npm install
     displayName: 'Install Dependencies'
 
