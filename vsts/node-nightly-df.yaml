@@ -5,6 +5,7 @@ resources:
 
 jobs:
 - job: Phase_2
+  timeoutInMinutes: 360
   displayName: Ubuntu 20.04 - Node 12.x
   condition: succeededOrFailed()
   pool:

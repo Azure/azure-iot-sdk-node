@@ -5,6 +5,7 @@ resources:
 
 jobs:
 - job: Phase_1
+  timeoutInMinutes: 360
   displayName: 'Windows Node 14.x'
   condition: succeededOrFailed()
   pool:
