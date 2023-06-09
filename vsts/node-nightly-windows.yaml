@@ -18,7 +18,7 @@ jobs:
   - powershell: |
        runas.exe /savecred /user:administrator
        npm install --global node-gyp@6.1.0
-       npm install --global lerna
+       npm install --global lerna@^6.6.2
        npm install
     displayName: 'Install Dependencies'
 
