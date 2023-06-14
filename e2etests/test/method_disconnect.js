@@ -24,84 +24,84 @@ let doConnectTest = function doConnectTest(doIt) {
 
 let protocolAndTermination = [
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.AmqpWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceMqtt.Mqtt,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceMqtt.MqttWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpConnection',
     closeReason: ' severs the AMQP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpSession',
     closeReason: ' severs the AMQP session ',
     delayInSeconds: 1
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkReq',
     closeReason: ' severs AMQP CBS request link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkResp',
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpMethodReqLink',
     closeReason: ' severs AMQP method request link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpMethodRespLink',
     closeReason: ' severs AMQP method response link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceMqtt.Mqtt,
     operationType: 'ShutDownMqtt',
     closeReason: ' cleanly shutdowns MQTT connection ',

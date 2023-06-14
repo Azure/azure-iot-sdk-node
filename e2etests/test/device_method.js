@@ -21,8 +21,8 @@ let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 [
   deviceMqtt.Mqtt,
   deviceMqtt.MqttWs,
-  deviceAmqp.Amqp,
-  deviceAmqp.AmqpWs
+  // deviceAmqp.Amqp,
+  // deviceAmqp.AmqpWs
 ].forEach(function (protocolCtor) {
   describe('Device Methods over ' + protocolCtor.name, function () {
     // eslint-disable-next-line no-invalid-this

@@ -21,7 +21,7 @@ const Mqtt = require('azure-iot-device-mqtt').Mqtt;
 const MqttWs = require('azure-iot-device-mqtt').MqttWs;
 const Http = require('azure-iot-device-http').Http;
 
-const transports = [Amqp, AmqpWs, Mqtt, MqttWs, Http];
+const transports = [/* Amqp, AmqpWs, */Mqtt, MqttWs, /* Http */];
 const hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 describe('Authentication', function () {

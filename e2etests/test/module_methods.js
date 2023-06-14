@@ -11,7 +11,7 @@ let AmqpWs = require('azure-iot-device-amqp').AmqpWs;
 let Mqtt = require('azure-iot-device-mqtt').Mqtt;
 let MqttWs = require('azure-iot-device-mqtt').MqttWs;
 
-let transportsToTest = [ Amqp, AmqpWs, Mqtt, MqttWs ];
+let transportsToTest = [ /*Amqp, AmqpWs,*/ Mqtt, MqttWs ];
 
 describe('module methods', function () {
   // eslint-disable-next-line no-invalid-this

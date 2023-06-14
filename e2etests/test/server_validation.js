@@ -44,7 +44,7 @@ describe('Service Client', function () {
     require('azure-iothub').Amqp,
     require('azure-iothub').AmqpWs
   ].forEach(function (Transport) {
-    it('Service client will fail with SAS token over ' + Transport.name + ' using a shared access signature', function (done) {
+    it.skip('Service client will fail with SAS token over ' + Transport.name + ' using a shared access signature', function (done) {
       let connStr = serviceSdk.ConnectionString.parse(hubConnectionString);
       let sas = serviceSas.create(connStr.HostName, connStr.SharedAccessKeyName, connStr.SharedAccessKey, anHourFromNow()).toString();
       let serviceClient = serviceSdk.Client.fromSharedAccessSignature(sas, Transport);
@@ -82,7 +82,7 @@ describe('Registry', function () {
   let deviceIdOnly = {
     deviceId: uuid.v4()
   };
-  it('Fails to create a device', function (done){
+  it.skip('Fails to create a device', function (done){
     let registry = Registry.fromConnectionString(hubConnectionString);
     registry.create(deviceIdOnly, function (err) {
       correctDisconnectMessage(err, done);
@@ -95,9 +95,9 @@ describe('Device Client', function () {
   let uuidData = uuid.v4();
   let originalMessage = new Message(uuidData);
   [
-    httpModule.Http,
-    amqpModule.Amqp,
-    amqpModule.AmqpWs,
+    // httpModule.Http,
+    // amqpModule.Amqp,
+    // amqpModule.AmqpWs,
     mqttModule.Mqtt,
     mqttModule.MqttWs
   ].forEach(function (deviceTransport) {

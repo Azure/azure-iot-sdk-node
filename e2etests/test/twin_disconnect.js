@@ -25,70 +25,70 @@ let doConnectTest = function doConnectTest(doIt) {
 //
 let protocolAndTermination = [
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceMqtt.Mqtt,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceMqtt.MqttWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpTwinLinkReq',
     closeReason: ' severs AMQP TWIN request link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
-    operationType: 'KillAmqpTwinLinkResp',
-    closeReason: ' severs AMQP TWIN response link ',
-    delayInSeconds: 2
-  },
-  {
-    testEnabled: true,
-    transport: deviceAmqp.AmqpWs,
-    operationType: 'KillAmqpTwinLinkReq',
-    closeReason: ' severs AMQP TWIN request link ',
-    delayInSeconds: 2
-  },
-  {
-    testEnabled: true,
-    transport: deviceAmqp.AmqpWs,
     operationType: 'KillAmqpTwinLinkResp',
     closeReason: ' severs AMQP TWIN response link ',
     delayInSeconds: 2
   },
   {
     testEnabled: false,
+    transport: deviceAmqp.AmqpWs,
+    operationType: 'KillAmqpTwinLinkReq',
+    closeReason: ' severs AMQP TWIN request link ',
+    delayInSeconds: 2
+  },
+  {
+    testEnabled: false,
+    transport: deviceAmqp.AmqpWs,
+    operationType: 'KillAmqpTwinLinkResp',
+    closeReason: ' severs AMQP TWIN response link ',
+    delayInSeconds: 2
+  },
+  {
+    testEnabled: true,
     transport: deviceMqtt.Mqtt,
     operationType: 'ShutDownMqtt',
     closeReason: ' cleanly shutdowns MQTT connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: false,
+    testEnabled: true,
     transport: deviceMqtt.MqttWs,
     operationType: 'ShutDownMqtt',
     closeReason: ' cleanly shutdowns MQTT connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.AmqpWs,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',

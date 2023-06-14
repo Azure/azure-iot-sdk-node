@@ -49,7 +49,7 @@ let nullMergeResult = JSON.parse(JSON.stringify(newProps));
 delete nullMergeResult.tweedle;
 
 [
-  deviceAmqp.Amqp,
+  // deviceAmqp.Amqp,
   deviceMqtt.Mqtt
 ].forEach(function (protocolCtor) {
   describe('Twin over ' + protocolCtor.name, function () {

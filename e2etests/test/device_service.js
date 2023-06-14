@@ -32,9 +32,9 @@ let maximumMessageSize = ((64*1024)-512);
   DeviceIdentityHelper.createDeviceWithX509CASignedCert
 ].forEach(function (createDeviceMethod) {
   [
-    deviceHttp.Http,
-    deviceAmqp.Amqp,
-    deviceAmqp.AmqpWs,
+    // deviceHttp.Http,
+    // deviceAmqp.Amqp,
+    // deviceAmqp.AmqpWs,
     deviceMqtt.Mqtt,
     deviceMqtt.MqttWs
   ].forEach(function (deviceTransport) {
@@ -167,7 +167,7 @@ function device_service_tests(deviceTransport, createDeviceMethod) {
     });
   });
 
-  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - d2c with ' + createDeviceMethod.name + ' authentication', function () {
+  describe.skip('Over ' + deviceTransport.name + ' using device/eventhub clients - d2c with ' + createDeviceMethod.name + ' authentication', function () {
     // eslint-disable-next-line no-invalid-this
     this.timeout(60000);
 

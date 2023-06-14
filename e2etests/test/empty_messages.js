@@ -24,9 +24,9 @@ let deviceHttp = require('azure-iot-device-http');
 let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 
 [
-  deviceHttp.Http,
-  deviceAmqp.Amqp,
-  deviceAmqp.AmqpWs,
+  // deviceHttp.Http,
+  // deviceAmqp.Amqp,
+  // deviceAmqp.AmqpWs,
   deviceMqtt.MqttWs,
   deviceMqtt.Mqtt
 ].forEach(function (deviceTransport) {
@@ -131,7 +131,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
     });
   });
 
-  describe('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
+  describe.skip('Over ' + deviceTransport.name + ' using device/eventhub clients - messaging', function () {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 

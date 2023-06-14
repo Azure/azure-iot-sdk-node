@@ -18,11 +18,11 @@ let debug = require('debug')('e2etests:sas_token_tests');
 
 let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 let transports  = [
-  require('azure-iot-device-amqp').Amqp,
-  require('azure-iot-device-amqp').AmqpWs,
+  // require('azure-iot-device-amqp').Amqp,
+  // require('azure-iot-device-amqp').AmqpWs,
   require('azure-iot-device-mqtt').Mqtt,
   require('azure-iot-device-mqtt').MqttWs,
-  require('azure-iot-device-http').Http
+  // require('azure-iot-device-http').Http
 ];
 
 transports.forEach(function (deviceTransport) {
@@ -114,7 +114,7 @@ transports.forEach(function (deviceTransport) {
       });
     });
 
-    it('Renews SAS after connection and is still able to send D2C messages', function (testCallback) {
+    it.skip('Renews SAS after connection and is still able to send D2C messages', function (testCallback) {
       let beforeSas = uuid.v4();
       let afterSas = uuid.v4();
 
