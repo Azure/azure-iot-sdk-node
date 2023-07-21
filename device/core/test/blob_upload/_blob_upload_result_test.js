@@ -46,7 +46,7 @@ describe('BlobUploadResult', function () {
       let result = BlobUploadResult.fromAzureStorageCallbackArgs(new Error(testBody), null);
       assert.isFalse(result.isSuccess);
       assert.equal(result.statusCode, -1);
-      assert.equal(result.statusDescription, testBody);
+      assert.equal(result.statusDescription, "Failed to upload to blob");
     });
 
     /*Tests_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_003: [If `err` is null but `uploadResponse` is provided, and `uploadResponse.ErrorCode` is not null, `BlobUploadResult` shall have the `isSuccess` property set to `false`]*/
