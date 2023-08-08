@@ -1,7 +1,0 @@
-coverage/
-devdoc/
-test/
-samples/
-src/
-dist/**/*.map
-.nyc_output
