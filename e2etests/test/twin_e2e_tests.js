@@ -46,7 +46,7 @@ let nullIndividualProps = {
 };
 
 let nullMergeResult = JSON.parse(JSON.stringify(newProps));
-delete nullMergeResult.tweedle;
+delete nullMergeResult.bar.tweedle;
 
 [
   deviceAmqp.Amqp,
@@ -169,9 +169,17 @@ delete nullMergeResult.tweedle;
     let assertObjectsAreEqual = function (left, right) {
       let compare = function (left, right) {
         _.every(_.keys(right), function (key) {
-          if (typeof right[key] !== 'function' && !key.startsWith('$')) {
-            assert.equal(left[key], right[key], 'key ' + key + ' not matched between service and device');
+          if (key.startsWith('$')) {
+            return;
           }
+          if (typeof right[key] === 'object') {
+            if (typeof left[key] !== 'object') {
+              assert.fail('key ' + key + ' not matched between service and device');
+            }
+            compare(left[key], right[key]);
+            return;
+          }
+          assert.strictEqual(left[key], right[key], 'key ' + key + ' not matched between service and device');
         });
       };
       compare(left, right);
