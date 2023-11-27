@@ -176,7 +176,7 @@ delete nullMergeResult.bar.tweedle;
             if (typeof left[key] !== 'object') {
               assert.fail('key ' + key + ' not matched between service and device');
             }
-            compare(left[key], right[key]);
+            assertObjectsAreEqual(left[key], right[key]);
             return;
           }
           assert.strictEqual(left[key], right[key], 'key ' + key + ' not matched between service and device');
