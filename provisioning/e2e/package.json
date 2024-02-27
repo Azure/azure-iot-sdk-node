@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
+    "es5-ext": "0.10.63",
     "azure-iot-common": "1.13.2",
     "azure-iot-provisioning-device": "1.9.1",
     "azure-iot-provisioning-device-amqp": "1.9.1",
