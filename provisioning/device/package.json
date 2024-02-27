@@ -8,7 +8,7 @@
   "typings": "index.d.ts",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
+    "es5-ext": "0.10.63",
     "azure-iot-common": "1.13.2",
     "debug": "^4.3.1",
     "machina": "^4.0.2"
