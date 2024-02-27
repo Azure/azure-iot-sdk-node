@@ -7,7 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
+    "es5-ext": "0.10.63",
     "@azure/storage-blob": "^12.8.0",
     "azure-iot-common": "1.13.2",
     "azure-iot-device": "1.18.3",
