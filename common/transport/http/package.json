@@ -11,7 +11,7 @@
     "async": "^3.2.3",
     "azure-iot-common": "1.13.2",
     "debug": "^4.3.1",
-    "es5-ext": "0.10.53",
+    "es5-ext": "0.10.63",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
