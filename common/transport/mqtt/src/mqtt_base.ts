@@ -280,7 +280,7 @@ export class MqttBase extends EventEmitter {
             }, 30000);
 
             debug('disconnecting mqtt client');
-            this._disconnectClient(false, () => {
+            this._disconnectClient(true, () => {
               clearTimeout(disconnectTimeout);
               if (!switched) {
                 debug('mqtt client disconnected - reconnecting');
