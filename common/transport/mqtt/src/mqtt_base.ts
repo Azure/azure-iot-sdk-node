@@ -279,6 +279,9 @@ export class MqttBase extends EventEmitter {
               this._fsm.handle('forceDisconnect', callback);
             }, 30000);
 
+            // When experiencing message loss due to high throughput, the force flag in
+            // disconnectClient can be set to true to cause messages to be properly dropped,
+            // and thus re-sent. Making this the default is under investigation.
             debug('disconnecting mqtt client');
             this._disconnectClient(false, () => {
               clearTimeout(disconnectTimeout);
