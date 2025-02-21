@@ -19,13 +19,13 @@ In order to run the device samples you will first need the following prerequisit
 
 - Once the Codespace is open, all required packages to run the samples will be setup for you
 
-**3) Set the IOTHUB_DEVICE_CONNECTING_STRING environment variable**
+**3) Set the IOTHUB_DEVICE_CONNECTION_STRING environment variable**
 
 - From a shell or Node.js command prompt, navigate to the folder where you placed the sample files.
-- Set the `IOTHUB_DEVICE_CONNECTING_STRING` environment variable:
+- Set the `IOTHUB_DEVICE_CONNECTION_STRING` environment variable:
 
 ```bash
-export IOTHUB_DEVICE_CONNECTING_STRING="<YourIoTHubDeviceConnectionString>"
+export IOTHUB_DEVICE_CONNECTION_STRING="<YourIoTHubDeviceConnectionString>"
 ```
 
 **4) Run it**
@@ -77,7 +77,7 @@ cd device/samples/typescript
 npm install
 ```
 
-**3) Set the IOTHUB_DEVICE_CONNECTING_STRING environment variable**
+**3) Set the IOTHUB_DEVICE_CONNECTION_STRING environment variable**
 
 - From a shell or Node.js command prompt, navigate to the folder where you placed the sample files.
 - Set the `IOTHUB_DEVICE_CONNECTION_STRING` environment variable:
