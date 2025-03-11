@@ -11,8 +11,7 @@
     "azure-iot-common": "1.13.2",
     "debug": "^4.3.1",
     "machina": "^4.0.2",
-    "mqtt": "^4.2.8",
-    "uuid": "^8.3.2"
+    "mqtt": "^4.2.8"
   },
   "devDependencies": {
     "@types/node": "^16.10.2",

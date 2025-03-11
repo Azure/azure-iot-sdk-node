@@ -8,7 +8,7 @@ import { TwinProperties } from 'azure-iot-device';
 import { MqttBase, translateError } from 'azure-iot-mqtt-base';
 import * as querystring from 'querystring';
 import * as url from 'url';
-import * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 const debug = dbg('azure-iot-device-mqtt:MqttTwinClient');
@@ -195,7 +195,7 @@ export class MqttTwinClient extends EventEmitter {
   private _sendTwinRequest(method: string, resource: string, body: any, callback?: (err?: Error, result?: any) => void): void {
     /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_005: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
     /*Codes_SRS_NODE_DEVICE_MQTT_TWIN_CLIENT_16_015: [The `requestId` property in the topic querystring should be set to a unique identifier that will be used to identify the response later on.]*/
-    const requestId = uuid.v4();
+    const requestId = randomUUID();
     const propString = '?$rid=' + requestId;
 
     const topic = '$iothub/twin/' + method + resource + propString;

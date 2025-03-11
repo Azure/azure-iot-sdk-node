@@ -10,7 +10,7 @@ import { errors, endpoint, AuthenticationProvider } from 'azure-iot-common';
 import { Amqp as BaseAmqpClient, AmqpMessage, SenderLink, ReceiverLink, AmqpTransportError, getErrorName } from 'azure-iot-amqp-base';
 import { TwinProperties } from 'azure-iot-device';
 
-import * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import * as dbg from 'debug';
 import rhea = require('rhea');
 
@@ -163,7 +163,7 @@ export class AmqpTwinClient extends EventEmitter {
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_006: [When a listener is added for the `response` event, and the `post` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLink`.] */
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_012: [When a listener is added for the `post` event, and the `response` event is NOT already subscribed, upstream and downstream links are established via calls to `attachReceiverLink` and `attachSenderLine`.] */
                 /*Codes_SRS_NODE_DEVICE_AMQP_TWIN_16_036: [The same correlationId shall be used for both the sender and receiver links.]*/
-                const linkCorrelationId: string  = uuid.v4().toString();
+                const linkCorrelationId: string  = randomUUID().toString();
                 this._client.attachSenderLink( this._endpoint, this._generateTwinLinkProperties(linkCorrelationId), (senderLinkError?: Error, senderTransportObject?: any): void => {
                   if (senderLinkError) {
                       /* Codes_SRS_NODE_DEVICE_AMQP_TWIN_06_022: [If an error occurs on establishing the upstream or downstream link then the `error` event shall be emitted.] */
@@ -353,7 +353,7 @@ export class AmqpTwinClient extends EventEmitter {
       amqpMessage.message_annotations.resource = resource;
     }
 
-    const correlationId = uuid.v4();
+    const correlationId = randomUUID();
     //
     // Just a reminder here.  The correlation id will not be serialized into a amqp uuid encoding (0x98).
     // The service doesn't require it and leaving it as a string will be just fine.
