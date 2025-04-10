@@ -29,8 +29,11 @@ The SDK is entirely open-source. Downloading the whole SDK source code is as sim
 ```
 $ git clone https://github.com/azure/azure-iot-sdk-node
 ```
+This step is deprecated as of NPM v5.0.0, `windows-build-tools` was bundled into NPM and no longer needed to be installed manually.
 
-If you are going to be developing on Windows you will need to install some additional build tools.  In an administrator command prompt:
+For older versions of NPM developing on Windows, you will need to install some additional build tools.
+
+In an administrator command prompt:
 
 ```
 npm install -g windows-build-tools
@@ -41,10 +44,16 @@ This will probably take serveral minutes to run.
 The SDK ships in multiple NPM packages that depend on one another. We use [lerna.js](https://lernajs.io) to "link" those package together in a single environment. At a prompt with administrative privileges:
 
 ```
-npm install -g lerna
+npm install -g lerna@3.20.2
 ```
 
-Once lerna is installed, you can set up your development environment by running the `bootstrap command` at the root of the repository. This installs all dependencies and links packages together. We add the `--hoist` option to eliminate duplicate dependencies and reduce the time and space requirements of the cloned repository.
+Once Lerna is installed, initialize the repo:
+
+```
+lerna init
+```
+
+Once lerna is initialized, you can set up your development environment by running the `bootstrap command` at the root of the repository. This installs all dependencies and links packages together. We add the `--hoist` option to eliminate duplicate dependencies and reduce the time and space requirements of the cloned repository.
 
 ```
 lerna bootstrap --hoist
