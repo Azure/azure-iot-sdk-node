@@ -14,7 +14,6 @@
     "provisioning/transport/*",
     "provisioning/device/samples",
     "provisioning/device/ts-samples",
-    "provisioning/service/samples",
     "security/*",
     "sdklab/longhaultests",
     "sdklab/mean_time_recovery",
