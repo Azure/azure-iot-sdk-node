@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import * as machina from 'machina';
 import * as dbg from 'debug';
 import * as queryString from 'querystring';
@@ -234,7 +234,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
    * @private
    */
   registrationRequest(request: RegistrationRequest, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
-    let rid = uuid.v4();
+    let rid = randomUUID();
     debug('registration request given id of: ' + rid);
     this._fsm.handle('registrationRequest', request, rid, (err, result, pollingInterval) => {
       if (err) {
@@ -249,7 +249,7 @@ export class Mqtt extends EventEmitter implements X509ProvisioningTransport, Sym
    * @private
    */
   queryOperationStatus(request: RegistrationRequest, operationId: string, callback: (err?: Error, result?: DeviceRegistrationResult, response?: any, pollingInterval?: number) => void): void {
-    let rid = uuid.v4();
+    let rid = randomUUID();
     debug('query operation request given id of: ' + rid);
     this._fsm.handle('queryOperationStatus', request, rid, operationId, (err, result, pollingInterval) => {
       if (err) {
