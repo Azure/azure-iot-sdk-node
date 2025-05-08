@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-device",
-  "version": "1.18.2",
+  "version": "1.18.3",
   "description": "Azure IoT device SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",

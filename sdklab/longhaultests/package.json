@@ -39,10 +39,10 @@
   "dependencies": {
     "async": "^3.2.3",
     "azure-iot-common": "1.13.2",
-    "azure-iot-device": "1.18.2",
-    "azure-iot-device-amqp": "1.14.2",
-    "azure-iot-device-http": "1.14.2",
-    "azure-iot-device-mqtt": "1.16.2",
+    "azure-iot-device": "1.18.3",
+    "azure-iot-device-amqp": "1.14.3",
+    "azure-iot-device-http": "1.14.3",
+    "azure-iot-device-mqtt": "1.16.3",
     "azure-iothub": "1.15.1",
     "debug": "^4.3.1",
     "uuid": "^8.3.2"

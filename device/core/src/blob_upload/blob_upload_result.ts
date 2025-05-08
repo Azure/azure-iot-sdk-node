@@ -52,7 +52,7 @@ export class BlobUploadResult {
     let uploadResult: BlobUploadResult;
     if (err) {
       const statusCode = ((Object.prototype.hasOwnProperty.call(err, 'statusCode')) ? (err.statusCode) : (-1));
-      const statusDescription = ((Object.prototype.hasOwnProperty.call(err, 'response')) ? (err.response) : (err.message));
+      const statusDescription = `Failed to upload to blob${statusCode === -1 ? '' : `. Status code: ${statusCode}`}`;
       /*Codes_SRS_NODE_DEVICE_BLOB_UPLOAD_RESULT_41_002: [If `err` is not `null`, the `BlobUploadResult` shall have the `isSuccess` property set to `false`]*/
       uploadResult = new BlobUploadResult(false, statusCode, statusDescription);
     } else {
