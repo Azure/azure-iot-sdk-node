@@ -6,7 +6,7 @@
 import { anHourFromNow, errors, SharedAccessSignature, X509 } from 'azure-iot-common';
 import { Http as HttpBase, HttpRequestOptions } from './http';
 import { AccessToken, TokenCredential } from '@azure/core-auth';
-import  * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { ClientRequest } from 'http';
 import dbg = require('debug');
 const debug = dbg('azure-iot-http-base.RestApiClient');
@@ -188,7 +188,7 @@ export class RestApiClient {
     timeout?: number | HttpRequestOptions | RestApiClient.ResponseCallback,
     requestOptions?: HttpRequestOptions | number | RestApiClient.ResponseCallback,
     done?: RestApiClient.ResponseCallback): void  {
-    httpHeaders['Request-Id'] = uuid.v4();
+    httpHeaders['Request-Id'] = randomUUID();
     httpHeaders['User-Agent'] = this._userAgent;
 
     let requestBodyString: string;

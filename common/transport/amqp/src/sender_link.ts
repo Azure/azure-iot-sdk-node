@@ -1,6 +1,6 @@
 import * as machina from 'machina';
 import * as dbg from 'debug';
-import * as uuid from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'events';
 import { EventContext, AmqpError, Session, Sender, SenderOptions } from 'rhea';
 import { results, errors } from 'azure-iot-common';
@@ -214,7 +214,7 @@ export class SenderLink extends EventEmitter implements AmqpLink {
             this._attachingCallback = callback;
             this._indicatedError = undefined;
             this._senderCloseOccurred = false;
-            this._rheaSenderName = 'rheaSender_' + uuid.v4();
+            this._rheaSenderName = 'rheaSender_' + randomUUID();
             this._combinedOptions.name = this._rheaSenderName;
             debug(this.toString() + ': Attaching sender name: ' + this._rheaSenderName + ' with address: ' + this._linkAddress);
             //
