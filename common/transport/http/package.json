@@ -10,9 +10,7 @@
     "@azure/core-auth": "^1.4.0",
     "async": "^3.2.3",
     "azure-iot-common": "1.13.2",
-    "debug": "^4.3.1",
-    "es5-ext": "0.10.53",
-    "uuid": "^8.3.2"
+    "debug": "^4.3.1"
   },
   "devDependencies": {
     "@types/node": "^16.10.2",
