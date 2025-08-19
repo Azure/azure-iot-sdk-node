@@ -7,16 +7,17 @@
   "main": "iotprovisioningservice.js",
   "typings": "iotprovisioningservice.d.ts",
   "dependencies": {
+    "@azure/core-auth": "^1.4.0",
+    "@azure/core-http": "^1.2.3",
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
     "azure-iot-common": "1.13.2",
     "azure-iot-http-base": "1.12.2",
     "debug": "^4.3.1",
-    "@azure/core-http": "^1.2.3"
+    "es5-ext": "0.10.53"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/node": "^16.10.2",
+    "@types/node": "^14.18.63",
     "chai": "^4.3.3",
     "mocha": "^9.2.1",
     "nyc": "^15.0.0",

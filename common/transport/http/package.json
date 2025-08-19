@@ -13,14 +13,13 @@
     "debug": "^4.3.1"
   },
   "devDependencies": {
-    "@types/node": "^16.10.2",
+    "@types/node": "^14.18.63",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
     "chai": "^4.3.3",
     "eslint": "^8.26.0",
     "eslint-plugin-jsdoc": "^39.3.25",
-    "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-no-only-tests": "^3.1.0",
     "eslint-plugin-promise": "^6.1.1",
