@@ -88,7 +88,7 @@ export interface MqttTransportOptions {
   /**
    * Boolean flag indicating whether to force disconnection in high throughput scenarios to cause messages to be properly dropped.
    */
-  forceFlag?: boolean;
+  forceDisconnect?: boolean;
 
 }
 
