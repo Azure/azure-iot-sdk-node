@@ -85,6 +85,10 @@ export interface MqttTransportOptions {
    * Optional [Agent]{@link https://nodejs.org/api/https.html#https_class_https_agent} object to use with MQTT-WS connections
    */
   webSocketAgent?: Agent;
+  /**
+   * Optional boolean flag indicating whether to force disconnection in high throughput scenarios to cause messages to be properly dropped.
+   */
+  forceDisconnect?: boolean;
 
 }
 
@@ -144,12 +148,12 @@ export interface DeviceClientOptions extends X509 {
   /**
    * Optional object with options specific to the MQTT transport
    */
-   mqtt?: MqttTransportOptions;
+  mqtt?: MqttTransportOptions;
 
   /**
    * Optional object with options specific to the HTTP transport
    */
-   http?: HttpTransportOptions;
+  http?: HttpTransportOptions;
 
   /**
    * Optional object with options specific to the AMQP transport
