@@ -16,7 +16,7 @@ class OnTheWireMessage {
   enqueuedTimeSecondsSinceEpoch: number;
   callback: (err?: Error, result?: any) => void;
   constructor(callback: (err?: Error, result?: any) => void) {
-    this.enqueuedTimeSecondsSinceEpoch = Math.floor( Date.now() / 1000 );
+    this.enqueuedTimeSecondsSinceEpoch = Math.floor(Date.now() / 1000);
     this.callback = callback;
   }
 }
@@ -280,7 +280,7 @@ export class MqttBase extends EventEmitter {
             }, 30000);
 
             debug('disconnecting mqtt client');
-            this._disconnectClient(true, () => {
+            this._disconnectClient(this._options?.mqtt?.forceDisconnect ?? false, () => {
               clearTimeout(disconnectTimeout);
               if (!switched) {
                 debug('mqtt client disconnected - reconnecting');
@@ -467,6 +467,7 @@ export class MqttBase extends EventEmitter {
   }
 
   private _disconnectClient(forceDisconnect: boolean, callback: () => void): void {
+    debug('forceDisconnect is valued at: ' + forceDisconnect);
     if (this._mqttClient) {
       debug('removing all listeners');
       this._mqttTrackedListeners.removeAllTrackedListeners();
@@ -514,9 +515,9 @@ export class MqttBase extends EventEmitter {
   }
 }
 
-  /**
-   * @private
-   */
+/**
+ * @private
+ */
 export interface MqttBaseTransportConfig {
   sharedAccessSignature?: string | SharedAccessSignature;
   clientId: string;
