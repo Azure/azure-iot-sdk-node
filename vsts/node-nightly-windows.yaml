@@ -85,12 +85,12 @@ jobs:
       ArtifactName: drop
       publishLocation: 'Container'
 
-  - task: AzureFileCopy@2
-    displayName: 'Copy Release Artifacts to Partner Release Pipeline'
-    condition: coalesce(variables.release, False)
-    inputs:
-      SourcePath: $(Build.ArtifactStagingDirectory)\_out
-      azureSubscription: azuresdkpartnerdrops
-      Destination: AzureBlob
-      storage: azuresdkpartnerdrops
-      ContainerName: 'drops/azure-iot-sdk/node/'
+  # - task: AzureFileCopy@2
+  #   displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+  #   condition: coalesce(variables.release, False)
+  #   inputs:
+  #     SourcePath: $(Build.ArtifactStagingDirectory)\_out
+  #     azureSubscription: azuresdkpartnerdrops
+  #     Destination: AzureBlob
+  #     storage: azuresdkpartnerdrops
+  #     ContainerName: 'drops/azure-iot-sdk/node/'

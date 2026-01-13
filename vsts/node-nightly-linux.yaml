@@ -5,10 +5,10 @@ resources:
 
 jobs:
 - job: Phase_2
-  displayName: Ubuntu 20.04 - Node 14.x
+  displayName: Ubuntu 22.04 - Node 14.x
   condition: succeededOrFailed()
   pool:
-    vmImage: 'Ubuntu 20.04'
+    vmImage: 'ubuntu-22.04'
 
   steps:
   - task: NodeTool@0
