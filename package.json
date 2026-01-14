@@ -41,6 +41,6 @@
 	"dependencies": {
 		"eslint-plugin-security": "^1.5.0",
 		"node-gyp": "^9.0.0",
-		"nodejs": "^0.0.0",
+		"nodejs": "^0.0.0"
 	}
 }
