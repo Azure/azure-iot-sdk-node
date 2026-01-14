@@ -8,7 +8,7 @@ jobs:
   displayName: 'Windows Node 14.x'
   condition: succeededOrFailed()
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 14.x'
