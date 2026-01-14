@@ -450,6 +450,7 @@ describe('IotEdgeAuthenticationProvider', function () {
 
     describe('#SharedAccessSignature.createWithSigningFunction works', function () {
       let createWithSigningFunctionStub;
+
       beforeEach(function () {
         createWithSigningFunctionStub = sinon
           .stub(SharedAccessSignature, 'createWithSigningFunction')
@@ -490,6 +491,7 @@ describe('IotEdgeAuthenticationProvider', function () {
 
     describe('#SharedAccessSignature.createWithSigningFunction fails', function () {
       let createWithSigningFunctionStub;
+
       beforeEach(function () {
         createWithSigningFunctionStub = sinon
           .stub(SharedAccessSignature, 'createWithSigningFunction')

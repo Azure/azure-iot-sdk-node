@@ -69,6 +69,7 @@ function singleMessageTests(Client, Transport, registry, testName, requestFn) {
 
     describe('#' + testName + ' with a SharedAccessKey', function () {
       let sakConnectionString;
+
       before(function (done) {
         registry.create({ deviceId: deviceId, status: "enabled" }, function (err, device) {
           sakConnectionString = makeConnectionString(host, deviceId, device.authentication.symmetricKey.primaryKey);
@@ -188,6 +189,7 @@ function batchMessageTests(Client, Transport, registry, testName, requestFn) {
 
     describe('#' + testName + ' with a Shared Access Key', function () {
       let sakConnectionString;
+
       before(function (done) {
         registry.create({ deviceId: deviceId, status: "enabled" }, function (err, device) {
           sakConnectionString = makeConnectionString(host, deviceId, device.authentication.symmetricKey.primaryKey);
