@@ -23,6 +23,7 @@ jobs:
     displayName: 'Install Dependencies'
 
   - script: |
+        npx tsc --version
         lerna bootstrap --hoist
         lerna run build
     displayName: 'Bootstrap & Build'
