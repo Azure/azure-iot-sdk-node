@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@types/async": "^3.2.8",
-    "@types/node": "^16.10.2",
     "eslint": "^8.26.0",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
@@ -32,8 +31,7 @@
     "nyc": "^15.0.0",
     "sinon": "^11.1.2",
     "sinon-test": "3.1.4",
-    "source-map-support": "^0.5.16",
-    "typescript": "4.4.4"
+    "source-map-support": "^0.5.16"
   },
   "scripts": {
     "srclint": "eslint src --ext .ts -f visualstudio",
