@@ -9,7 +9,7 @@
   "dependencies": {
     "async": "^3.2.3",
     "@azure/abort-controller": "1.0.1",
-    "@azure/storage-blob": "^12.8.0",
+    "@azure/storage-blob": "12.8.0",
     "azure-iot-common": "1.13.2",
     "azure-iot-http-base": "1.12.2",
     "debug": "^4.3.1",
