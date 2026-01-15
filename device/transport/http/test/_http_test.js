@@ -530,6 +530,7 @@ describe('HttpReceiver', function () {
   describe('#receiveTimers', function () {
     let fakeHttp;
     let receiver;
+
     beforeEach(function () {
       fakeHttp = new FakeHttp();
       receiver = new Http(fakeAuthenticationProvider, fakeHttp);
