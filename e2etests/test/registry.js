@@ -42,6 +42,7 @@ let deviceIdWithThumbprints = {
 describe('Registry', function () {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
   it('Creates a device with only a deviceId and gets it', function (done){
     let registry = Registry.fromConnectionString(hubConnectionString);
 
