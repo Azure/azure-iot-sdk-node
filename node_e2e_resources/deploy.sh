@@ -23,14 +23,17 @@ function usage {
 location=westus2
 
 while [ "$1" != "" ]; do
+    echo "Processing argument '$1'"
     case $1 in
         -l | --location)
             location=$2
+	    echo "Using location '$location'"
             shift; shift;
             ;;
 
         -n | --rg-name)
             rgName=$2
+	    echo "Using resource group '$rgName'"
             shift; shift;
             ;;
 
