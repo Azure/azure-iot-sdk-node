@@ -82,6 +82,7 @@ describe('Registry', function () {
   let deviceIdOnly = {
     deviceId: uuid.v4()
   };
+
   it('Fails to create a device', function (done){
     let registry = Registry.fromConnectionString(hubConnectionString);
     registry.create(deviceIdOnly, function (err) {
