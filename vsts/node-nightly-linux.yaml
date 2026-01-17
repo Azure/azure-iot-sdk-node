@@ -25,6 +25,10 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
+          set -e
+
+          export AZURE_RESOURCE_GROUP=$(setResourceNames.AZURE_RESOURCE_GROUP)
+
           . ./node_e2e_resources/deploy.sh -l "$AZURE_REGION" -n "$AZURE_RESOURCE_GROUP"
       displayName: Create Azure Resources
       name: createAzureResources
