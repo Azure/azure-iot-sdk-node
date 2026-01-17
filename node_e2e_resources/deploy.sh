@@ -24,6 +24,7 @@ location=westus2
 
 while [ "$1" != "" ]; do
     echo "Processing argument '$1'"
+    echo "Args '$1' '$2' '$3' '$4'"
     case $1 in
         -l | --location)
             location=$2
