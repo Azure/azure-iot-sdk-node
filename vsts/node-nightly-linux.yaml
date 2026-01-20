@@ -70,9 +70,7 @@ stages:
 
     - script: |
         set -e
-        find . -iname activate*
         . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
-        printenv | sort
         lerna run ci
       displayName: 'Unit & Integration Tests'
 
