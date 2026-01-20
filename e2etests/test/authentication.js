@@ -88,7 +88,7 @@ describe('Authentication', function () {
     transports.forEach(function (Transport) {
       [{
         reason: 'improperly formed',
-        id: testDeviceId + '//foo'
+        id: testDeviceId + '#+foo'
       },{
         reason: 'does not exist',
         id: testDeviceId + 'foo'
