@@ -50,6 +50,11 @@ stages:
     - download: current
       artifact: secretsEnv
 
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
+        addToPath: true
+
     - task: NodeTool@0
       displayName: 'Use Node 14.x'
       inputs:
