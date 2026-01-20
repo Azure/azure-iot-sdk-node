@@ -167,6 +167,13 @@ delete nullMergeResult.tweedle;
     };
 
     let assertObjectsAreEqual = function (left, right) {
+      
+
+      console.log(">>> LEFT:", JSON.stringify(left));
+      console.log(">>> RIGHT:", JSON.stringify(right));
+
+
+
       let compare = function (left, right) {
         _.every(_.keys(right), function (key) {
           if (typeof right[key] !== 'function' && !key.startsWith('$')) {
