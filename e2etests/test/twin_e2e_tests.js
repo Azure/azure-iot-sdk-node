@@ -167,12 +167,7 @@ delete nullMergeResult.tweedle;
     };
 
     let assertObjectsAreEqual = function (left, right) {
-      
-
-      console.log(">>> LEFT:", JSON.stringify(left));
-      console.log(">>> RIGHT:", JSON.stringify(right));
-
-
+      debug("assertObjectsAreEqual(left=", JSON.stringify(left), ", right=", JSON.stringify(right), ")");
 
       let compare = function (left, right) {
         _.every(_.keys(right), function (key) {
