@@ -29,6 +29,8 @@ stages:
 
           export AZURE_RESOURCE_GROUP=$(setResourceNames.AZURE_RESOURCE_GROUP)
 
+          printenv | sort
+
           ./node_e2e_resources/deploy.sh -l "$AZURE_REGION" -n "$AZURE_RESOURCE_GROUP" -u
       displayName: Create Azure Resources
       name: createAzureResources

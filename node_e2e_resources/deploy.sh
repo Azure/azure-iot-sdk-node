@@ -68,7 +68,6 @@ if [ "$rgName" == "" ]; then
     exit 1
 fi
 
-
 # print warning
 printf "WARNING\n"
 printf "This script will deploy Azure resources into\n"
