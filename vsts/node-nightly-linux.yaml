@@ -37,7 +37,7 @@ stages:
       name: createAzureResources
 
     - publish: ./node_e2e_resources/secrets/env/activate
-      artifact: buildOutput
+      artifact: secretsEnv
 
 - stage: build_and_tests
   jobs:
@@ -49,7 +49,7 @@ stages:
 
     steps:
     - download: current
-      artifact: buildOutput
+      artifact: secretsEnv
 
     - task: NodeTool@0
       displayName: 'Use Node 14.x'
@@ -70,13 +70,15 @@ stages:
 
     - script: |
         set -e
-        . $(Pipeline.Workspace)/activate    # Set env vars defined in setup.
+        find . -iname activate*
+        . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
+        printenv | sort
         lerna run ci
       displayName: 'Unit & Integration Tests'
 
     - script: |
         set -e
-        . $(Pipeline.Workspace)/activate    # Set env vars defined in setup.
+        . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
         lerna run e2e
       displayName: 'E2E Tests'
 
