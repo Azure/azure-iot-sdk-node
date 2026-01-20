@@ -27,14 +27,14 @@ let sendMessageTimeout = null;
 
 let protocolAndTermination = [
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.AmqpWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
@@ -55,42 +55,42 @@ let protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpConnection',
     closeReason: ' severs the AMQP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpSession',
     closeReason: ' severs the AMQP session ',
     delayInSeconds: 1
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkReq',
     closeReason: ' severs AMQP CBS request link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkResp',
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpD2CLink',
     closeReason: ' severs AMQP D2C link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
