@@ -95,6 +95,7 @@ describe('Authentication', function () {
       }].forEach(function (deviceIdConfig){
         it('Gets an UnauthorizedError over ' + Transport.name + ' if the Device ID is ' + deviceIdConfig.reason, function (testCallback) {
           const connectionString = DeviceConnectionString.createWithSharedAccessKey(hostName, deviceIdConfig.id, testDeviceKey);
+          console.log(">>> connectionString=", connectionString);
           const deviceClient = DeviceClient.fromConnectionString(connectionString, Transport);
           deviceClient.sendEvent(new Message('testMessage'), function (err) {
             if (err instanceof UnauthorizedError || err instanceof DeviceNotFoundError || err instanceof NotConnectedError) {
