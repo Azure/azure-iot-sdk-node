@@ -99,6 +99,12 @@ private_key=$(printf "%s" $(base64 -i ${script_dir}/secrets/certs/azure-iot-test
 # start deployment
 deploymentName="IoT-E2E-$(printf $RANDOM)"
 
+if [ -v AZURESUBSCRIPTION_CLIENT_ID ]; then
+    userObjectId=$(az ad sp show --id $AZURESUBSCRIPTION_CLIENT_ID --query id -o tsv)
+else
+    userObjectId=$(az ad signed-in-user show --query id -o tsv)
+fi
+
 printf "Deploying Azure resources...\n"
 deployment_out=$(az deployment sub create --only-show-errors \
     -f ${script_dir}/test-resources.bicep \
@@ -107,7 +113,7 @@ deployment_out=$(az deployment sub create --only-show-errors \
     -p \
         rgName=$rgName \
         alias=$(az account show --query '{user:user.name}' -o tsv) \
-        userObjectId=$(az ad sp show --id $(az account show --query user.assignedIdentity -o tsv) --query id -o tsv) \
+        userObjectId=$userObjectId \
         rootCertValue=$root_cert \
         rootCertPrivateKey=$private_key)
 
