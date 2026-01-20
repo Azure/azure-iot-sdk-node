@@ -19,11 +19,13 @@ function usage {
     printf "    --rg-name, -n     Name of the resource group to use. Will be created if needed. (required)\n"
     printf "                      Note: A resource group can only hold a single set of E2E resources.\n"
     printf "    --location, -l    Deploy to specific Azure region (optional, default is westus2)\n"
+    printf "    --unattended, -u  Runs the script without manual interaction.\n"
 }
 
 
 # process args
 location=westus2
+unattended=0
 
 while [ "$1" != "" ]; do
     echo "Processing argument '$1'"
@@ -39,6 +41,12 @@ while [ "$1" != "" ]; do
             rgName=$2
 	    echo "Using resource group '$rgName'"
             shift; shift;
+            ;;
+
+        -u | --unattended)
+            unattended=1
+	        echo "Running in unatteded mode."
+            shift;
             ;;
 
         -h | --help)
@@ -68,8 +76,10 @@ printf "Subscription: $(az account show --query "name" -o tsv)\n"
 printf "Resource Group: $rgName\n"
 printf "Region: $location\n"
 printf "(Use 'az account list' and 'az account set' to change the subscription.)\n"
-read -p 'Press [Enter] to continue or ctrl-c to break'
 
+if [ "$unattended" == "0" ]; then 
+    read -p 'Press [Enter] to continue or ctrl-c to break'
+fi
 
 # create certs
 printf "Creating certs...\n"
