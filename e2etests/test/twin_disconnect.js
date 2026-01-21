@@ -6,8 +6,8 @@
 let Registry = require('azure-iothub').Registry;
 let debug = require('debug')('e2etests:twin_disconnect');
 let Message = require('azure-iot-common').Message;
-let deviceMqtt = require('azure-iot-device-mqtt');
-let deviceAmqp = require('azure-iot-device-amqp');
+// let deviceMqtt = require('azure-iot-device-mqtt');
+// let deviceAmqp = require('azure-iot-device-amqp');
 let uuid = require('uuid');
 let NoRetry = require('azure-iot-common').NoRetry;
 let DeviceIdentityHelper = require('./device_identity_helper.js');
@@ -23,7 +23,9 @@ let doConnectTest = function doConnectTest(doIt) {
 //
 // The disconnect implementation for MQTT is implemented incorrectly.  Disabling the tests.
 //
+// TODO: review and remove these as Gwv2 does not support service-fault-injection commands.
 let protocolAndTermination = [
+/*
   {
     testEnabled: false,
     transport: deviceMqtt.Mqtt,
@@ -94,6 +96,7 @@ let protocolAndTermination = [
     closeReason: ' cleanly shutdowns AMQP connection ',
     delayInSeconds: 2
   },
+*/
 ];
 
 protocolAndTermination.forEach( function (testConfiguration) {

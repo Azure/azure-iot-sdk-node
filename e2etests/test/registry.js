@@ -171,10 +171,13 @@ describe('Registry', function () {
         let foundTwo = false;
 
         deviceList.forEach(function (device) {
+          debug("Device id:", device.deviceId);
           if (device.deviceId === deviceIdOnly.deviceId) {
+            debug("Found device id", deviceIdOnly.deviceId);
             foundOne = true;
           }
           if (device.deviceId === deviceIdWithKeys.deviceId) {
+            debug("Found device id", deviceIdWithKeys.deviceId);
             foundTwo = true;
           }
         });

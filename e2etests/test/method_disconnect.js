@@ -7,8 +7,8 @@ let debug = require('debug')('e2etests:methoddisconnect');
 let uuid = require('uuid');
 let assert = require('chai').assert;
 
-let deviceAmqp = require('azure-iot-device-amqp');
-let deviceMqtt = require('azure-iot-device-mqtt');
+// let deviceAmqp = require('azure-iot-device-amqp');
+// let deviceMqtt = require('azure-iot-device-mqtt');
 let Message = require('azure-iot-common').Message;
 let NoRetry = require('azure-iot-common').NoRetry;
 let serviceSdk = require('azure-iothub');
@@ -22,7 +22,9 @@ let doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
 };
 
+// TODO: review and remove these as Gwv2 does not support service-fault-injection commands.
 let protocolAndTermination = [
+/*
   {
     testEnabled: true,
     transport: deviceAmqp.Amqp,
@@ -107,6 +109,7 @@ let protocolAndTermination = [
     closeReason: ' cleanly shutdowns MQTT connection ',
     delayInSeconds: 2
   },
+*/
 ];
 
 
