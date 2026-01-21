@@ -117,7 +117,6 @@ deployment_out=$(az deployment sub create --only-show-errors \
 
 iot_hub_name=$(printf "$deployment_out" | jq -r .properties.outputs.iotHubName.value)
 dps_name=$(printf "$deployment_out" | jq -r .properties.outputs.dpsName.value)
-key_vault_name=$(printf "$deployment_out" | jq -r .properties.outputs.keyVaultName.value)
 iot_provisioning_device_idscope=$(printf "$deployment_out" | jq -r .properties.outputs.iotProvisioningDeviceIdScope.value)
 iot_provisioning_service_connection_string=$(printf "$deployment_out" | jq -r .properties.outputs.iotProvisioningServiceConnectionString.value)
 iothub_connection_string=$(printf "$deployment_out" | jq -r .properties.outputs.iotHubConnectionString.value)
@@ -230,4 +229,3 @@ printf "Bash: source secrets/env/activate\n"
 printf "PowerShell: secrets/env/activate.ps1\n"
 printf "CMD: secrets/env/activate.cmd\n"
 printf "Alternatively, you can retreive the environment variables from secrets/env/env.json\n"
-printf "or from the Key Vault named $key_vault_name.\n"
