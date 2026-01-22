@@ -306,6 +306,7 @@ describe('Amqp', function () {
         });
       });
     });
+
     describe('#connection failures', function () {
       it('invokes the disconnect handler with an error if the connection fails - returns to the disconnected state.', function (testCallback) {
         const amqp = new Amqp();

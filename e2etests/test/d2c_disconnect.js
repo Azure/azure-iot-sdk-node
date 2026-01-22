@@ -5,8 +5,8 @@
 
 let debug = require('debug')('e2etests:d2cdisconnect');
 let uuid = require('uuid');
-let deviceAmqp = require('azure-iot-device-amqp');
-let deviceMqtt = require('azure-iot-device-mqtt');
+// let deviceAmqp = require('azure-iot-device-amqp');
+// let deviceMqtt = require('azure-iot-device-mqtt');
 let Message = require('azure-iot-common').Message;
 let createDeviceClient = require('./testUtils.js').createDeviceClient;
 let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
@@ -25,16 +25,18 @@ let doConnectTest = function doConnectTest(doIt) {
 let numberOfD2CMessages = 3;
 let sendMessageTimeout = null;
 
+// TODO: review and remove these as Gwv2 does not support service-fault-injection commands.
 let protocolAndTermination = [
+/*
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.AmqpWs,
     operationType: 'KillTcp',
     closeReason: ' severs the TCP connection ',
@@ -55,42 +57,42 @@ let protocolAndTermination = [
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpConnection',
     closeReason: ' severs the AMQP connection ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpSession',
     closeReason: ' severs the AMQP session ',
     delayInSeconds: 1
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkReq',
     closeReason: ' severs AMQP CBS request link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpCBSLinkResp',
     closeReason: ' severs AMQP CBS response link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'KillAmqpD2CLink',
     closeReason: ' severs AMQP D2C link ',
     delayInSeconds: 2
   },
   {
-    testEnabled: true,
+    testEnabled: false,
     transport: deviceAmqp.Amqp,
     operationType: 'ShutDownAmqp',
     closeReason: ' cleanly shutdowns AMQP connection ',
@@ -103,6 +105,7 @@ let protocolAndTermination = [
     closeReason: ' cleanly shutdowns MQTT connection ',
     delayInSeconds: 2
   },
+*/
 ];
 
 

@@ -24,6 +24,7 @@ let ModuleClient = require('../dist/module_client').ModuleClient;
 [ModuleClient, DeviceClient].forEach(function (ClientCtor) {
   describe(ClientCtor.name, function () {
     let sharedKeyConnectionString = 'HostName=host;DeviceId=id;SharedAccessKey=key';
+
     describe('#constructor', function () {
       /*Tests_SRS_NODE_DEVICE_CLIENT_05_001: [The InternalClient constructor shall throw ReferenceError if the transport argument is falsy.]*/
       /*Tests_SRS_NODE_MODULE_CLIENT_05_001: [The InternalClient constructor shall throw ReferenceError if the transport argument is falsy.]*/
@@ -176,6 +177,7 @@ let ModuleClient = require('../dist/module_client').ModuleClient;
       beforeEach(function () {
         fs.writeFileSync('aziotfakepemfile', 'ca cert');
       });
+
       afterEach(function () {
         fs.unlinkSync('aziotfakepemfile');
       });
@@ -637,6 +639,7 @@ let ModuleClient = require('../dist/module_client').ModuleClient;
     describe('transport.on(\'disconnect\') handler', function () {
       let fakeTransport;
       let fakeRetryPolicy;
+
       beforeEach(function () {
         fakeRetryPolicy = {
           shouldRetry: function () { return true; },

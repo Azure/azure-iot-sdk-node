@@ -10,6 +10,7 @@ const CBS = require('../dist/amqp_cbs.js').ClaimsBasedSecurityAgent;
 
 describe('ClaimsBasedSecurityAgent', function () {
   afterEach(sinon.restore);
+
   describe('#attach', function () {
     /*Tests_SRS_NODE_AMQP_CBS_16_006: [If given as an argument, the `attach` method shall call `callback` with a standard `Error` object if any link fails to attach.]*/
     it('calls its callback with an error if can NOT establish a sender link', function (testCallback) {

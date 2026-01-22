@@ -79,6 +79,7 @@ describe('ModuleClient', function () {
     ['EdgeHubConnectionString', 'IotHubConnectionString'].forEach(function (envName) {
       describe('calls ModuleClient.fromConnectionString', function () {
         let stub;
+
         beforeEach(function () {
           stub = sinon.stub(ModuleClient, 'fromConnectionString').returns(42);
           process.env[envName] = 'cs';
@@ -145,6 +146,7 @@ describe('ModuleClient', function () {
 
       describe('fails if CA cert fs read fails', function () {
         let fsstub;
+
         beforeEach(function () {
           process.env[envName] = 'cs';
           process.env.EdgeModuleCACertificateFile = '/path/to/ca/cert/file';
@@ -908,6 +910,7 @@ describe('ModuleClient', function () {
   describe('transport.on(\'disconnect\') handler', function () {
     let fakeTransport;
     let fakeRetryPolicy;
+
     beforeEach(function () {
       fakeRetryPolicy = {
         shouldRetry: function () {

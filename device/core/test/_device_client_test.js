@@ -392,6 +392,7 @@ describe('Device Client', function () {
   describe('transport.on(\'disconnect\') handler', function () {
     let fakeTransport;
     let fakeRetryPolicy;
+
     beforeEach(function () {
       fakeRetryPolicy = {
         shouldRetry: function () { return true; },

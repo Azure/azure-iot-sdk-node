@@ -426,6 +426,7 @@ describe('MqttBase', function () {
 
   describe('#timeout', function () {
     const defaultTimeOutInSeconds = 30;
+
     it('completes message with a timeout at around default timeout number of seconds', function (done) {
       const clock = sinon.useFakeTimers();
       const fakemqtt = new ErrorFakeMqtt();

@@ -20,8 +20,8 @@ let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 let transports  = [
   require('azure-iot-device-amqp').Amqp,
   require('azure-iot-device-amqp').AmqpWs,
-  require('azure-iot-device-mqtt').Mqtt,
-  require('azure-iot-device-mqtt').MqttWs,
+  // require('azure-iot-device-mqtt').Mqtt, // TODO: investigate and re-enable.
+  // require('azure-iot-device-mqtt').MqttWs, // TODO: investigate and re-enable.
   require('azure-iot-device-http').Http
 ];
 

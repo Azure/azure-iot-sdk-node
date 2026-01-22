@@ -3,56 +3,111 @@ resources:
   - repo: self
     clean: true
 
-jobs:
-- job: Phase_2
-  displayName: Ubuntu 20.04 - Node 14.x
-  condition: succeededOrFailed()
-  pool:
-    vmImage: 'Ubuntu 20.04'
+stages:
+- stage: setup
+  jobs:
+  - job: create_azure_resources
+    pool:
+      vmImage: 'ubuntu-24.04'
+    steps:
+    - script: |
+        sudo apt-get install -y uuid
+        # Cut first 28 characters of uuid to make a resource group name no longer than 46 characters.
+        # deploy.sh fails if rgName is longer than 46 characters.
+        AZURE_RESOURCE_GROUP="nodenightlylinux$(uuid | tr -d '-' | cut -c1-29)"
 
-  steps:
-  - task: NodeTool@0
-    displayName: 'Use Node 14.x'
-    inputs:
-      versionSpec: '14.x'
+        # Export variables to other stages/jobs/steps.
+        echo "##vso[task.setvariable variable=AZURE_RESOURCE_GROUP;isOutput=true]$AZURE_RESOURCE_GROUP"
+      name: setResourceNames
+      displayName: Set Resource Names
 
-  - script: |
-       npm install --global node-gyp
-       npm install --global lerna@^6.6.2
-       npm install
-    displayName: 'Install Dependencies'
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'iot hub sdk service connection'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -e
 
-  - script: |
-        lerna bootstrap --hoist
-        lerna run build
-    displayName: 'Bootstrap & Build'
+          export AZURE_RESOURCE_GROUP=$(setResourceNames.AZURE_RESOURCE_GROUP)
 
-  - script: 'lerna run ci'
-    displayName: 'Unit & Integration Tests'
-    env:
-      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+          ./node_e2e_resources/deploy.sh -l "$AZURE_REGION" -n "$AZURE_RESOURCE_GROUP" -u
+          find . -iname activate*
+      displayName: Create Azure Resources
+      name: createAzureResources
 
-  - script: 'lerna run e2e'
-    displayName: 'E2E Tests'
-    env:
-      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
-      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
-      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
-      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
-      STORAGE_CONNECTION_STRING: $(STORAGE-CONNECTION-STRING)
-      IOT_PROVISIONING_DEVICE_IDSCOPE: $(IOT-PROVISIONING-DEVICE-IDSCOPE)
-      IOT_PROVISIONING_ROOT_CERT: $(IOT-PROVISIONING-ROOT-CERT)
-      IOT_PROVISIONING_ROOT_CERT_KEY: $(IOT-PROVISIONING-ROOT-CERT-KEY)
-      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
-      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
-      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
-      IOTHUB_CONN_STRING_INVALID_CERT: $(IOTHUB-CONN-STRING-INVALID-CERT)
-      IOTHUB_DEVICE_CONN_STRING_INVALID_CERT: $(IOTHUB-DEVICE-CONN-STRING-INVALID-CERT)
+    - publish: ./node_e2e_resources/secrets/env/activate
+      artifact: secretsEnv
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results | Mocha'
-    inputs:
-      testResultsFiles: '**/test-results.*.xml'
-      mergeTestResults: true
-      testRunTitle: 'E2E Tests - Linux'
+- stage: build_and_tests
+  jobs:
+  - job: Phase_2
+    displayName: Ubuntu 22.04 - Node 14.x
     condition: succeededOrFailed()
+    pool:
+      vmImage: 'ubuntu-22.04'
+
+    steps:
+    - download: current
+      artifact: secretsEnv
+
+    - task: NodeTool@0
+      displayName: 'Use Node 14.x'
+      inputs:
+        versionSpec: '14.x'
+
+    - script: |
+        npm install --global node-gyp
+        npm install --global lerna@^6.6.2
+        npm install
+      displayName: 'Install Dependencies'
+
+    - script: |
+          npx tsc --version
+          lerna bootstrap --hoist
+          lerna run build
+      displayName: 'Bootstrap & Build'
+
+    - script: |
+        set -e
+        . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
+        lerna run ci
+      displayName: 'Unit & Integration Tests'
+
+    - script: |
+        set -e
+        . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
+        lerna run e2e
+      displayName: 'E2E Tests'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results | Mocha'
+      inputs:
+        testResultsFiles: '**/test-results.*.xml'
+        mergeTestResults: true
+        testRunTitle: 'E2E Tests - Linux'
+      condition: succeededOrFailed()
+- stage: cleanup
+  dependsOn:
+  - setup
+  - build_and_tests
+  condition: always() # Run stage even if the pipeline run is cancelled.
+  jobs:
+  - job: destroy_azure_resource_group
+    condition: always() # Run job even if the pipeline run is cancelled.
+    pool:
+      vmImage: 'ubuntu-24.04'
+    variables:
+        AZURE_RESOURCE_GROUP: $[stageDependencies.setup.create_azure_resources.outputs['setResourceNames.AZURE_RESOURCE_GROUP']]
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'iot hub sdk service connection'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          # set -e
+
+          time az group delete --name $(AZURE_RESOURCE_GROUP) --yes
+      displayName: Destroy Azure Resource Group
+      condition: always() # Run step even if the pipeline run is cancelled.
