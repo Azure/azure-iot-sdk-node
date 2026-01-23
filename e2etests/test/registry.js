@@ -42,6 +42,7 @@ let deviceIdWithThumbprints = {
 describe('Registry', function () {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
   it('Creates a device with only a deviceId and gets it', function (done){
     let registry = Registry.fromConnectionString(hubConnectionString);
 
@@ -170,10 +171,13 @@ describe('Registry', function () {
         let foundTwo = false;
 
         deviceList.forEach(function (device) {
+          debug("Device id:", device.deviceId);
           if (device.deviceId === deviceIdOnly.deviceId) {
+            debug("Found device id", deviceIdOnly.deviceId);
             foundOne = true;
           }
           if (device.deviceId === deviceIdWithKeys.deviceId) {
+            debug("Found device id", deviceIdWithKeys.deviceId);
             foundTwo = true;
           }
         });

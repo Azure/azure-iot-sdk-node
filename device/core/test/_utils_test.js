@@ -12,6 +12,7 @@ let packageJson = require('../package.json');
 describe('getUserAgentString', function () {
   let fakePlatformString = 'fakePlatformString';
   let fakeProductInfoString = 'fakeProductInfoString';
+
   before(function () {
     sinon.stub(core, 'getAgentPlatformString').callsArgWith(0, fakePlatformString);
   });

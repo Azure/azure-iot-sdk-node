@@ -12,7 +12,6 @@
     "debug": "^4.3.1"
   },
   "devDependencies": {
-    "@types/node": "^16.10.2",
     "chai": "^4.3.3",
     "mocha": "^9.2.1",
     "nyc": "^15.0.0",
@@ -27,8 +26,7 @@
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-no-only-tests": "^3.1.0",
     "eslint-plugin-promise": "^6.1.1",
-    "eslint-plugin-security": "^1.5.0",
-    "typescript": "4.4.4"
+    "eslint-plugin-security": "^1.5.0"
   },
   "scripts": {
     "srclint": "eslint src --ext .ts -f visualstudio",

@@ -88,7 +88,7 @@ describe('Authentication', function () {
     transports.forEach(function (Transport) {
       [{
         reason: 'improperly formed',
-        id: testDeviceId + '//foo'
+        id: testDeviceId + '#+foo'
       },{
         reason: 'does not exist',
         id: testDeviceId + 'foo'
@@ -114,6 +114,7 @@ describe('Authentication', function () {
     let x509badCert = '';
     let x509badKey = '';
     let x509testConnectionString = '';
+
     before(function (beforeCallback) {
       pem.createCertificate({ selfSigned: true, days: 1 }, function (err, certConstructionResult) {
         if (err) {
