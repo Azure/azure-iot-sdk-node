@@ -119,17 +119,17 @@ stages:
         publishLocation: 'Container'
 
     - task: AzurePowerShell@5
-        displayName: 'Upload files to partner drop folder'
-        condition: coalesce(variables.release, False)
-        inputs:
-          azureSubscription: 'azuresdkpartnerdrops'
-          ScriptType: 'InlineScript'
-          azurePowerShellVersion: LatestVersion 
-          pwsh: true
-          Inline: |
-            azcopy copy $(Build.ArtifactStagingDirectory)\_out\* "https://azuresdkpartnerdrops.blob.core.windows.net/drops/azure-iot-sdk/node/"
-        env: 
-          AZCOPY_AUTO_LOGIN_TYPE: 'PSCRED'
+      displayName: 'Upload files to partner drop folder'
+      condition: coalesce(variables.release, False)
+      inputs:
+        azureSubscription: 'azuresdkpartnerdrops'
+        ScriptType: 'InlineScript'
+        azurePowerShellVersion: LatestVersion 
+        pwsh: true
+        Inline: |
+          azcopy copy $(Build.ArtifactStagingDirectory)\_out\* "https://azuresdkpartnerdrops.blob.core.windows.net/drops/azure-iot-sdk/node/"
+      env: 
+        AZCOPY_AUTO_LOGIN_TYPE: 'PSCRED'
 - stage: cleanup
   dependsOn:
   - setup
