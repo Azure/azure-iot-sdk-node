@@ -283,7 +283,7 @@ export class MqttBase extends EventEmitter {
             // disconnectClient can be set to true to cause messages to be properly dropped,
             // and thus re-sent. Making this the default is under investigation.
             debug('disconnecting mqtt client');
-            this._disconnectClient(this._options.mqtt?.forceDisconnect ?? false, () => {
+            this._disconnectClient(this._options?.mqtt?.forceDisconnect ?? false, () => {
               clearTimeout(disconnectTimeout);
               if (!switched) {
                 debug('mqtt client disconnected - reconnecting');
