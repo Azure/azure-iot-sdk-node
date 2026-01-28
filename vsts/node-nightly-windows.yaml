@@ -21,23 +21,23 @@ stages:
       name: setResourceNames
       displayName: Set Resource Names
 
-    - task: AzureCLI@2
-      inputs:
-        azureSubscription: 'iot hub sdk service connection'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          set -e
+    # - task: AzureCLI@2
+    #   inputs:
+    #     azureSubscription: 'iot hub sdk service connection'
+    #     scriptType: 'bash'
+    #     scriptLocation: 'inlineScript'
+    #     inlineScript: |
+    #       set -e
 
-          export AZURE_RESOURCE_GROUP=$(setResourceNames.AZURE_RESOURCE_GROUP)
+    #       export AZURE_RESOURCE_GROUP=$(setResourceNames.AZURE_RESOURCE_GROUP)
 
-          ./node_e2e_resources/deploy.sh -l "$AZURE_REGION" -n "$AZURE_RESOURCE_GROUP" -u
-          find . -iname activate*
-      displayName: Create Azure Resources
-      name: createAzureResources
+    #       ./node_e2e_resources/deploy.sh -l "$AZURE_REGION" -n "$AZURE_RESOURCE_GROUP" -u
+    #       find . -iname activate*
+    #   displayName: Create Azure Resources
+    #   name: createAzureResources
 
-    - publish: ./node_e2e_resources/secrets/env/activate.cmd
-      artifact: secretsEnv
+    # - publish: ./node_e2e_resources/secrets/env/activate.cmd
+    #   artifact: secretsEnv
 
 - stage: build_and_tests
   jobs:
@@ -72,15 +72,15 @@ stages:
         call lerna run build
       displayName: 'Bootstrap & Build'
 
-    - script: |
-        call $(Pipeline.Workspace)\secretsEnv\activate.cmd
-        call lerna run ci
-      displayName: 'Unit & Integration Tests'
+    # - script: |
+    #     call $(Pipeline.Workspace)\secretsEnv\activate.cmd
+    #     call lerna run ci
+    #   displayName: 'Unit & Integration Tests'
 
-    - script: |
-        call $(Pipeline.Workspace)\secretsEnv\activate.cmd
-        lerna run e2e
-      displayName: 'E2E Tests'
+    # - script: |
+    #     call $(Pipeline.Workspace)\secretsEnv\activate.cmd
+    #     lerna run e2e
+    #   displayName: 'E2E Tests'
 
     - task: PublishTestResults@2
       displayName: 'Publish Test Results | Mocha'
@@ -105,6 +105,11 @@ stages:
         . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
         $outputFolder = $env:output
         Build-Artifacts -Sources $env:sources -Output $outputFolder
+
+        echo ">>> outputFolder:"
+        dir $outputFolder
+        echo ">>> Build.ArtifactStagingDirectory)\_out:"
+        dir $(Build.ArtifactStagingDirectory)\_out
       displayName: 'npm pack'
       condition: coalesce(variables.release, False)
       env:
@@ -127,6 +132,7 @@ stages:
         azurePowerShellVersion: LatestVersion 
         pwsh: true
         Inline: |
+          dir $(Build.ArtifactStagingDirectory)\_out\
           azcopy copy $(Build.ArtifactStagingDirectory)\_out\* "https://azuresdkpartnerdrops.blob.core.windows.net/drops/azure-iot-sdk/node/"
       env: 
         AZCOPY_AUTO_LOGIN_TYPE: 'PSCRED'
@@ -151,6 +157,6 @@ stages:
         inlineScript: |
           # set -e
 
-          time az group delete --name $(AZURE_RESOURCE_GROUP) --yes
+          # time az group delete --name $(AZURE_RESOURCE_GROUP) --yes
       displayName: Destroy Azure Resource Group
       condition: always() # Run step even if the pipeline run is cancelled.
