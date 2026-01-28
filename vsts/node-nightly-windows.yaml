@@ -47,8 +47,8 @@ stages:
     pool:
       vmImage: 'windows-latest'
     steps:
-    - download: current
-      artifact: secretsEnv
+    # - download: current
+    #   artifact: secretsEnv
 
     - task: UsePythonVersion@0
       inputs:
