@@ -118,15 +118,18 @@ stages:
         ArtifactName: drop
         publishLocation: 'Container'
 
-    # - task: AzureFileCopy@2
-    #   displayName: 'Copy Release Artifacts to Partner Release Pipeline'
-    #   condition: coalesce(variables.release, False)
-    #   inputs:
-    #     SourcePath: $(Build.ArtifactStagingDirectory)\_out
-    #     azureSubscription: azuresdkpartnerdrops
-    #     Destination: AzureBlob
-    #     storage: azuresdkpartnerdrops
-    #     ContainerName: 'drops/azure-iot-sdk/node/'
+    - task: AzurePowerShell@5
+      displayName: 'Upload files to partner drop folder'
+      condition: coalesce(variables.release, False)
+      inputs:
+        azureSubscription: 'azuresdkpartnerdrops'
+        ScriptType: 'InlineScript'
+        azurePowerShellVersion: LatestVersion 
+        pwsh: true
+        Inline: |
+          azcopy copy $(Build.ArtifactStagingDirectory)\_out\* "https://azuresdkpartnerdrops.blob.core.windows.net/drops/azure-iot-sdk/node/"
+      env: 
+        AZCOPY_AUTO_LOGIN_TYPE: 'PSCRED'
 - stage: cleanup
   dependsOn:
   - setup
