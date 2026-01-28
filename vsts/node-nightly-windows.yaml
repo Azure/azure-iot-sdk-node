@@ -134,10 +134,10 @@ stages:
         Inline: |
           echo ">>> printenv:"
           printenv | sort
-          echo "<<<" printenv"
-          echo ">>> Build.ArtifactStagingDirectory)\_out\:"
+          echo "<<< printenv"
+          echo ">>> Build.ArtifactStagingDirectory\_out\:"
           dir $(Build.ArtifactStagingDirectory)\_out\
-          echo "<<< Build.ArtifactStagingDirectory)\_out\"
+          echo "<<< Build.ArtifactStagingDirectory\_out\"
           azcopy copy $(Build.ArtifactStagingDirectory)\_out\* "https://azuresdkpartnerdrops.blob.core.windows.net/drops/azure-iot-sdk/node/" --recursive=true
       env: 
         AZCOPY_AUTO_LOGIN_TYPE: 'PSCRED'
