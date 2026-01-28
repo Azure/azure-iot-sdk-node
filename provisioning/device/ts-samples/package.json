@@ -7,17 +7,17 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iot-device": "1.18.3",
-    "azure-iot-device-amqp": "1.14.3",
-    "azure-iot-device-http": "1.14.3",
-    "azure-iot-device-mqtt": "1.16.3",
-    "azure-iot-provisioning-device": "1.9.1",
-    "azure-iot-provisioning-device-amqp": "1.9.1",
-    "azure-iot-provisioning-device-http": "1.9.1",
-    "azure-iot-provisioning-device-mqtt": "1.8.1",
-    "azure-iot-security-symmetric-key": "1.8.2",
-    "azure-iot-security-tpm": "1.9.2",
-    "azure-iot-security-x509": "1.8.2"
+    "azure-iot-device": "1.18.4",
+    "azure-iot-device-amqp": "1.14.4",
+    "azure-iot-device-http": "1.14.4",
+    "azure-iot-device-mqtt": "1.16.4",
+    "azure-iot-provisioning-device": "1.9.2",
+    "azure-iot-provisioning-device-amqp": "1.9.2",
+    "azure-iot-provisioning-device-http": "1.9.2",
+    "azure-iot-provisioning-device-mqtt": "1.8.2",
+    "azure-iot-security-symmetric-key": "1.8.3",
+    "azure-iot-security-tpm": "1.9.3",
+    "azure-iot-security-x509": "1.8.3"
   },
   "devDependencies": {
     "encoding": "^0.1.13",
