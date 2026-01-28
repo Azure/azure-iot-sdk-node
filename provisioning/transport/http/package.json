@@ -1,6 +1,6 @@
 {
   "name": "azure-iot-provisioning-device-http",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "HTTP transport for Azure Device Provisioning SDK",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -9,9 +9,9 @@
   "dependencies": {
     "async": "^3.2.3",
     "es5-ext": "0.10.53",
-    "azure-iot-common": "1.13.2",
-    "azure-iot-http-base": "1.12.2",
-    "azure-iot-provisioning-device": "1.9.1",
+    "azure-iot-common": "1.13.3",
+    "azure-iot-http-base": "1.12.3",
+    "azure-iot-provisioning-device": "1.9.2",
     "debug": "^4.3.1",
     "machina": "^4.0.2"
   },
