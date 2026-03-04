@@ -103,6 +103,11 @@ else
     userObjectId=$(az ad signed-in-user show --query id -o tsv)
 fi
 
+cat > ./destroy_deployment.sh << EOF
+#!/bin/bash
+az deployment sub delete --name $deploymentName --no-wait
+EOF
+
 printf "Deploying Azure resources...\n"
 deployment_out=$(az deployment sub create --only-show-errors \
     -f ${script_dir}/test-resources.bicep \
