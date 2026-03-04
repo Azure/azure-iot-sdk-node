@@ -157,6 +157,6 @@ stages:
         inlineScript: |
           # set -e
 
-          . "$(Pipeline.Workspace)/cleanup-scripts/destroy_deployment.sh"
+          . "$(Pipeline.Workspace)/cleanup-script/destroy_deployment.sh"
       displayName: Destroy Azure Resource Group
       condition: always() # Run step even if the pipeline run is cancelled.
