@@ -35,7 +35,10 @@ stages:
           find . -iname activate*
       displayName: Create Azure Resources
       name: createAzureResources
-
+    - publish: ./destroy_deployment.sh
+      artifact: cleanup-script
+      displayName: Publish artifact (cleanup script)
+      condition: always()
     - publish: ./node_e2e_resources/secrets/env/activate.cmd
       artifact: secretsEnv
 
@@ -143,6 +146,9 @@ stages:
     variables:
         AZURE_RESOURCE_GROUP: $[stageDependencies.setup.create_azure_resources.outputs['setResourceNames.AZURE_RESOURCE_GROUP']]
     steps:
+    - download: current
+      artifact: cleanup-script
+      displayName: Download artifact (cleanup script)
     - task: AzureCLI@2
       inputs:
         azureSubscription: 'iot hub sdk service connection'
@@ -151,6 +157,6 @@ stages:
         inlineScript: |
           # set -e
 
-          time az group delete --name $(AZURE_RESOURCE_GROUP) --yes
+          . "$(Pipeline.Workspace)/cleanup-script/destroy_deployment.sh"
       displayName: Destroy Azure Resource Group
       condition: always() # Run step even if the pipeline run is cancelled.
