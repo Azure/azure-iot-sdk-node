@@ -105,6 +105,7 @@ fi
 
 cat > ./destroy_deployment.sh << EOF
 #!/bin/bash
+az group delete --name $rgName --yes --no-wait
 az deployment sub delete --name $deploymentName --no-wait
 EOF
 
