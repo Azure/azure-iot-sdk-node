@@ -37,7 +37,7 @@ if (edgeCaCertPath === '') {
 // fromConnectionString must specify a transport constructor, coming from any transport package.
 const client: Client = Client.fromConnectionString(deviceConnectionString, Protocol);
 
-let sendInterval: NodeJS.Timer;
+let sendInterval: NodeJS.Timeout;
 const connectCallback = function (err?: Error): void {
   if (err) {
     console.error('Could not connect: ' + err.message);

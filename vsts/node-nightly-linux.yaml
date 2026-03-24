@@ -45,7 +45,7 @@ stages:
 - stage: build_and_tests
   jobs:
   - job: Phase_2
-    displayName: Ubuntu 22.04 - Node 14.x
+    displayName: Ubuntu 22.04 - Node 18.x
     condition: succeededOrFailed()
     pool:
       vmImage: 'ubuntu-22.04'
@@ -55,9 +55,9 @@ stages:
       artifact: secretsEnv
 
     - task: NodeTool@0
-      displayName: 'Use Node 14.x'
+      displayName: 'Use Node 18.x'
       inputs:
-        versionSpec: '14.x'
+        versionSpec: '18.x'
 
     - script: |
         npm install --global node-gyp
@@ -67,7 +67,7 @@ stages:
 
     - script: |
           npx tsc --version
-          lerna bootstrap --hoist
+          lerna bootstrap --hoist -- --ignore-scripts
           lerna run build
       displayName: 'Bootstrap & Build'
 

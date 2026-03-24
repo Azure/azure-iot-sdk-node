@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/azure/azure-iot-sdk-node#readme",
   "devDependencies": {
-    "@types/uuid": "^3.4.5",
+    "@types/uuid": "^9.0.0",
     "encoding": "^0.1.13",
     "eslint": "^8.26.0",
     "@typescript-eslint/eslint-plugin": "^5.41.0",

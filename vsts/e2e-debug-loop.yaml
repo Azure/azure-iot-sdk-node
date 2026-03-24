@@ -10,9 +10,9 @@ jobs:
 
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 18.x'
     inputs:
-      versionSpec: '12.x'
+      versionSpec: '18.x'
 
   - script: |
       npm install --global node-gyp
@@ -21,7 +21,7 @@ jobs:
     displayName: 'Install Tools'
 
   - script: |
-       lerna bootstrap --hoist
+       lerna bootstrap --hoist -- --ignore-scripts
        lerna run build
     displayName: 'Bootstrap & Build'
 
@@ -62,9 +62,9 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 18.x'
     inputs:
-      versionSpec: 12.x
+      versionSpec: '18.x'
 
   - powershell: |
       runas.exe /savecred /user:administrator
@@ -74,7 +74,7 @@ jobs:
     displayName: 'Install Tools'
 
   - script: |
-       call lerna bootstrap --hoist
+       call lerna bootstrap --hoist -- --ignore-scripts
        call lerna run build
     displayName: 'Bootstrap & Build'
 

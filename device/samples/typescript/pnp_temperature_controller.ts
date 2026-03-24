@@ -24,9 +24,9 @@ const thermostat1ComponentName = 'thermostat1';
 const thermostat2ComponentName = 'thermostat2';
 const deviceInfoComponentName = 'deviceInformation';
 const commandComponentCommandNameSeparator = '*';
-let intervalToken1: NodeJS.Timer;
-let intervalToken2: NodeJS.Timer;
-let intervalToken3: NodeJS.Timer;
+let intervalToken1: NodeJS.Timeout;
+let intervalToken2: NodeJS.Timeout;
+let intervalToken3: NodeJS.Timeout;
 
 class TemperatureSensor {
   currTemp: number;

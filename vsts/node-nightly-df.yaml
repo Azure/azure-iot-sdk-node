@@ -5,16 +5,16 @@ resources:
 
 jobs:
 - job: Phase_2
-  displayName: Ubuntu 20.04 - Node 12.x
+  displayName: Ubuntu 20.04 - Node 18.x
   condition: succeededOrFailed()
   pool:
     vmImage: 'Ubuntu 20.04'
 
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 18.x'
     inputs:
-      versionSpec: '12.x'
+      versionSpec: '18.x'
 
   - script: |
        npm install --global node-gyp
@@ -23,7 +23,7 @@ jobs:
     displayName: 'Install Dependencies'
 
   - script: |
-        lerna bootstrap --hoist
+        lerna bootstrap --hoist -- --ignore-scripts
         lerna run build
     displayName: 'Bootstrap & Build'
 
@@ -58,15 +58,15 @@ jobs:
     condition: succeededOrFailed()
 
 - job: Phase_1
-  displayName: 'Windows Node 12.x'
+  displayName: 'Windows Node 18.x'
   condition: succeededOrFailed()
   pool:
     vmImage: 'vs2017-win2016'
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 12.x'
+    displayName: 'Use Node 18.x'
     inputs:
-      versionSpec: '12.x'
+      versionSpec: '18.x'
 
   - powershell: |
        runas.exe /savecred /user:administrator
@@ -76,7 +76,7 @@ jobs:
     displayName: 'Install Dependencies'
 
   - script: |
-       call lerna bootstrap --hoist
+       call lerna bootstrap --hoist -- --ignore-scripts
        call lerna run build
     displayName: 'Bootstrap & Build'
 

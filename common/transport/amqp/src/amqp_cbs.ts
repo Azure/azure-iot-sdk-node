@@ -51,7 +51,7 @@ class PutTokenStatus {
     outstandingPutTokens: PutTokenOperation[] = [];
     numberOfSecondsToTimeout: number = 120;
     putTokenTimeOutExaminationInterval: number = 10000;
-    timeoutTimer: NodeJS.Timer;
+    timeoutTimer: NodeJS.Timeout;
 }
 
 /**
