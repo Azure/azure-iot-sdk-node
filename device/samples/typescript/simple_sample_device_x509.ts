@@ -45,7 +45,7 @@ const client: Client = Client.fromConnectionString(
   Protocol
 );
 
-let sendInterval: NodeJS.Timer;
+let sendInterval: NodeJS.Timeout;
 const connectCallback = function (err?: Error): void {
   if (err) {
     console.error('Could not connect: ' + err.message);
@@ -90,7 +90,7 @@ const connectCallback = function (err?: Error): void {
 
     client.on('disconnect', function (): void {
       clearInterval(sendInterval);
-      sendInterval = (null as unknown as NodeJS.Timer);
+      sendInterval = (null as unknown as NodeJS.Timeout);
       client.removeAllListeners();
       client.open(connectCallback);
     });

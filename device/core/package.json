@@ -32,9 +32,9 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-security": "^1.5.0",
     "chai": "^4.3.3",
-    "mocha": "^9.2.1",
-    "nyc": "^15.0.0",
-    "sinon": "^11.1.2",
+    "mocha": "^10.7.0",
+    "nyc": "^17.0.0",
+    "sinon": "^17.0.0",
     "source-map-support": "^0.5.16",
     "uuid": "^8.3.2"
   },
@@ -82,7 +82,7 @@
     "bail": true
   },
   "engines": {
-    "node": ">= 14.0.0"
+    "node": ">= 18.0.0"
   },
   "repository": {
     "type": "git",

@@ -15,7 +15,7 @@ export class TpmAuthenticationProvider extends EventEmitter implements Authentic
   automaticRenewal: boolean = true;
   private _tokenValidTimeInSeconds: number = 3600;   // 1 hour
   private _tokenRenewalMarginInSeconds: number = 900; // 15 minutes
-  private _renewalTimeout: NodeJS.Timer;
+  private _renewalTimeout: NodeJS.Timeout;
   private _fsm: machina.Fsm;
 
   private _credentials: TransportConfig;

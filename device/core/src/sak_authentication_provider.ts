@@ -19,7 +19,7 @@ export class SharedAccessKeyAuthenticationProvider extends EventEmitter implemen
   private _tokenRenewalMarginInSeconds: number = 900; // 15 minutes
 
   private _currentTokenExpiryTimeInSeconds: number;
-  private _renewalTimeout: NodeJS.Timer;
+  private _renewalTimeout: NodeJS.Timeout;
 
   /**
    * @private

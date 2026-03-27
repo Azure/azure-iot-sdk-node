@@ -423,7 +423,7 @@ export class TpmSecurityClient  {
     //
     // Un-marshal components of the activation blob received from the provisioning service.
     //
-    const buf: tss.TpmBuffer = activationBlob instanceof Buffer ? new tss.TpmBuffer(activationBlob) : activationBlob;
+    const buf: tss.TpmBuffer = Buffer.isBuffer(activationBlob) ? new tss.TpmBuffer(activationBlob) : activationBlob as tss.TpmBuffer;
 
     const credentialBlob: tss.TPMS_ID_OBJECT = buf.createSizedObj(tss.TPMS_ID_OBJECT);
     const encodedSecret: tss.TPM2B_ENCRYPTED_SECRET = buf.createObj(tss.TPM2B_ENCRYPTED_SECRET);

@@ -20,16 +20,16 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "mocha": "^9.2.1",
-    "typescript": "4.9.5",
-    "@types/node": "14.18.63"
+    "mocha": "^10.7.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^18.19.0"
   },
   "scripts": {
     "lint": "eslint test --ext .js -f visualstudio",
     "test": "../node_modules/mocha/bin/_mocha --reporter dot ./test/**/*.js"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",

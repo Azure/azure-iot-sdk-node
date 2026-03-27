@@ -115,7 +115,7 @@ client.open(function (err?: Error): void {
     });
 
     // start event data send routing
-    const sendInterval: NodeJS.Timer = setInterval(function (): void {
+    const sendInterval: NodeJS.Timeout = setInterval(function (): void {
       temperature += generateRandomIncrement();
       externalTemperature += generateRandomIncrement();
       humidity += generateRandomIncrement();

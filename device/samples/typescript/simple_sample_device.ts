@@ -33,7 +33,7 @@ async function asyncMain(): Promise<void> {
 
 function disconnectHandler(): void {
   clearInterval(sendInterval);
-  sendInterval = (null as unknown as NodeJS.Timer);
+  sendInterval = (null as unknown as NodeJS.Timeout);
 
   client.open().catch((err) => {
     console.error(err.message);

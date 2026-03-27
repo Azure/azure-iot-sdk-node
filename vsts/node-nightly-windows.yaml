@@ -45,7 +45,7 @@ stages:
 - stage: build_and_tests
   jobs:
   - job: Phase_1
-    displayName: 'Windows Node 14.x'
+    displayName: 'Windows Node 18.x'
     condition: succeededOrFailed()
     pool:
       vmImage: 'windows-latest'
@@ -59,19 +59,19 @@ stages:
         addToPath: true
 
     - task: NodeTool@0
-      displayName: 'Use Node 14.x'
+      displayName: 'Use Node 18.x'
       inputs:
-        versionSpec: '14.x'
+        versionSpec: '18.x'
 
     - powershell: |
         runas.exe /savecred /user:administrator
-        npm install --global node-gyp@6.1.0
+        npm install --global node-gyp
         npm install --global lerna@^6.6.2
         npm install
       displayName: 'Install Dependencies'
 
     - script: |
-        call lerna bootstrap --hoist
+        call lerna bootstrap --hoist -- --ignore-scripts
         call lerna run build
       displayName: 'Bootstrap & Build'
 

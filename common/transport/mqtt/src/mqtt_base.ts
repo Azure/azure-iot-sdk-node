@@ -46,7 +46,7 @@ class OnTheWireMessageContainer {
   // insertion.
   //
   private _onTheWire: Map<number, OnTheWireMessage>;
-  private _timeoutTimer: NodeJS.Timer;
+  private _timeoutTimer: NodeJS.Timeout;
   private _timeoutInSeconds: number;
   private _identifier: number;
 

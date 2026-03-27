@@ -70,8 +70,8 @@ export class Http extends EventEmitter implements DeviceTransport {
   private _http: Base;
   private _opts: HttpReceiverOptions;
   private _cronObj: any;
-  private _intervalObj: NodeJS.Timer;
-  private _timeoutObj: NodeJS.Timer;
+  private _intervalObj: NodeJS.Timeout;
+  private _timeoutObj: NodeJS.Timeout;
   private _receiverStarted: boolean;
   private _userAgentString: string;
   private _productInfo: string;
