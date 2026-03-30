@@ -14,6 +14,9 @@
     "async": "^3.2.3",
     "azure-iothub": "^1.16.1"
   },
+  "overrides": {
+    "form-data": "^4.0.5"
+  },
   "devDependencies": {
     "encoding": "^0.1.13",
     "eslint": "^8.26.0",
