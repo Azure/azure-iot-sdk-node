@@ -18,14 +18,12 @@ jobs:
 
   - script: |
        npm install --global node-gyp
-       npm install --global lerna@^6.6.2
-       npm install
+       npm install --ignore-scripts
     displayName: 'Install Dependencies'
 
   - script: |
-        lerna bootstrap --hoist -- --ignore-scripts
-        lerna run build
-    displayName: 'Bootstrap & Build'
+        npx lerna run build
+    displayName: 'Build'
 
   - script: 'lerna run ci'
     displayName: 'Unit & Integration Tests'
@@ -71,14 +69,12 @@ jobs:
   - powershell: |
        runas.exe /savecred /user:administrator
        npm install --global node-gyp
-       npm install --global lerna
-       npm install
+       npm install --ignore-scripts
     displayName: 'Install Dependencies'
 
   - script: |
-       call lerna bootstrap --hoist -- --ignore-scripts
-       call lerna run build
-    displayName: 'Bootstrap & Build'
+       call npx lerna run build
+    displayName: 'Build'
 
   - script: 'call lerna run ci'
     displayName: 'Unit & Integration Tests'

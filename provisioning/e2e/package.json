@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "^3.2.3",
-    "es5-ext": "0.10.53",
+    "es5-ext": "^0.10.64",
     "azure-iot-common": "1.13.3",
     "azure-iot-provisioning-device": "1.9.2",
     "azure-iot-provisioning-device-amqp": "1.9.2",
@@ -16,7 +16,7 @@
     "azure-iot-security-symmetric-key": "1.8.3",
     "azure-iot-security-tpm": "1.9.3",
     "azure-iot-security-x509": "1.8.3",
-    "azure-iothub": "1.15.1",
+    "azure-iothub": "1.16.6",
     "chai": "^4.3.3",
     "debug": "^4.3.1",
     "jshint": "^2.13.4",
