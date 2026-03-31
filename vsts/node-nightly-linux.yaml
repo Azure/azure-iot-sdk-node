@@ -61,15 +61,13 @@ stages:
 
     - script: |
         npm install --global node-gyp
-        npm install --global lerna@^6.6.2
-        npm install
+        npm install --ignore-scripts
       displayName: 'Install Dependencies'
 
     - script: |
           npx tsc --version
-          lerna bootstrap --hoist -- --ignore-scripts
-          lerna run build
-      displayName: 'Bootstrap & Build'
+          npx lerna run build
+      displayName: 'Build'
 
     - script: |
         set -e

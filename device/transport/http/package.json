@@ -15,7 +15,7 @@
     "node-crontab": "^0.0.8"
   },
   "devDependencies": {
-    "azure-iothub": "1.15.1",
+    "azure-iothub": "1.16.6",
     "eslint": "^8.26.0",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
