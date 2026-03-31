@@ -4,14 +4,15 @@
 		"codespaceinstall": "(cd device/samples/javascript && npm install & cd ../../../) && (cd device/samples/javascript/pnp && npm install & cd ../../../../) && (cd device/samples/typescript && npm install && npm run build)"
 	},
 	"devDependencies": {
-		"lerna": "^5.6.2",
+		"lerna": "^9.0.7",
 		"mocha": "^10.7.0",
 		"typescript": "^5.5.0",
 		"@types/node": "^18.19.0"
 	},
 	"overrides": {
 		"typescript": "^5.5.0",
-		"@types/node": "^18.19.0"
+		"@types/node": "^18.19.0",
+		"serialize-javascript": ">=7.0.5"
 	},
 	"engines": {
 		"node": ">=18.0.0"
@@ -40,6 +41,6 @@
 	},
 	"dependencies": {
 		"eslint-plugin-security": "^1.5.0",
-		"node-gyp": "^10.0.0"
+		"node-gyp": "^12.2.0"
 	}
 }
