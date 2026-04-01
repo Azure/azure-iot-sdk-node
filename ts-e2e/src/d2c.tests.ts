@@ -41,7 +41,10 @@ describe('D2C', function () {
         const startAfterTime = new Date(Date.now() - 5000);
         const onEventHubMessage = (receivedMsg: ReceivedEventData) => {
           debug('EH Client: Message received');
-          if (uuidBuffer.toString(receivedMsg.messageId) === testMessage.messageId) {
+          const msgId = Buffer.isBuffer(receivedMsg.messageId)
+            ? uuidBuffer.toString(receivedMsg.messageId)
+            : String(receivedMsg.messageId);
+          if (msgId === testMessage.messageId) {
             debug('EH Client: Message OK');
             receiveOK = true;
             if (sendOK && receiveOK) {
