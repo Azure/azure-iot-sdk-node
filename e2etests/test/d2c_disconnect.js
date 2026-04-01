@@ -10,13 +10,12 @@ let uuid = require('uuid');
 let Message = require('azure-iot-common').Message;
 let createDeviceClient = require('./testUtils.js').createDeviceClient;
 let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-let eventHubClient = require('@azure/event-hubs').EventHubClient;
-let EventPosition = require('@azure/event-hubs').EventPosition;
+let EventHubConsumerClient = require('@azure/event-hubs').EventHubConsumerClient;
 let NoRetry = require('azure-iot-common').NoRetry;
 let DeviceIdentityHelper = require('./device_identity_helper.js');
 let Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 
-let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let eventHubConnectionString = process.env.EVENTHUB_CONNECTION_STRING;
 
 let doConnectTest = function doConnectTest(doIt) {
   return doIt ? it : it.skip;
@@ -164,9 +163,9 @@ protocolAndTermination.forEach( function (testConfiguration) {
         testCallback(err);
       };
       let onEventHubMessage = function (eventData) {
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+        if (eventData.systemProperties['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
-          let received_message_uuid = eventData.properties && eventData.properties.message_id;
+          let received_message_uuid = eventData.messageId;
           if (Buffer.isBuffer(received_message_uuid)) {
             const str = received_message_uuid.toString('hex');
             received_message_uuid = `${str.slice(0, 8)}-${str.slice(8, 12)}-${str.slice(12, 16)}-${str.slice(16, 20)}-${str.slice(20)}`;
@@ -187,31 +186,25 @@ protocolAndTermination.forEach( function (testConfiguration) {
             debug('eventhubs client: eventData doesn\'t match: ' + originalMessage.messageId);
           }
         } else {
-          debug('eventhubs client: ignoring message from: ' + eventData.annotations['iothub-connection-device-id']);
+          debug('eventhubs client: ignoring message from: ' + eventData.systemProperties['iothub-connection-device-id']);
         }
       };
 
-      eventHubClient.createFromIotHubConnectionString(hubConnectionString)
-      .then(function (client) {
-        ehClient = client;
-        rdv.imIn('ehClient');
-        deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
-        deviceClient.setRetryPolicy(new NoRetry());
-      }).then(function () {
-        debug('eventhubs client: connected. getting partition ids');
-        return ehClient.getPartitionIds();
-      }).then(function (partitionIds) {
-        debug('eventhubs client: got partition ids. setting up receivers');
-        partitionIds.forEach(function (partitionId) {
-          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(testStart) });
-        });
-        debug('eventhubs client: receivers started: waiting 3 seconds before starting device client');
-        return new Promise(function (resolve) {
-          setTimeout(function () {
-            resolve();
-          }, 3000);
-        });
-      }).then(function () {
+      ehClient = new EventHubConsumerClient("$Default", eventHubConnectionString);
+      rdv.imIn('ehClient');
+      deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+      deviceClient.setRetryPolicy(new NoRetry());
+      ehClient.subscribe({
+        processEvents: async function (events) {
+          for (let eventData of events) { onEventHubMessage(eventData); }
+        },
+        processError: async function (err) { onEventHubError(err); },
+      }, {
+        startPosition: { enqueuedOn: new Date(testStart) },
+      });
+      debug('eventhubs client: receivers started');
+      // Wait 3 seconds before starting device client
+      setTimeout(function () {
         debug('device client: connecting...');
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (openErr) {
@@ -233,8 +226,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             });
           }
         });
-      })
-      .catch(testCallback);
+      }, 3000);
     });
 
     doConnectTest(testConfiguration.testEnabled)('device sends ' + numberOfD2CMessages + ' messages, when event hub client receives first, it ' + testConfiguration.closeReason + 'which is not seen by the iot hub device client', function (testCallback) {
@@ -316,7 +308,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
       };
 
       let onEventHubMessage = function (eventData) {
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+        if (eventData.systemProperties['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           debug('eventhubs client: received a message from the test device: ' + provisionedDevice.deviceId);
           let receivedMessageId = eventData.body.toString();
           if (originalMessages[receivedMessageId]) {
@@ -347,30 +339,24 @@ protocolAndTermination.forEach( function (testConfiguration) {
             debug('eventhubs client: eventData doesn\'t match: ' + eventData.body.toString());
           }
         } else {
-          debug('eventhubs client: ignoring message from: ' + eventData.annotations['iothub-connection-device-id']);
+          debug('eventhubs client: ignoring message from: ' + eventData.systemProperties['iothub-connection-device-id']);
         }
       };
 
-      eventHubClient.createFromIotHubConnectionString(hubConnectionString)
-      .then(function (client) {
-        ehClient = client;
-        rdv.imIn('ehClient');
-        deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
-      }).then(function () {
-        debug('eventhubs client: connected. getting partition ids');
-        return ehClient.getPartitionIds();
-      }).then(function (partitionIds) {
-        debug('eventhubs client: got partition ids. setting up receivers');
-        partitionIds.forEach(function (partitionId) {
-          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
-        });
-        debug('eventhubs client: receivers started: waiting 3 seconds before starting device client');
-        return new Promise(function (resolve) {
-          setTimeout(function () {
-            resolve();
-          }, 3000);
-        });
-      }).then(function () {
+      ehClient = new EventHubConsumerClient("$Default", eventHubConnectionString);
+      rdv.imIn('ehClient');
+      deviceClient = createDeviceClient(testConfiguration.transport, provisionedDevice);
+      ehClient.subscribe({
+        processEvents: async function (events) {
+          for (let eventData of events) { onEventHubMessage(eventData); }
+        },
+        processError: async function (err) { onEventHubError(err); },
+      }, {
+        startPosition: { enqueuedOn: new Date(startAfterTime) },
+      });
+      debug('eventhubs client: receivers started');
+      // Wait 3 seconds before starting device client
+      setTimeout(function () {
         debug('device client: connecting...');
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (openErr) {
@@ -386,11 +372,7 @@ protocolAndTermination.forEach( function (testConfiguration) {
             sendNextMessage();
           }
         });
-      })
-      .catch(function (err) {
-        debug('eventhubs client: error: ' + err.toString());
-        testCallback(err);
-      });
+      }, 3000);
     });
   });
 });

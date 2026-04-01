@@ -3,8 +3,7 @@
 
 'use strict';
 
-const EventHubClient = require('@azure/event-hubs').EventHubClient;
-const EventPosition = require('@azure/event-hubs').EventPosition;
+const { EventHubConsumerClient, latestEventPosition } = require('@azure/event-hubs');
 const debug = require('debug')('stresstests:EventHubHelper');
 
 /**
@@ -31,28 +30,28 @@ class Deferred {
 }
 
 /**
- * Helps manage an EventHubClient for listening to D2C messages.
+ * Helps manage an EventHubConsumerClient for listening to D2C messages.
  */
 class EventHubHelper {
   /**
    * Construct an EventHubHelper instance.
    *
-   * @param {string} [iotHubConnectionString] - The connection string to the IoT
-   *   Hub. If not provided, the environment variable IOTHUB_CONNECTION_STRING
-   *   will be used.
+   * @param {string} [eventHubConnectionString] - The Event Hub-compatible connection string.
+   *   If not provided, the environment variable EVENTHUB_CONNECTION_STRING will be used.
    * @public
    */
-  constructor(iotHubConnectionString) {
+  constructor(eventHubConnectionString) {
     this._client = null;
+    this._subscription = null;
     this._warnUnexpectedMessage = null;
     this._warnNoMessageId = null;
     this._expectedMessages = new Map();
-    this._iotHubConnectionString = iotHubConnectionString ?
-      iotHubConnectionString :
-      process.env.IOTHUB_CONNECTION_STRING;
-    if (!this._iotHubConnectionString) {
+    this._eventHubConnectionString = eventHubConnectionString ?
+      eventHubConnectionString :
+      process.env.EVENTHUB_CONNECTION_STRING;
+    if (!this._eventHubConnectionString) {
       throw new Error(
-        'iotHubConnectionString must be specified or IOTHUB_CONNECTION_STRING environment variable must be set'
+        'eventHubConnectionString must be specified or EVENTHUB_CONNECTION_STRING environment variable must be set'
       )
     }
   }
@@ -73,7 +72,7 @@ class EventHubHelper {
   }
 
   /**
-   * Creates an EventHubClient to listen to D2C messages and manage messages
+   * Creates an EventHubConsumerClient to listen to D2C messages and manage messages
    * being waited for.
    *
    * @public
@@ -87,11 +86,10 @@ class EventHubHelper {
     this._warnNoMessageId = true;
     try {
       debug('Opening Event Hubs client.');
-      this._client = await EventHubClient.createFromIotHubConnectionString(this._iotHubConnectionString);
-      for (const partitionId of await this._client.getPartitionIds()) {
-        this._client.receive(
-          partitionId,
-          (event) => {
+      this._client = new EventHubConsumerClient("$Default", this._eventHubConnectionString);
+      this._subscription = this._client.subscribe({
+        processEvents: async (events) => {
+          for (const event of events) {
             const messageId = event.properties && event.properties.message_id;
             const body = JSON.stringify(event.body);
             if (!messageId && this._warnNoMessageId) {
@@ -115,14 +113,15 @@ class EventHubHelper {
               );
               this._warnUnexpectedMessage = false;
             }
-          },
-          (err) => {
-            debug(`Event Hubs client threw an error: ${err}.`);
-            this.close(err);
-          },
-          { eventPosition: EventPosition.fromEnd() }
-        )
-      }
+          }
+        },
+        processError: async (err) => {
+          debug(`Event Hubs client threw an error: ${err}.`);
+          this.close(err);
+        },
+      }, {
+        startPosition: latestEventPosition,
+      });
     } catch (err) {
       await this.close(err);
       throw err;

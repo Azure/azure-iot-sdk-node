@@ -3,7 +3,8 @@
 
 'use strict';
 
-let azureStorage = require('azure-storage');
+// azure-storage was removed to eliminate the deprecated 'request' package dependency.
+// The import/export test below is skipped and would need @azure/storage-blob if re-enabled.
 let Registry = require('azure-iothub').Registry;
 let errors = require('azure-iot-common').errors;
 let assert = require('chai').assert;

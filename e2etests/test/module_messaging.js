@@ -60,7 +60,7 @@ describe('module messaging', function () {
             testRendezvous.imIn(ehClientParticipant);
             debug('adding handler for \'message\' event on ehReceiver');
             ehReceiver.on('message', function (msg) {
-              if (msg.annotations['iothub-connection-device-id'] === testModule.deviceId && msg.annotations['iothub-connection-module-id'] === testModule.moduleId) {
+              if (msg.systemProperties['iothub-connection-device-id'] === testModule.deviceId && msg.systemProperties['iothub-connection-module-id'] === testModule.moduleId) {
                 assert.strictEqual(msg.body.toString('ascii'), testOutputText);
                 testRendezvous.imDone(ehClientParticipant);
               }
