@@ -1,5 +1,5 @@
 {
-  "name": "iothub-buildtools",
+  "name": "@azure-iot/iothub-buildtools",
   "version": "0.0.1",
   "private": true,
   "description": "Build tools for the Azure IoT Hub Node.js SDK Build",
