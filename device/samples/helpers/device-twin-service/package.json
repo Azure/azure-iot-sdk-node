@@ -1,5 +1,5 @@
 {
-  "name": "sample-helpers-device-twin-service",
+  "name": "@azure-iot/sample-helpers-device-twin-service",
   "version": "1.0.0",
   "description": "Helper project that acts as a backend service to update device twin desired properties on a specific device.",
   "main": "twin-service.js",
