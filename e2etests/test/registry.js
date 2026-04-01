@@ -392,7 +392,7 @@ describe('Registry', function () {
 
     let testDeviceCount = 10;
     let registry = Registry.fromConnectionString(hubConnectionString);
-    let blobSvc = azureStorage.createBlobService(storageConnectionString);
+    let blobSvc = azureStorage.createBlobService(storageConnectionString); // eslint-disable-line no-undef
 
     let inputContainerName = 'nodee2e-import-' + uuid.v4();
     let outputContainerName = 'nodee2e-export-' + uuid.v4();
@@ -474,7 +474,7 @@ describe('Registry', function () {
 
     let deleteContainers = function () {
       return new Promise(function (resolve, reject) {
-        let blobSvc = azureStorage.createBlobService(storageConnectionString);
+        let blobSvc = azureStorage.createBlobService(storageConnectionString); // eslint-disable-line no-undef
         debug('Delete input container');
         blobSvc.deleteContainer(inputContainerName, function (err) {
           if(err) {
