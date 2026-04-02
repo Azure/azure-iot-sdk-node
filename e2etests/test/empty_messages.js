@@ -12,8 +12,7 @@ let Message = require('azure-iot-common').Message;
 let createDeviceClient = require('./testUtils.js').createDeviceClient;
 let closeDeviceServiceClients = require('./testUtils.js').closeDeviceServiceClients;
 let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
-let EventHubClient = require('@azure/event-hubs').EventHubClient;
-let EventPosition = require('@azure/event-hubs').EventPosition;
+let EventHubConsumerClient = require('@azure/event-hubs').EventHubConsumerClient;
 let DeviceIdentityHelper = require('./device_identity_helper.js');
 let Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 
@@ -22,6 +21,7 @@ let deviceMqtt = require('azure-iot-device-mqtt');
 let deviceHttp = require('azure-iot-device-http');
 
 let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let eventHubConnectionString = process.env.EVENTHUB_CONNECTION_STRING;
 
 [
   deviceHttp.Http,
@@ -174,8 +174,8 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
       message.messageId = uuidData;
 
       let onEventHubMessage = function (eventData) {
-        if ((eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId)) {
-          let receivedMsgId = eventData.properties && eventData.properties.message_id;
+        if ((eventData.systemProperties['iothub-connection-device-id'] === provisionedDevice.deviceId)) {
+          let receivedMsgId = eventData.messageId;
           if (Buffer.isBuffer(receivedMsgId)) {
             const str = receivedMsgId.toString('hex');
             receivedMsgId = `${str.slice(0, 8)}-${str.slice(8, 12)}-${str.slice(12, 16)}-${str.slice(16, 20)}-${str.slice(20)}`;
@@ -192,7 +192,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
             debug('received message from test device but messageId does not match. actual: ' + receivedMsgId + '; expected: ' + uuidData);
           }
         } else {
-          debug('Received message from device: ' + eventData.annotations['iothub-connection-device-id'] + ' when expecting it from: ' + provisionedDevice.deviceId);
+          debug('Received message from device: ' + eventData.systemProperties['iothub-connection-device-id'] + ' when expecting it from: ' + provisionedDevice.deviceId);
         }
       };
 
@@ -201,22 +201,17 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
         done(err);
       };
 
-      EventHubClient.createFromIotHubConnectionString(hubConnectionString)
-      .then(function (client) {
-        ehClient = client;
-        testRendezvous.imIn(ehClientParticipant);
-      }).then(function () {
-        return ehClient.getPartitionIds();
-      }).then(function (partitionIds) {
-        partitionIds.forEach(function (partitionId) {
-          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
-        });
-        return new Promise(function (resolve) {
-          setTimeout(function () {
-            resolve();
-          }, 3000);
-        });
-      }).then(function () {
+      ehClient = new EventHubConsumerClient("$Default", eventHubConnectionString);
+      testRendezvous.imIn(ehClientParticipant);
+      ehClient.subscribe({
+        processEvents: async function (events) {
+          for (let eventData of events) { onEventHubMessage(eventData); }
+        },
+        processError: async function (err) { onEventHubError(err); },
+      }, {
+        startPosition: { enqueuedOn: new Date(startAfterTime) },
+      });
+      setTimeout(function () {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (openErr) {
           if (openErr) {
@@ -235,8 +230,7 @@ function empty_message_tests(deviceTransport, createDeviceMethod) {
             });
           }
         });
-      })
-      .catch(done);
+      }, 3000);
     });
   });
 }

@@ -1,5 +1,5 @@
 {
-  "name": "iot-device-samples",
+  "name": "@azure-iot/iot-device-samples",
   "version": "0.0.1",
   "private": true,
   "description": "Simple samples demonstrating how to use the Azure IoT device SDK for Node.js",

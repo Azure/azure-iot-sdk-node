@@ -6,8 +6,7 @@
 let uuid = require('uuid');
 
 let serviceSdk = require('azure-iothub');
-let EventHubClient = require('@azure/event-hubs').EventHubClient;
-let EventPosition = require('@azure/event-hubs').EventPosition;
+let EventHubConsumerClient = require('@azure/event-hubs').EventHubConsumerClient;
 let Client = require('azure-iot-device').Client;
 let Message = require('azure-iot-common').Message;
 let SharedAccessSignature = require('azure-iot-device').SharedAccessSignature;
@@ -17,6 +16,7 @@ let Rendezvous = require('./rendezvous_helper.js').Rendezvous;
 let debug = require('debug')('e2etests:sas_token_tests');
 
 let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let eventHubConnectionString = process.env.EVENTHUB_CONNECTION_STRING;
 let transports  = [
   require('azure-iot-device-amqp').Amqp,
   require('azure-iot-device-amqp').AmqpWs,
@@ -143,9 +143,9 @@ transports.forEach(function (deviceTransport) {
       };
 
       let onEventHubMessage = function (eventData) {
-        debug('event hubs client: message received from device: \'' + eventData.annotations['iothub-connection-device-id'] + '\'');
+        debug('event hubs client: message received from device: \'' + eventData.systemProperties['iothub-connection-device-id'] + '\'');
         debug('event hubs client: message is: ' + ((eventData.body) ? (eventData.body.toString()) : '(no body)'));
-        if (eventData.annotations['iothub-connection-device-id'] === provisionedDevice.deviceId) {
+        if (eventData.systemProperties['iothub-connection-device-id'] === provisionedDevice.deviceId) {
           if (eventData.body && eventData.body.indexOf(beforeSas) === 0) {
             debug('event hubs client: first message received: ' + eventData.body.toString());
             debug('device client: updating shared access signature');
@@ -170,22 +170,17 @@ transports.forEach(function (deviceTransport) {
 
       debug('opening event hubs client');
       let monitorStartTime = new Date(Date.now() - 30000);
-      EventHubClient.createFromIotHubConnectionString(hubConnectionString)
-      .then(function (client) {
-        ehClient = client;
-        testRendezvous.imIn(ehClientParticipant);
-      }).then(function () {
-        return ehClient.getPartitionIds();
-      }).then(function (partitionIds) {
-        partitionIds.forEach(function (partitionId) {
-          ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(monitorStartTime) });
-        });
-        return new Promise(function (resolve) {
-          setTimeout(function () {
-            resolve();
-          }, 3000);
-        });
-      }).then(function () {
+      ehClient = new EventHubConsumerClient("$Default", eventHubConnectionString);
+      testRendezvous.imIn(ehClientParticipant);
+      ehClient.subscribe({
+        processEvents: async function (events) {
+          for (let eventData of events) { onEventHubMessage(eventData); }
+        },
+        processError: async function (err) { onEventHubError(err); },
+      }, {
+        startPosition: { enqueuedOn: monitorStartTime },
+      });
+      setTimeout(function () {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         deviceClient.open(function (err) {
           if (err) return finishUp(err);
@@ -196,11 +191,7 @@ transports.forEach(function (deviceTransport) {
             debug('device client: first message sent: ' + beforeSas);
           });
         });
-        return null;
-      })
-      .catch(function (err) {
-        finishUp(err);
-      });
+      }, 3000);
     });
   });
 });

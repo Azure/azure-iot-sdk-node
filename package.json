@@ -39,7 +39,10 @@
 		"es5-ext": ">=0.10.63",
 		"xml2js": ">=0.5.0",
 		"axios": ">=1.7.9",
-		"@azure/identity": ">=4.2.1"
+		"@azure/identity": ">=4.2.1",
+		"jshint": {
+			"minimatch": "3.1.4"
+		}
 	},
 	"engines": {
 		"node": ">=18.0.0"

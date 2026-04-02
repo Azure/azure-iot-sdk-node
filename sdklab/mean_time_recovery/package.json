@@ -1,5 +1,5 @@
 {
-  "name": "mean_time_recovery",
+  "name": "@azure-iot/mean_time_recovery",
   "version": "1.0.0",
   "description": "metric analysis of mean time to recovery for device code",
   "main": "ochestrator.js",

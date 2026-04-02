@@ -2,7 +2,7 @@ import { Client as DeviceClient, ConnectionString as DeviceConnectionString } fr
 import { Amqp as DeviceAmqp, AmqpWs as DeviceAmqpWs } from 'azure-iot-device-amqp';
 import { Mqtt as DeviceMqtt, MqttWs as DeviceMqttWs } from 'azure-iot-device-mqtt';
 import { Http as DeviceHttp } from 'azure-iot-device-http';
-import { EventHubClient, EventPosition } from '@azure/event-hubs';
+import { EventHubConsumerClient, ReceivedEventData } from '@azure/event-hubs';
 import { Message, results } from 'azure-iot-common';
 import { ConnectionString as ServiceConnectionString } from 'azure-iothub';
 import * as uuid from 'uuid';
@@ -36,15 +36,15 @@ describe('D2C', function () {
         testMessage.messageId = uuid.v4();
         let sendOK = false;
         let receiveOK = false;
-        let ehClient: EventHubClient;
+        let ehClient: EventHubConsumerClient;
 
         const startAfterTime = new Date(Date.now() - 5000);
-        const onEventHubError = (err) => {
-          throw err;
-        };
-        const onEventHubMessage = (receivedMsg) => {
+        const onEventHubMessage = (receivedMsg: ReceivedEventData) => {
           debug('EH Client: Message received');
-          if (uuidBuffer.toString(receivedMsg.properties.message_id) === testMessage.messageId) {
+          const msgId = Buffer.isBuffer(receivedMsg.messageId)
+            ? uuidBuffer.toString(receivedMsg.messageId)
+            : String(receivedMsg.messageId);
+          if (msgId === testMessage.messageId) {
             debug('EH Client: Message OK');
             receiveOK = true;
             if (sendOK && receiveOK) {
@@ -54,15 +54,18 @@ describe('D2C', function () {
           }
         };
 
-        EventHubClient.createFromIotHubConnectionString(process.env.IOTHUB_CONNECTION_STRING)
-        .then((client) => ehClient = client)
-        .then(() => ehClient.getPartitionIds())
-        .then((partitionIds) => {
-          partitionIds.forEach((partitionId) => {
-            ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startAfterTime) });
-          });
-          return new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)); //DevSkim: reviewed DS172411 on 2022-11-30
-        }).then(() => {
+        ehClient = new EventHubConsumerClient("$Default", process.env.EVENTHUB_CONNECTION_STRING);
+        ehClient.subscribe({
+          processEvents: async (events) => {
+            for (const event of events) { onEventHubMessage(event); }
+          },
+          processError: async (err) => {
+            throw err;
+          },
+        }, {
+          startPosition: { enqueuedOn: startAfterTime },
+        });
+        setTimeout(() => {
           debug('EH Client: Receivers created');
           const deviceClient = DeviceClient.fromConnectionString(testDeviceCS, transportCtor);
           deviceClient.sendEvent(testMessage, (sendErr, result) => {
@@ -74,10 +77,7 @@ describe('D2C', function () {
               return testCallback();
             }
           });
-        })
-        .catch((err) => {
-          throw err;
-        });
+        }, 3000);
       });
     });
   });

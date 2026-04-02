@@ -3,13 +3,12 @@
 
 'use strict';
 
-let EventHubClient = require('@azure/event-hubs').EventHubClient;
-let EventPosition = require('@azure/event-hubs').EventPosition;
+let EventHubConsumerClient = require('@azure/event-hubs').EventHubConsumerClient;
 let util = require('util');
 let EventEmitter = require('events');
 let closeDeviceEventHubClients = require('./testUtils.js').closeDeviceEventHubClients;
 
-let hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
+let eventHubConnectionString = process.env.EVENTHUB_CONNECTION_STRING;
 
 let EventHubReceiverHelper = function () {
   EventEmitter.call(this);
@@ -19,28 +18,22 @@ util.inherits(EventHubReceiverHelper, EventEmitter);
 EventHubReceiverHelper.prototype.openClient = function (done) {
   let self = this;
   // account for potential delays and clock skews
-  let startTime = Date.now() - 5000;
-  let onEventHubMessage = function (eventData) {
-    self.emit('message', eventData);
-  };
-  let onEventHubError = function (err) {
-    self.emit('error', err);
-  };
-
-  EventHubClient.createFromIotHubConnectionString(hubConnectionString)
-  .then(function (client) {
-    self.ehClient = client;
-  }).then(function () {
-    return self.ehClient.getPartitionIds();
-  }).then(function (partitionIds) {
-    partitionIds.forEach(function (partitionId) {
-      self.ehClient.receive(partitionId, onEventHubMessage, onEventHubError, { eventPosition: EventPosition.fromEnqueuedTime(startTime) });
-    });
-  }).then(function () {
-    done();
-  }).catch(function (err) {
-    done(err);
+  let startTime = new Date(Date.now() - 5000);
+  self.ehClient = new EventHubConsumerClient("$Default", eventHubConnectionString);
+  self._subscription = self.ehClient.subscribe({
+    processEvents: async function (events) {
+      for (let eventData of events) {
+        self.emit('message', eventData);
+      }
+    },
+    processError: async function (err) {
+      self.emit('error', err);
+    },
+  }, {
+    startPosition: { enqueuedOn: startTime },
   });
+  // Give receivers time to set up
+  setTimeout(function () { done(); }, 3000);
 };
 
 EventHubReceiverHelper.prototype.closeClient = function (done) {

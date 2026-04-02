@@ -3,7 +3,8 @@
 
 'use strict';
 
-let azureStorage = require('azure-storage');
+// azure-storage was removed to eliminate the deprecated 'request' package dependency.
+// The import/export test below is skipped and would need @azure/storage-blob if re-enabled.
 let Registry = require('azure-iothub').Registry;
 let errors = require('azure-iot-common').errors;
 let assert = require('chai').assert;
@@ -391,7 +392,7 @@ describe('Registry', function () {
 
     let testDeviceCount = 10;
     let registry = Registry.fromConnectionString(hubConnectionString);
-    let blobSvc = azureStorage.createBlobService(storageConnectionString);
+    let blobSvc = azureStorage.createBlobService(storageConnectionString); // eslint-disable-line no-undef
 
     let inputContainerName = 'nodee2e-import-' + uuid.v4();
     let outputContainerName = 'nodee2e-export-' + uuid.v4();
@@ -473,7 +474,7 @@ describe('Registry', function () {
 
     let deleteContainers = function () {
       return new Promise(function (resolve, reject) {
-        let blobSvc = azureStorage.createBlobService(storageConnectionString);
+        let blobSvc = azureStorage.createBlobService(storageConnectionString); // eslint-disable-line no-undef
         debug('Delete input container');
         blobSvc.deleteContainer(inputContainerName, function (err) {
           if(err) {

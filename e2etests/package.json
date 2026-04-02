@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@azure/event-hubs": "^1.0.8",
+    "@azure/event-hubs": "^6.0.3",
     "@azure/storage-blob": "12.8.0",
     "async": "^3.2.3",
     "azure-iot-common": "1.13.3",
@@ -15,7 +15,6 @@
     "azure-iot-device-http": "1.14.4",
     "azure-iot-device-mqtt": "1.16.4",
     "azure-iothub": "1.16.6",
-    "azure-storage": "^2.10.4",
     "debug": "^4.3.1",
     "lodash": "^4.17.21",
     "npm-run-all": "^4.1.5",
