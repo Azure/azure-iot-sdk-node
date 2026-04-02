@@ -80,7 +80,7 @@ Refer to the [Azure IoT Device SDK lifecycle and support](https://learn.microsof
 
 | Release | Category | End-of-life |
 |-|-|-|
-| 1.18.2 | Active | - |
+| 1.18.4 | Active | - |
 
 # Read More
 
