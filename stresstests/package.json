@@ -6,23 +6,26 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
+    "@azure/event-hubs": "^6.0.3",
+    "aedes": "^0.4.0",
     "async": "^3.2.3",
     "azure-iot-common": "1.13.3",
     "azure-iot-device": "1.18.4",
     "azure-iot-device-amqp": "1.14.4",
     "azure-iot-device-http": "1.14.4",
     "azure-iot-device-mqtt": "1.16.4",
-    "azure-iothub": "1.16.6",
-    "@azure/event-hubs": "^6.0.3",
-    "uuid": "^8.3.2",
-    "debug": "^4.3.1",
+    "azure-iothub": "^1.16.5",
     "chai": "^4.3.3",
+    "debug": "^4.3.1",
+    "lerna": "6.6.2",
+    "tslint": "5.8.0",
+    "uuid": "^8.3.2",
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
+    "@types/node": "^18.19.0",
     "mocha": "^10.7.0",
-    "typescript": "^5.5.0",
-    "@types/node": "^18.19.0"
+    "typescript": "^5.5.0"
   },
   "scripts": {
     "lint": "eslint test --ext .js -f visualstudio",
