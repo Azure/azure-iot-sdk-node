@@ -28,7 +28,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^18.19.0",
-		"lerna": "^6.6.2",
+		"lerna": "^9.0.7",
 		"mocha": "^10.7.0",
 		"typescript": "^5.5.0"
 	},
@@ -74,10 +74,7 @@
 	"dependencies": {
 		"@azure/ms-rest-js": "^2.7.0",
 		"@opencensus/web-types": "^0.0.7",
-		"aedes": "0.4.0",
-		"azure-iothub": "^1.16.5",
 		"eslint-plugin-security": "^1.5.0",
-		"node-gyp": "^12.2.0",
-		"tslint": "5.8.0"
+		"node-gyp": "^12.2.0"
 	}
 }

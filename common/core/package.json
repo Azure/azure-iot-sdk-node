@@ -7,35 +7,30 @@
   "main": "common.js",
   "typings": "common.d.ts",
   "dependencies": {
-    "@azure/storage-blob": "12.27.0",
-    "aedes": "0.4.0",
     "async": "^3.2.3",
-    "azure-iothub": "1.16.5",
     "debug": "^4.3.1",
-    "getos": "^3.2.1",
-    "lerna": "6.6.2",
-    "tslint": "5.8.0"
+    "getos": "^3.2.1"
   },
   "devDependencies": {
-    "@istanbuljs/nyc-config-typescript": "^1.0.0",
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/getos": "^3.0.0",
-    "@types/node": "^18.19.0",
+    "eslint": "^8.26.0",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/eslint-plugin-tslint": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
-    "chai": "^4.3.3",
-    "eslint": "^8.26.0",
     "eslint-plugin-jsdoc": "^39.3.25",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-no-only-tests": "^3.1.0",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-security": "^1.5.0",
+    "chai": "^4.3.3",
     "mocha": "^10.7.0",
-    "nyc": "^14.1.1",
+    "nyc": "^17.0.0",
     "sinon": "^17.0.0",
     "source-map-support": "^0.5.16",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "@types/node": "^18.19.0"
   },
   "scripts": {
     "srclint": "eslint src --ext .ts -f visualstudio",
