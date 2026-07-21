@@ -5,6 +5,11 @@ variables:
   Horton.Repo: $(Build.Repository.Uri)
   Horton.Commit: $(Build.SourceBranch)
   Horton.ForcedImage: ''
+  # Direct access to public npm registries (registry.npmjs.org, etc.) is blocked on
+  # Microsoft-managed devices/agents. Route npm/npx through the CFS-protected feed.
+  # npm's default replace-registry-host=npmjs rewrites the registry.npmjs.org tarball
+  # URLs already stored in package-lock.json, so the lockfiles need no changes.
+  npm_config_registry: https://packagefeedproxy.microsoft.io/npm/
 
 resources:
   repositories:
