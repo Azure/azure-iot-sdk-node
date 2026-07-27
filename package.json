@@ -45,6 +45,9 @@
 			"minimatch": "3.1.4",
 			"lodash": ">=4.18.0"
 		},
+		"nx": {
+			"brace-expansion": "^5.0.7"
+		},
 		"tmp": ">=0.2.7",
 		"form-data": ">=4.0.6",
 		"tar": ">=7.5.16"
