@@ -45,6 +45,9 @@
 			"minimatch": "3.1.4",
 			"lodash": ">=4.18.0"
 		},
+		"lerna": {
+			"js-yaml": "^4.3.0"
+		},
 		"nx": {
 			"brace-expansion": "^5.0.8"
 		},
