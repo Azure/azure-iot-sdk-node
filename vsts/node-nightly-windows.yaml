@@ -82,12 +82,12 @@ stages:
 
     - script: |
         call $(Pipeline.Workspace)\secretsEnv\activate.cmd
-        call lerna run ci
+        call npx lerna run ci
       displayName: 'Unit & Integration Tests'
 
     - script: |
         call $(Pipeline.Workspace)\secretsEnv\activate.cmd
-        lerna run e2e
+        call npx lerna run e2e
       displayName: 'E2E Tests'
 
     - task: PublishTestResults@2

@@ -79,13 +79,13 @@ stages:
     - script: |
         set -e
         . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
-        lerna run ci
+        npx lerna run ci
       displayName: 'Unit & Integration Tests'
 
     - script: |
         set -e
         . $(Pipeline.Workspace)/secretsEnv/activate    # Set env vars defined in setup.
-        lerna run e2e
+        npx lerna run e2e
       displayName: 'E2E Tests'
 
     - task: PublishTestResults@2
