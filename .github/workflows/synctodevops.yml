@@ -7,8 +7,8 @@ name: Sync issue to Azure DevOps work item
       [opened, reopened, closed, deleted, assigned, labeled, unlabeled]
 
 permissions:
-  contents: read
-  issues: read
+  id-token: write
+  issues: write
 
 jobs:
   alert:
