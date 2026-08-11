@@ -82,6 +82,7 @@ stages:
 
     - task: CodeQL3000Init@0
       displayName: 'Initialize CodeQL'
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
     - script: |
         npm install --global node-gyp
@@ -97,7 +98,7 @@ stages:
     # integration/E2E runs; CodeQL only needs the sources and the built output.
     - task: CodeQL3000Finalize@0
       displayName: 'Finalize CodeQL'
-      condition: always()
+      condition: and(always(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
     - script: |
         set -e
