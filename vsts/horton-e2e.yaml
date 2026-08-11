@@ -5,6 +5,11 @@ variables:
   Horton.Repo: $(Build.Repository.Uri)
   Horton.Commit: $(Build.SourceBranch)
   Horton.ForcedImage: ''
+  # This is an e2e gate, not the SDL scanning pipeline. Auto-injected CodeQL here
+  # produces incidental databases that displace the one from the nightly Linux
+  # pipeline (vsts/node-nightly-linux.yaml), because S360 records
+  # arg_max(SnapshotDate) per (repo, language). See https://aka.ms/codeql3000.
+  Codeql.Enabled: false
   # Direct access to public npm registries (registry.npmjs.org, etc.) is blocked on
   # Microsoft-managed devices/agents. Route npm/npx through the CFS-protected feed.
   # npm's default replace-registry-host=npmjs rewrites the registry.npmjs.org tarball
