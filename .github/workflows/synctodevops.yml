@@ -6,11 +6,14 @@ name: Sync issue to Azure DevOps work item
     types:
       [opened, reopened, closed, deleted, assigned, labeled, unlabeled]
 
+permissions:
+  contents: read
+
 jobs:
   alert:
     runs-on: ubuntu-latest
     steps:
-      - uses: danhellem/github-actions-issue-to-work-item@master
+      - uses: danhellem/github-actions-issue-to-work-item@70e94b931901465f5550532c7a061b0d103b4b10 # For security purposes, pin to a specific version rather than latest
         env:
           ado_token: "${{ secrets.ADO_PERSONAL_ACCESS_TOKEN }}"
           ado_organization: "${{ secrets.ADO_ORGANIZATION }}"
