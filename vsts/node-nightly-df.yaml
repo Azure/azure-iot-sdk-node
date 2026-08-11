@@ -12,10 +12,10 @@ variables:
 
 jobs:
 - job: Phase_2
-  displayName: Ubuntu 20.04 - Node 22.x
+  displayName: Ubuntu 22.04 - Node 22.x
   condition: succeededOrFailed()
   pool:
-    vmImage: 'Ubuntu 20.04'
+    vmImage: 'ubuntu-22.04'
 
   steps:
   - task: NodeTool@0
@@ -66,7 +66,7 @@ jobs:
   displayName: 'Windows Node 22.x'
   condition: succeededOrFailed()
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 22.x'
