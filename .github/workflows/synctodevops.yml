@@ -6,9 +6,7 @@ name: Sync issue to Azure DevOps work item
     types:
       [opened, reopened, closed, deleted, assigned, labeled, unlabeled]
 
-permissions:
-  id-token: write
-  issues: write
+permissions: {}
 
 jobs:
   alert:
