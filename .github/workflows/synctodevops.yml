@@ -8,6 +8,7 @@ name: Sync issue to Azure DevOps work item
 
 permissions:
   contents: read
+  issues: read
 
 jobs:
   alert:
