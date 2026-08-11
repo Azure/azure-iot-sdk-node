@@ -9,6 +9,14 @@ variables:
   # npm's default replace-registry-host=npmjs rewrites the registry.npmjs.org tarball
   # URLs already stored in package-lock.json, so the lockfiles need no changes.
   npm_config_registry: https://packagefeedproxy.microsoft.io/npm/
+  # CodeQL is auto-injected into every job by the 1ES policy decorator. Off by
+  # default here so the resource-provisioning and cleanup jobs stop producing
+  # incidental databases -- S360 records arg_max(SnapshotDate) per
+  # (repo, language), and the 'javascript' snapshot for this repo was being
+  # attributed to the 'create_azure_resources' job. The 'Phase_2' job below opts
+  # back in after the real npm/lerna build.
+  # See https://aka.ms/codeql3000 and https://aka.ms/sdlfaqcodeql.
+  Codeql.Enabled: false
 
 stages:
 - stage: setup
@@ -54,6 +62,12 @@ stages:
   - job: Phase_2
     displayName: Ubuntu 22.04 - Node 18.x
     condition: succeededOrFailed()
+    variables:
+      # Owns the 'javascript' CodeQL snapshot for this repo
+      # (Microsoft.Security.CodeQL.10000). Overrides the pipeline-level
+      # Codeql.Enabled: false. Only on main; PR builds need no snapshot.
+      Codeql.Enabled: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+      Codeql.Language: javascript
     pool:
       vmImage: 'ubuntu-22.04'
 
@@ -66,6 +80,9 @@ stages:
       inputs:
         versionSpec: '18.x'
 
+    - task: CodeQL3000Init@0
+      displayName: 'Initialize CodeQL'
+
     - script: |
         npm install --global node-gyp
         npm install --ignore-scripts
@@ -75,6 +92,12 @@ stages:
           npx tsc --version
           npx lerna run build
       displayName: 'Build'
+
+    # Finalize before the test steps so the snapshot is not hostage to flaky
+    # integration/E2E runs; CodeQL only needs the sources and the built output.
+    - task: CodeQL3000Finalize@0
+      displayName: 'Finalize CodeQL'
+      condition: always()
 
     - script: |
         set -e
