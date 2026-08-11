@@ -52,7 +52,7 @@ stages:
 - stage: build_and_tests
   jobs:
   - job: Phase_2
-    displayName: Ubuntu 22.04 - Node 18.x
+    displayName: Ubuntu 22.04 - Node 22.x
     condition: succeededOrFailed()
     pool:
       vmImage: 'ubuntu-22.04'
@@ -62,9 +62,9 @@ stages:
       artifact: secretsEnv
 
     - task: NodeTool@0
-      displayName: 'Use Node 18.x'
+      displayName: 'Use Node 22.x'
       inputs:
-        versionSpec: '18.x'
+        versionSpec: '22.x'
 
     - script: |
         npm install --global node-gyp
