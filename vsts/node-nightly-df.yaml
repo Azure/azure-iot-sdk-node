@@ -12,16 +12,16 @@ variables:
 
 jobs:
 - job: Phase_2
-  displayName: Ubuntu 20.04 - Node 18.x
+  displayName: Ubuntu 22.04 - Node 22.x
   condition: succeededOrFailed()
   pool:
-    vmImage: 'Ubuntu 20.04'
+    vmImage: 'ubuntu-22.04'
 
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 18.x'
+    displayName: 'Use Node 22.x'
     inputs:
-      versionSpec: '18.x'
+      versionSpec: '22.x'
 
   - script: |
        npm install --global node-gyp
@@ -63,15 +63,15 @@ jobs:
     condition: succeededOrFailed()
 
 - job: Phase_1
-  displayName: 'Windows Node 18.x'
+  displayName: 'Windows Node 22.x'
   condition: succeededOrFailed()
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
-    displayName: 'Use Node 18.x'
+    displayName: 'Use Node 22.x'
     inputs:
-      versionSpec: '18.x'
+      versionSpec: '22.x'
 
   - powershell: |
        runas.exe /savecred /user:administrator
