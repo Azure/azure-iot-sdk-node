@@ -9,6 +9,10 @@ variables:
   # npm's default replace-registry-host=npmjs rewrites the registry.npmjs.org tarball
   # URLs already stored in package-lock.json, so the lockfiles need no changes.
   npm_config_registry: https://packagefeedproxy.microsoft.io/npm/
+  # The 'javascript' snapshot S360 recorded for this repo was coming from this
+  # pipeline's 'create_azure_resources' job, which builds nothing. The snapshot is
+  # owned by vsts/node-nightly-linux.yaml instead. See https://aka.ms/codeql3000.
+  Codeql.Enabled: false
 
 stages:
 - stage: setup
