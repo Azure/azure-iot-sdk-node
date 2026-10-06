@@ -9,7 +9,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   sku: {
     name: 'Standard_GRS'
   }
-  kind: 'Storage'
+  kind: 'StorageV2'
   resource blobService 'blobServices' = {
     name: 'default'
     resource container 'containers' = {
