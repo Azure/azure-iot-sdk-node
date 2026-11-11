@@ -19,6 +19,35 @@ variables:
   Codeql.Enabled: false
 
 stages:
+# CredScan is required of every team by the SDL static analysis requirement. It needs
+# no Azure resources, so this stage does not wait for the e2e setup. Post Analysis
+# breaks the build on unsuppressed findings (the requirement accepts a build break in
+# place of TSA bug filing). Test fixtures with fake secrets are listed in
+# credscan_suppression.json.
+- stage: credscan
+  displayName: CredScan
+  dependsOn: []
+  jobs:
+  - job: CredScan
+    displayName: CredScan
+    pool:
+      vmImage: 'windows-2022'
+    steps:
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@3
+      displayName: 'Run CredScan'
+      inputs:
+        toolMajorVersion: 'V2'
+        suppressionsFile: 'credscan_suppression.json'
+        debugMode: false
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@3
+      displayName: 'Publish Security Analysis Logs'
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
+      displayName: 'Post Analysis'
+      inputs:
+        CredScan: true
+
 - stage: setup
   jobs:
   - job: create_azure_resources
