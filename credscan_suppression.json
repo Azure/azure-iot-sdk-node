@@ -20,6 +20,18 @@
     {
       "placeholder": "88JmrIsVYOGmRSjCO1x1LLbv0K001Gikh1rjfJqbQXA%3D",
       "_justification": "Fake shared access signature token"
+    },
+    {
+      "placeholder": "lGO7OlXNhXlFyYV1rh9F/lUCQC1Owuh5f/1P0I1AFSY=",
+      "_justification": "Fake DPS connection string key in node_e2e_resources/deploy.sh; the host is a fake invalid-certificate test server"
+    },
+    {
+      "placeholder": "Fk1H0asPeeAwlRkUMTybJasksTYTd13cgI7SsteB05U=",
+      "_justification": "Fake IoT Hub connection string key in node_e2e_resources/deploy.sh; the host is a fake invalid-certificate test server"
+    },
+    {
+      "placeholder": "zWmeTGWmjcgDG1dpuSCVjc5ZY4TqVnKso5+g1wt/K3E=",
+      "_justification": "Fake device connection string key in node_e2e_resources/deploy.sh; the host is a fake invalid-certificate test server"
     }
   ]
 }
