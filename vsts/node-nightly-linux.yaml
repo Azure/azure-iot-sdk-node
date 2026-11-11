@@ -49,6 +49,7 @@ stages:
         CredScan: true
 
 - stage: setup
+  dependsOn: []
   jobs:
   - job: create_azure_resources
     pool:
