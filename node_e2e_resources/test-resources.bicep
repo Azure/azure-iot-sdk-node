@@ -23,6 +23,10 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: deployment().location
   tags: {
     createdBy: alias
+    // Opts out of the CloudGov_StorAccSec_Deny policy (public network access on storage accounts).
+    // The file upload tests need the CI agents to reach the hub's storage account over the public
+    // endpoint. The resource group is deleted at the end of every run.
+    'skip-cloudgov-Sec_keys': 'true'
   }
 }
 
